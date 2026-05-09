@@ -105,14 +105,14 @@ export function LandingProductCard({
           {isOutOfStock ? (
             <div
               aria-disabled="true"
-              className="w-full bg-gray-100 text-gray-400 font-semibold py-2 rounded-lg text-center text-xs cursor-not-allowed"
+              className="w-full bg-gray-100 text-gray-400 font-semibold py-2 rounded-lg text-center text-xs border-2 border-gray-300 cursor-not-allowed"
             >
               Stok Habis
             </div>
           ) : (
             <Link
               href={`/produk/${product.slug}`}
-              className="block w-full bg-brand-500 hover:bg-brand-600 text-white font-semibold py-2 rounded-lg text-center text-xs transition-colors"
+              className="block w-full bg-brand-500 hover:bg-brand-600 text-white font-semibold py-2 rounded-lg text-center text-xs border-2 border-black shadow-[0_3px_0_rgba(0,0,0,0.9)] hover:shadow-[0_4px_0_rgba(0,0,0,0.9)] hover:-translate-y-0.5 active:translate-y-1 active:shadow-[0_1px_0_rgba(0,0,0,0.9)] transition-all duration-150"
             >
               Pesan Sekarang
             </Link>

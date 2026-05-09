@@ -71,7 +71,7 @@ export function Header() {
           </Link>
           <Link
             href="/daftar"
-            className="text-sm font-semibold px-5 py-2 rounded-lg bg-brand-500 text-white hover:bg-brand-600 shadow-sm hover:shadow-md hover:shadow-brand-500/30 hover:-translate-y-0.5 active:translate-y-0 active:shadow-sm transition-all duration-200"
+            className="text-sm font-semibold px-5 py-2 rounded-lg border-2 border-black bg-brand-500 text-white shadow-[0_3px_0_rgba(0,0,0,0.9)] hover:shadow-[0_5px_0_rgba(0,0,0,0.9)] hover:-translate-y-0.5 active:translate-y-1 active:shadow-[0_1px_0_rgba(0,0,0,0.9)] transition-all duration-150"
           >
             Daftar
           </Link>
@@ -119,7 +119,7 @@ export function Header() {
             <Link
               href="/daftar"
               onClick={() => setMenuOpen(false)}
-              className="mt-1 px-5 py-2.5 rounded-lg bg-brand-500 text-white text-center font-semibold hover:bg-brand-600"
+              className="mt-1 px-5 py-2.5 rounded-lg border-2 border-black bg-brand-500 text-white text-center font-semibold shadow-[0_3px_0_rgba(0,0,0,0.9)] active:translate-y-1 active:shadow-[0_1px_0_rgba(0,0,0,0.9)]"
             >
               Daftar Sekarang
             </Link>

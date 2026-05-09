@@ -3,18 +3,18 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 rounded-lg font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
+  'inline-flex items-center justify-center gap-2 rounded-lg font-semibold border-2 border-black transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-60 disabled:shadow-none',
   {
     variants: {
       variant: {
         primary:
-          'bg-brand-500 text-white shadow-sm hover:bg-brand-600 hover:shadow-md hover:shadow-brand-500/25 hover:-translate-y-0.5 active:translate-y-0 active:shadow-sm',
+          'bg-brand-500 text-white shadow-[0_3px_0_rgba(0,0,0,0.9)] hover:shadow-[0_5px_0_rgba(0,0,0,0.9)] hover:-translate-y-0.5 active:translate-y-1 active:shadow-[0_1px_0_rgba(0,0,0,0.9)]',
         secondary:
-          'bg-white text-ink border border-gray-200 hover:border-brand-500 hover:text-brand-600 hover:bg-brand-50',
+          'bg-white text-ink shadow-[0_3px_0_rgba(0,0,0,0.9)] hover:bg-brand-50 hover:shadow-[0_5px_0_rgba(0,0,0,0.9)] hover:-translate-y-0.5 active:translate-y-1 active:shadow-[0_1px_0_rgba(0,0,0,0.9)]',
         ghost:
-          'bg-transparent text-ink-muted hover:bg-gray-50 hover:text-ink',
+          'bg-transparent text-ink-muted border-transparent hover:bg-gray-50 hover:text-ink',
         danger:
-          'bg-danger/10 text-danger border border-danger/30 hover:bg-danger/20',
+          'bg-danger text-white shadow-[0_3px_0_rgba(0,0,0,0.9)] hover:shadow-[0_5px_0_rgba(0,0,0,0.9)] hover:-translate-y-0.5 active:translate-y-1 active:shadow-[0_1px_0_rgba(0,0,0,0.9)]',
       },
       size: {
         sm: 'px-4 py-1.5 text-xs',

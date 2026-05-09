@@ -69,7 +69,7 @@ export default async function HomePage() {
               <div className="mt-7 sm:mt-8 flex flex-wrap items-center justify-center md:justify-start gap-3 sm:gap-4">
                 <Link
                   href="/#ai"
-                  className="group bg-white text-brand-700 hover:text-brand-800 font-semibold px-7 sm:px-8 py-3.5 rounded-lg shadow-lg shadow-brand-900/25 hover:shadow-xl hover:shadow-brand-900/30 hover:-translate-y-0.5 active:translate-y-0 active:shadow-md transition-all duration-200 text-base inline-flex items-center gap-2"
+                  className="group bg-white text-brand-700 hover:text-brand-800 font-semibold px-7 sm:px-8 py-3.5 rounded-lg border-2 border-black shadow-[0_4px_0_rgba(0,0,0,0.9)] hover:shadow-[0_6px_0_rgba(0,0,0,0.9)] hover:-translate-y-0.5 active:translate-y-1 active:shadow-[0_2px_0_rgba(0,0,0,0.9)] transition-all duration-150 text-base inline-flex items-center gap-2"
                 >
                   Lihat Layanan
                   <svg className="w-4 h-4 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" aria-hidden="true">
@@ -78,7 +78,7 @@ export default async function HomePage() {
                 </Link>
                 <Link
                   href="/#cara-pesan"
-                  className="group border-2 border-white/80 text-white hover:bg-white hover:text-brand-700 hover:border-white font-semibold px-7 sm:px-8 py-3 rounded-lg transition-all duration-200 text-base inline-flex items-center gap-2"
+                  className="group bg-brand-700 text-white hover:bg-brand-800 font-semibold px-7 sm:px-8 py-3 rounded-lg border-2 border-black shadow-[0_4px_0_rgba(0,0,0,0.9)] hover:shadow-[0_6px_0_rgba(0,0,0,0.9)] hover:-translate-y-0.5 active:translate-y-1 active:shadow-[0_2px_0_rgba(0,0,0,0.9)] transition-all duration-150 text-base inline-flex items-center gap-2"
                 >
                   Cara Pesan
                   <svg className="w-4 h-4 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" aria-hidden="true">
@@ -298,7 +298,7 @@ export default async function HomePage() {
             </div>
             <Link
               href="/daftar"
-              className="bg-white text-brand-700 hover:bg-brand-50 font-semibold px-8 py-3.5 rounded-lg shadow-lg transition-colors shrink-0"
+              className="bg-white text-brand-700 hover:text-brand-800 font-semibold px-8 py-3.5 rounded-lg border-2 border-black shadow-[0_4px_0_rgba(0,0,0,0.9)] hover:shadow-[0_6px_0_rgba(0,0,0,0.9)] hover:-translate-y-0.5 active:translate-y-1 active:shadow-[0_2px_0_rgba(0,0,0,0.9)] transition-all duration-150 shrink-0 inline-flex items-center gap-2"
             >
               Daftar Sekarang →
             </Link>
