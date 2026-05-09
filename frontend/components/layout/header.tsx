@@ -28,17 +28,17 @@ export function Header() {
 
   return (
     <header
-      className={`sticky top-0 z-40 transition-all duration-200 ${
-        scrolled ? 'bg-white shadow-sm border-b border-gray-100' : 'bg-transparent'
+      className={`sticky top-0 z-40 bg-white transition-shadow duration-200 ${
+        scrolled ? 'shadow-sm border-b border-gray-100' : ''
       }`}
     >
       <div className="container mx-auto flex h-16 items-center justify-between px-4 max-w-7xl">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 shrink-0" aria-label="JualAkun home">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-500 text-base font-black text-white shadow-md">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-500 text-base font-black text-white shadow-sm">
             J
           </div>
-          <span className={`font-bold text-lg ${scrolled ? 'text-ink' : 'text-white'}`}>
+          <span className="font-bold text-lg text-ink">
             Jual<span className="text-brand-500">Akun</span>
           </span>
         </Link>
@@ -53,13 +53,9 @@ export function Header() {
                 href={item.href}
                 aria-current={active ? 'page' : undefined}
                 className={`px-3 py-2 rounded-lg transition-colors ${
-                  scrolled
-                    ? active
-                      ? 'text-brand-600 bg-brand-50'
-                      : 'text-ink-muted hover:text-ink hover:bg-gray-50'
-                    : active
-                    ? 'text-white bg-white/15'
-                    : 'text-white/90 hover:bg-white/10 hover:text-white'
+                  active
+                    ? 'text-brand-600 bg-brand-50'
+                    : 'text-ink-muted hover:text-ink hover:bg-gray-50'
                 }`}
               >
                 {item.label}
@@ -72,21 +68,13 @@ export function Header() {
         <div className="hidden md:flex items-center gap-2">
           <Link
             href="/masuk"
-            className={`text-sm font-medium px-3 py-2 rounded-lg transition-colors ${
-              scrolled
-                ? 'text-ink-muted hover:text-ink hover:bg-gray-50'
-                : 'text-white/90 hover:text-white hover:bg-white/10'
-            }`}
+            className="text-sm font-medium px-3 py-2 rounded-lg text-ink-muted hover:text-ink hover:bg-gray-50 transition-colors"
           >
             Masuk
           </Link>
           <Link
             href="/daftar"
-            className={`text-sm font-semibold px-5 py-2 rounded-lg transition-all ${
-              scrolled
-                ? 'bg-brand-500 text-white hover:bg-brand-600 shadow-sm'
-                : 'border-2 border-white text-white hover:bg-white hover:text-brand-600'
-            }`}
+            className="text-sm font-semibold px-5 py-2 rounded-lg bg-brand-500 text-white hover:bg-brand-600 shadow-sm transition-colors"
           >
             Daftar
           </Link>
@@ -96,7 +84,7 @@ export function Header() {
         <button
           aria-label={menuOpen ? 'Tutup menu' : 'Buka menu'}
           aria-expanded={menuOpen}
-          className={`md:hidden p-2 rounded-lg ${scrolled ? 'text-ink' : 'text-white'}`}
+          className="md:hidden p-2 rounded-lg text-ink hover:bg-gray-50"
           onClick={() => setMenuOpen(!menuOpen)}
         >
           {menuOpen ? <X size={22} /> : <Menu size={22} />}
