@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { Menu, X } from 'lucide-react'
+import { Logo } from '@/components/branding/logo'
 
 const NAV_ITEMS = [
   { href: '/#streaming', label: 'Streaming' },
@@ -36,16 +37,8 @@ export function Header() {
         scrolled ? 'shadow-sm border-b border-gray-100' : ''
       }`}
     >
-      <div className="container mx-auto flex h-16 items-center justify-between px-4 max-w-7xl">
-        {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 shrink-0" aria-label="Jualakun.id home">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-500 text-base font-black text-white shadow-sm">
-            J
-          </div>
-          <span className="font-bold text-lg text-ink">
-            Jualakun<span className="text-brand-500">.id</span>
-          </span>
-        </Link>
+      <div className="container mx-auto flex h-20 items-center justify-between px-4 max-w-7xl">
+        <Logo size="md" showTagline />
 
         {/* Desktop Nav */}
         <nav className="hidden md:flex items-center gap-1 text-sm font-medium" aria-label="Main">

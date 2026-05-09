@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { Mail, Phone, Clock } from 'lucide-react'
+import { Logo } from '@/components/branding/logo'
 
 export function Footer() {
   return (
@@ -7,18 +8,8 @@ export function Footer() {
       <div className="container mx-auto grid gap-8 px-4 py-12 md:grid-cols-4">
         {/* Brand */}
         <div className="md:col-span-1">
-          <div className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-500 text-base font-black text-white">
-              J
-            </div>
-            <span className="font-bold text-lg text-white">
-              Jualakun<span className="text-brand-400">.id</span>
-            </span>
-          </div>
-          <p className="mt-2 text-xs font-semibold text-brand-400 italic">
-            Anti Mainstream, Tetap Asli.
-          </p>
-          <p className="mt-3 text-sm text-white/60 leading-relaxed">
+          <Logo size="lg" showTagline inverted />
+          <p className="mt-4 text-sm text-white/60 leading-relaxed">
             Marketplace akun digital langka & sulit dicari di tempat lain — premium, asli, dengan garansi resmi.
           </p>
           <div className="mt-4 flex items-center gap-1.5 text-xs text-white/40">
