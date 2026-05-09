@@ -16,13 +16,13 @@ export default function AppleIcon() {
           justifyContent: 'center',
         }}
       >
-        <svg width="140" height="140" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
-          <path d="M20 3 L37 20 L20 37 L3 20 Z" fill="#0089A8" />
-          <path d="M20 3 L37 20 L20 20 Z" fill="white" fillOpacity="0.15" />
+        <svg width="170" height="170" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+          <path d="M20 1 L39 20 L20 39 L1 20 Z" fill="#0089A8" />
+          <path d="M20 1 L39 20 L20 20 Z" fill="white" fillOpacity="0.15" />
           <path
-            d="M12 20.5 L17.5 26 L28 14"
+            d="M11 20.5 L17 26.5 L29 13.5"
             stroke="white"
-            strokeWidth="3.5"
+            strokeWidth="4.5"
             strokeLinecap="round"
             strokeLinejoin="round"
             fill="none"
