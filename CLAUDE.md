@@ -124,9 +124,16 @@ Gunakan slash commands untuk generate kode yang konsisten dengan project:
 | Command | Kegunaan |
 |---------|---------|
 | `/ui-builder [komponen/halaman]` | Generate React/Next.js komponen mengikuti brand-guide.md |
+| `/ui-cloner [komponen/halaman]` | Clone UI style akunmu.id — light mode, colorful, pill buttons |
 | `/api-builder [fitur/endpoint]` | Generate Hono route + service + Zod schema (ZEO pattern) |
 | `/db-helper [kebutuhan]` | SQL debug queries, migration baru, RLS policies |
 | `/scaffold [frontend\|backend]` | Inisialisasi struktur folder proyek |
 | `/requirement-writer` | Generate dokumen PRD, SRD, problem framing |
 
 Semua skill ada di `.claude/skills/[nama]/SKILL.md`.
+
+## Sub-Agents Tersedia
+
+| Agent | File | Kegunaan |
+|-------|------|---------|
+| `ui-cloner` | `.claude/agents/ui-cloner.md` | Analisis referensi UI eksternal dan generate komponen matching |

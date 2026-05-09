@@ -40,6 +40,7 @@ const config: Config = {
         heading: ['var(--font-heading)', 'sans-serif'],
         body: ['var(--font-body)', 'sans-serif'],
         mono: ['var(--font-mono)', 'monospace'],
+        poppins: ['var(--font-poppins)', 'sans-serif'],
       },
       fontSize: {
         hero: ['3rem', { lineHeight: '1.15', fontWeight: '800' }],

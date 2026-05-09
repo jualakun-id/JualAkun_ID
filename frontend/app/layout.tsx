@@ -1,6 +1,13 @@
 import type { Metadata } from 'next'
-import { Plus_Jakarta_Sans, Inter, JetBrains_Mono } from 'next/font/google'
+import { Plus_Jakarta_Sans, Inter, JetBrains_Mono, Poppins } from 'next/font/google'
 import './globals.css'
+
+const poppins = Poppins({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '800'],
+  variable: '--font-poppins',
+  display: 'swap',
+})
 
 const heading = Plus_Jakarta_Sans({
   subsets: ['latin'],
@@ -47,7 +54,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="id"
-      className={`dark ${heading.variable} ${body.variable} ${mono.variable}`}
+      className={`dark ${heading.variable} ${body.variable} ${mono.variable} ${poppins.variable}`}
     >
       <body className="min-h-screen bg-bg text-text antialiased">{children}</body>
     </html>

@@ -3,7 +3,7 @@ import { Footer } from '@/components/layout/footer'
 
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col bg-white text-[#1A2340]" style={{ fontFamily: 'var(--font-poppins), sans-serif' }}>
       <Header />
       <main className="flex-1">{children}</main>
       <Footer />
