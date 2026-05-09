@@ -1,4 +1,4 @@
-import Link from 'next/link'
+﻿import Link from 'next/link'
 import { ShoppingBag, Wallet, Gift } from 'lucide-react'
 import { DashboardTabs } from '@/components/dashboard-tabs'
 import { OrderStatusBadge } from '@/components/order-status-badge'
@@ -24,7 +24,7 @@ export default async function DashboardPage() {
     <section className="container mx-auto px-4 py-8">
       <DashboardTabs active="/dashboard" />
 
-      <h1 className="mt-8 font-heading text-h1">Halo, {data?.profile?.full_name?.split(' ')[0] ?? 'Buyer'} 👋</h1>
+      <h1 className="mt-8 font-heading text-h1">Halo, {data?.profile?.full_name?.split(' ')[0] ?? 'Buyer'} ðŸ‘‹</h1>
 
       <div className="mt-6 grid gap-4 md:grid-cols-3">
         <StatCard icon={<ShoppingBag size={20} strokeWidth={1.5} />} label="Total Pesanan" value={String(data?.orders?.length ?? 0)} />
@@ -35,29 +35,29 @@ export default async function DashboardPage() {
       <div className="mt-8">
         <div className="flex items-end justify-between">
           <h2 className="font-heading text-h2">Pesanan Terakhir</h2>
-          <Link href="/dashboard/pesanan" className="text-sm text-primary hover:text-primary-light">Lihat semua →</Link>
+          <Link href="/dashboard/pesanan" className="text-sm text-brand-500 hover:text-brand-400">Lihat semua â†’</Link>
         </div>
         <div className="mt-4 space-y-2">
           {data?.orders?.slice(0, 5).map((o) => (
             <Link
               key={o.id}
               href={`/dashboard/pesanan/${o.id}`}
-              className="flex items-center justify-between rounded-lg border border-border bg-surface p-4 hover:border-primary/50"
+              className="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-4 hover:border-brand-500/50"
             >
               <div>
-                <div className="font-mono text-xs text-text-subtle">{o.order_number}</div>
-                <div className="mt-1 font-medium text-text">{o.product_name}</div>
-                <div className="mt-1 text-xs text-text-subtle">{formatDate(o.created_at)}</div>
+                <div className="font-mono text-xs text-ink-subtle">{o.order_number}</div>
+                <div className="mt-1 font-medium text-ink">{o.product_name}</div>
+                <div className="mt-1 text-xs text-ink-subtle">{formatDate(o.created_at)}</div>
               </div>
               <div className="flex items-center gap-3">
                 <OrderStatusBadge status={o.status} />
-                <span className="font-heading font-bold text-primary">{formatRupiah(o.total_idr)}</span>
+                <span className="font-heading font-bold text-brand-500">{formatRupiah(o.total_idr)}</span>
               </div>
             </Link>
           ))}
           {!data?.orders?.length ? (
-            <div className="rounded-lg border border-border bg-surface p-8 text-center text-text-muted">
-              Belum ada pesanan. <Link href="/" className="text-primary">Mulai belanja →</Link>
+            <div className="rounded-lg border border-gray-200 bg-white p-8 text-center text-ink-muted">
+              Belum ada pesanan. <Link href="/" className="text-brand-500">Mulai belanja â†’</Link>
             </div>
           ) : null}
         </div>
@@ -68,12 +68,12 @@ export default async function DashboardPage() {
 
 function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
-    <div className="rounded-xl border border-border bg-surface p-5">
-      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/15 text-primary-light">
+    <div className="rounded-xl border border-gray-200 bg-white p-5">
+      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-50 text-brand-400">
         {icon}
       </div>
-      <div className="mt-3 text-sm text-text-muted">{label}</div>
-      <div className="mt-1 font-heading text-h3 text-text">{value}</div>
+      <div className="mt-3 text-sm text-ink-muted">{label}</div>
+      <div className="mt-1 font-heading text-h3 text-ink">{value}</div>
     </div>
   )
 }

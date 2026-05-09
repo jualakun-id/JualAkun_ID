@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -60,19 +60,19 @@ export function RegisterForm({ referralCode }: Props) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label className="text-sm font-medium text-text-muted">Nama lengkap</label>
+        <label className="text-sm font-medium text-ink-muted">Nama lengkap</label>
         <Input required value={form.full_name} onChange={(e) => update('full_name', e.target.value)} className="mt-1.5" />
       </div>
       <div>
-        <label className="text-sm font-medium text-text-muted">Email</label>
+        <label className="text-sm font-medium text-ink-muted">Email</label>
         <Input type="email" required value={form.email} onChange={(e) => update('email', e.target.value)} className="mt-1.5" />
       </div>
       <div>
-        <label className="text-sm font-medium text-text-muted">No. WhatsApp <span className="text-text-subtle">(opsional)</span></label>
+        <label className="text-sm font-medium text-ink-muted">No. WhatsApp <span className="text-ink-subtle">(opsional)</span></label>
         <Input placeholder="0812xxxxxxxx" value={form.phone_wa} onChange={(e) => update('phone_wa', e.target.value)} className="mt-1.5" />
       </div>
       <div>
-        <label className="text-sm font-medium text-text-muted">Password</label>
+        <label className="text-sm font-medium text-ink-muted">Password</label>
         <Input
           type="password"
           required
@@ -82,11 +82,11 @@ export function RegisterForm({ referralCode }: Props) {
           onChange={(e) => update('password', e.target.value)}
           className="mt-1.5"
         />
-        <p className="mt-1 text-xs text-text-subtle">Minimal 8 karakter</p>
+        <p className="mt-1 text-xs text-ink-subtle">Minimal 8 karakter</p>
       </div>
       {form.referral_code ? (
         <div>
-          <label className="text-sm font-medium text-text-muted">Kode referral</label>
+          <label className="text-sm font-medium text-ink-muted">Kode referral</label>
           <Input value={form.referral_code} onChange={(e) => update('referral_code', e.target.value.toUpperCase())} className="mt-1.5 font-mono" />
         </div>
       ) : null}

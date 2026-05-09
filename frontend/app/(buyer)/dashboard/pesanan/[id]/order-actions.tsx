@@ -54,7 +54,7 @@ export function OrderActions({ order }: Props) {
   if (!showCreds) return null
 
   return (
-    <div className="mt-6 rounded-xl border border-border bg-surface p-6">
+    <div className="mt-6 rounded-xl border border-gray-200 bg-white p-6">
       <h2 className="font-heading text-h3">Akses Akun</h2>
       {!creds ? (
         <div className="mt-4">

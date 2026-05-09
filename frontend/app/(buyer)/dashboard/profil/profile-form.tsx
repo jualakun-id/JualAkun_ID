@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { Input } from '@/components/ui/input'
@@ -31,7 +31,7 @@ export function ProfileForm({ email, fullName, phoneWa, referralCode }: Props) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5 rounded-xl border border-border bg-surface p-6">
+    <form onSubmit={handleSubmit} className="space-y-5 rounded-xl border border-gray-200 bg-white p-6">
       <Field label="Email"><Input value={email} disabled /></Field>
       <Field label="Nama lengkap">
         <Input required value={name} onChange={(e) => setName(e.target.value)} />
@@ -57,7 +57,7 @@ export function ProfileForm({ email, fullName, phoneWa, referralCode }: Props) {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="text-sm font-medium text-text-muted">{label}</label>
+      <label className="text-sm font-medium text-ink-muted">{label}</label>
       <div className="mt-1.5">{children}</div>
     </div>
   )

@@ -1,4 +1,4 @@
-import Link from 'next/link'
+﻿import Link from 'next/link'
 import Image from 'next/image'
 import { DashboardTabs } from '@/components/dashboard-tabs'
 import { OrderStatusBadge } from '@/components/order-status-badge'
@@ -29,26 +29,26 @@ export default async function DashboardPesananPage() {
           <Link
             key={o.id}
             href={`/dashboard/pesanan/${o.id}`}
-            className="flex items-center gap-4 rounded-xl border border-border bg-surface p-4 hover:border-primary/50"
+            className="flex items-center gap-4 rounded-xl border border-gray-200 bg-white p-4 hover:border-brand-500/50"
           >
-            <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-surface-2">
+            <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-gray-50">
               {o.product_thumbnail ? (
                 <Image src={o.product_thumbnail} alt={o.product_name} fill sizes="64px" className="object-cover" />
               ) : null}
             </div>
             <div className="flex-1 min-w-0">
-              <div className="font-mono text-xs text-text-subtle">{o.order_number}</div>
-              <div className="mt-0.5 truncate font-medium text-text">{o.product_name}</div>
-              <div className="mt-0.5 text-xs text-text-subtle">{formatDateTime(o.created_at)}</div>
+              <div className="font-mono text-xs text-ink-subtle">{o.order_number}</div>
+              <div className="mt-0.5 truncate font-medium text-ink">{o.product_name}</div>
+              <div className="mt-0.5 text-xs text-ink-subtle">{formatDateTime(o.created_at)}</div>
             </div>
             <div className="flex flex-col items-end gap-2">
               <OrderStatusBadge status={o.status} />
-              <span className="font-heading font-bold text-primary">{formatRupiah(o.total_idr)}</span>
+              <span className="font-heading font-bold text-brand-500">{formatRupiah(o.total_idr)}</span>
             </div>
           </Link>
         ))}
         {!data?.orders?.length ? (
-          <div className="rounded-xl border border-border bg-surface p-12 text-center text-text-muted">
+          <div className="rounded-xl border border-gray-200 bg-white p-12 text-center text-ink-muted">
             Belum ada pesanan.
           </div>
         ) : null}

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import Image from 'next/image'
 import Script from 'next/script'
@@ -100,26 +100,26 @@ export function CheckoutClient({ product }: { product: Product }) {
     <div className="grid gap-6 md:grid-cols-[1fr_360px]">
       <Script src={POP_SRC} strategy="afterInteractive" />
 
-      <div className="rounded-xl border border-border bg-surface p-5">
+      <div className="rounded-xl border border-gray-200 bg-white p-5">
         <h2 className="font-heading text-h3">Detail Pesanan</h2>
         <div className="mt-4 flex gap-4">
-          <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-surface-2">
+          <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-gray-50">
             {product.thumbnail_url ? (
               <Image src={product.thumbnail_url} alt={product.name} fill sizes="80px" className="object-cover" />
             ) : null}
           </div>
           <div>
             <div className="font-heading text-h4">{product.name}</div>
-            <div className="mt-1 text-sm text-text-muted">
-              Durasi {product.duration_days} hari · Garansi {product.guarantee_days} hari
+            <div className="mt-1 text-sm text-ink-muted">
+              Durasi {product.duration_days} hari Â· Garansi {product.guarantee_days} hari
             </div>
-            <div className="mt-2 font-heading font-bold text-primary">{formatRupiah(product.price)}</div>
+            <div className="mt-2 font-heading font-bold text-brand-500">{formatRupiah(product.price)}</div>
           </div>
         </div>
 
         <div className="mt-6 space-y-4">
           <div>
-            <label className="text-sm font-medium text-text-muted">Kode kupon (opsional)</label>
+            <label className="text-sm font-medium text-ink-muted">Kode kupon (opsional)</label>
             <Input
               value={coupon}
               onChange={(e) => setCoupon(e.target.value.toUpperCase())}
@@ -128,7 +128,7 @@ export function CheckoutClient({ product }: { product: Product }) {
             />
           </div>
           <div>
-            <label className="text-sm font-medium text-text-muted">No. WhatsApp (untuk notifikasi)</label>
+            <label className="text-sm font-medium text-ink-muted">No. WhatsApp (untuk notifikasi)</label>
             <Input
               type="tel"
               value={phoneWa}
@@ -137,24 +137,24 @@ export function CheckoutClient({ product }: { product: Product }) {
               className="mt-1.5"
             />
           </div>
-          <label className="flex items-center gap-2 text-sm text-text-muted">
+          <label className="flex items-center gap-2 text-sm text-ink-muted">
             <input
               type="checkbox"
               checked={useCredits}
               onChange={(e) => setUseCredits(e.target.checked)}
-              className="rounded border-border"
+              className="rounded border-gray-200"
             />
             Pakai kredit referral saya
           </label>
         </div>
       </div>
 
-      <div className="rounded-xl border border-border bg-surface p-5">
+      <div className="rounded-xl border border-gray-200 bg-white p-5">
         <h2 className="font-heading text-h3">Ringkasan</h2>
         <div className="mt-4 space-y-2 text-sm">
           <Row label="Harga produk" value={formatRupiah(product.price)} />
           <Row label="Diskon" value="—" muted />
-          <hr className="border-border-subtle" />
+          <hr className="border-gray-100" />
           <Row label="Total" value={formatRupiah(product.price)} bold />
         </div>
         {error ? (
@@ -165,7 +165,7 @@ export function CheckoutClient({ product }: { product: Product }) {
         <Button onClick={handleCheckout} disabled={loading || product.stock_count === 0} className="mt-6 w-full">
           {loading ? 'Memproses...' : 'Bayar Sekarang'}
         </Button>
-        <p className="mt-3 text-center text-xs text-text-subtle">
+        <p className="mt-3 text-center text-xs text-ink-subtle">
           Diskon kupon & kredit otomatis dihitung saat klik bayar.
         </p>
       </div>
@@ -176,8 +176,8 @@ export function CheckoutClient({ product }: { product: Product }) {
 function Row({ label, value, muted, bold }: { label: string; value: string; muted?: boolean; bold?: boolean }) {
   return (
     <div className="flex items-center justify-between">
-      <span className={muted ? 'text-text-subtle' : 'text-text-muted'}>{label}</span>
-      <span className={bold ? 'font-heading font-bold text-primary' : 'text-text'}>{value}</span>
+      <span className={muted ? 'text-ink-subtle' : 'text-ink-muted'}>{label}</span>
+      <span className={bold ? 'font-heading font-bold text-brand-500' : 'text-ink'}>{value}</span>
     </div>
   )
 }

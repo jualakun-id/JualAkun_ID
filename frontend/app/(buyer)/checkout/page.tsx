@@ -1,4 +1,4 @@
-import { redirect } from 'next/navigation'
+﻿import { redirect } from 'next/navigation'
 import { CheckoutClient } from './checkout-client'
 import { createServerClient } from '@/lib/supabase-server'
 import { serverFetch } from '@/lib/server-fetch'
@@ -32,7 +32,7 @@ export default async function CheckoutPage({ searchParams }: Props) {
   return (
     <section className="container mx-auto max-w-3xl px-4 py-12">
       <h1 className="font-heading text-h1">Checkout</h1>
-      <p className="mt-2 text-text-muted">Periksa pesanan dan lanjutkan ke pembayaran.</p>
+      <p className="mt-2 text-ink-muted">Periksa pesanan dan lanjutkan ke pembayaran.</p>
       <div className="mt-8">
         <CheckoutClient product={product} />
       </div>

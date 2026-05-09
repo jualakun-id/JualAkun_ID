@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -38,11 +38,11 @@ export function ResetForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label className="text-sm font-medium text-text-muted">Password baru</label>
+        <label className="text-sm font-medium text-ink-muted">Password baru</label>
         <Input type="password" required minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} className="mt-1.5" />
       </div>
       <div>
-        <label className="text-sm font-medium text-text-muted">Konfirmasi password</label>
+        <label className="text-sm font-medium text-ink-muted">Konfirmasi password</label>
         <Input type="password" required minLength={8} value={confirm} onChange={(e) => setConfirm(e.target.value)} className="mt-1.5" />
       </div>
       {error ? (

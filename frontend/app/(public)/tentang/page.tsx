@@ -1,20 +1,20 @@
-export const metadata = { title: 'Tentang Jualakun.id' }
+﻿export const metadata = { title: 'Tentang Jualakun.id' }
 
 export default function TentangPage() {
   return (
     <section className="container mx-auto max-w-3xl px-4 py-12">
       <h1 className="font-heading text-h1">Tentang Jualakun.id</h1>
-      <p className="mt-4 text-text-muted">
+      <p className="mt-4 text-ink-muted">
         Jualakun.id adalah marketplace akun digital terpercaya di Indonesia. Kami menyediakan akun premium
         Netflix, Spotify, ChatGPT, Canva, dan ratusan produk digital lainnya dengan harga terjangkau,
         garansi resmi, dan pengiriman instan.
       </p>
       <h2 className="mt-8 font-heading text-h2">Visi</h2>
-      <p className="mt-2 text-text-muted">
+      <p className="mt-2 text-ink-muted">
         Menjadi platform #1 di Indonesia untuk akses akun digital premium tanpa hambatan.
       </p>
       <h2 className="mt-8 font-heading text-h2">Mengapa Jualakun.id?</h2>
-      <ul className="mt-2 list-disc space-y-2 pl-6 text-text-muted">
+      <ul className="mt-2 list-disc space-y-2 pl-6 text-ink-muted">
         <li>Pengiriman otomatis &lt; 5 menit setelah pembayaran berhasil.</li>
         <li>Garansi penggantian atau refund jika akun bermasalah.</li>
         <li>Support WhatsApp & email 24/7.</li>

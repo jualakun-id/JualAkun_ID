@@ -1,4 +1,4 @@
-import Link from 'next/link'
+﻿import Link from 'next/link'
 import { CheckCircle2 } from 'lucide-react'
 
 export const metadata = { title: 'Verifikasi Email' }
@@ -10,12 +10,12 @@ export default function VerifikasiEmailPage() {
         <CheckCircle2 size={28} strokeWidth={1.5} />
       </div>
       <h1 className="mt-4 font-heading text-h2">Email Terverifikasi</h1>
-      <p className="mt-2 text-sm text-text-muted">
+      <p className="mt-2 text-sm text-ink-muted">
         Akun Anda sudah aktif. Silakan masuk untuk mulai berbelanja.
       </p>
       <Link
         href="/masuk"
-        className="mt-6 inline-flex items-center justify-center rounded-lg bg-primary px-6 py-2.5 text-sm font-semibold text-white hover:bg-primary-hover"
+        className="mt-6 inline-flex items-center justify-center rounded-lg bg-brand-500 px-6 py-2.5 text-sm font-semibold text-white hover:bg-brand-600"
       >
         Masuk Sekarang
       </Link>

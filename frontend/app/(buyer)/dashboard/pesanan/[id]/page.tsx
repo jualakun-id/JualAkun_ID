@@ -42,7 +42,7 @@ export default async function DashboardPesananDetailPage({ params }: Props) {
 
       <div className="mt-8 flex items-center justify-between">
         <div>
-          <div className="font-mono text-sm text-text-subtle">{order.order_number}</div>
+          <div className="font-mono text-sm text-ink-subtle">{order.order_number}</div>
           <h1 className="mt-1 font-heading text-h1">{order.product.name}</h1>
         </div>
         <OrderStatusBadge status={order.status} />
@@ -50,13 +50,13 @@ export default async function DashboardPesananDetailPage({ params }: Props) {
 
       <OrderActions order={order} jwt={session?.access_token ?? null} />
 
-      <div className="mt-6 rounded-xl border border-border bg-surface p-6">
+      <div className="mt-6 rounded-xl border border-gray-200 bg-white p-6">
         <h2 className="font-heading text-h3">Ringkasan Pesanan</h2>
         <dl className="mt-4 space-y-2 text-sm">
           <Row label="Harga produk" value={formatRupiah(order.amount_idr)} />
           {order.discount_idr > 0 ? <Row label={`Diskon ${order.coupon_code ?? ''}`} value={`-${formatRupiah(order.discount_idr)}`} /> : null}
           {order.credit_used_idr > 0 ? <Row label="Kredit dipakai" value={`-${formatRupiah(order.credit_used_idr)}`} /> : null}
-          <hr className="border-border-subtle" />
+          <hr className="border-gray-100" />
           <Row label="Total dibayar" value={formatRupiah(order.total_idr)} bold />
           <Row label="Metode pembayaran" value={order.payment_method ?? '—'} />
           <Row label="Dibuat" value={formatDateTime(order.created_at)} />
@@ -69,7 +69,7 @@ export default async function DashboardPesananDetailPage({ params }: Props) {
             href={order.payment_url}
             target="_blank"
             rel="noopener"
-            className="mt-6 inline-flex items-center justify-center rounded-lg bg-primary px-6 py-2.5 font-semibold text-white hover:bg-primary-hover"
+            className="mt-6 inline-flex items-center justify-center rounded-lg bg-brand-500 px-6 py-2.5 font-semibold text-white hover:bg-brand-600"
           >
             Lanjutkan Pembayaran
           </a>
@@ -77,13 +77,13 @@ export default async function DashboardPesananDetailPage({ params }: Props) {
       </div>
 
       {['delivered', 'confirmed'].includes(order.status) ? null : (
-        <p className="mt-4 text-center text-sm text-text-subtle">
+        <p className="mt-4 text-center text-sm text-ink-subtle">
           Akun akan ditampilkan di sini setelah pembayaran dikonfirmasi.
         </p>
       )}
 
       <div className="mt-6 text-center">
-        <Link href="/dashboard/pesanan" className="text-sm text-text-muted hover:text-text">
+        <Link href="/dashboard/pesanan" className="text-sm text-ink-muted hover:text-brand-600">
           ← Kembali ke daftar pesanan
         </Link>
       </div>
@@ -94,8 +94,8 @@ export default async function DashboardPesananDetailPage({ params }: Props) {
 function Row({ label, value, bold }: { label: string; value: string; bold?: boolean }) {
   return (
     <div className="flex items-center justify-between">
-      <dt className="text-text-muted">{label}</dt>
-      <dd className={bold ? 'font-heading font-bold text-primary' : 'text-text'}>{value}</dd>
+      <dt className="text-ink-muted">{label}</dt>
+      <dd className={bold ? 'font-heading font-bold text-brand-500' : 'text-ink'}>{value}</dd>
     </div>
   )
 }

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { Input } from '@/components/ui/input'
@@ -32,7 +32,7 @@ export function ForgotForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label className="text-sm font-medium text-text-muted">Email</label>
+        <label className="text-sm font-medium text-ink-muted">Email</label>
         <Input
           type="email"
           required

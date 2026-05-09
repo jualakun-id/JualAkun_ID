@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -37,7 +37,7 @@ export function LoginForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label className="text-sm font-medium text-text-muted">Email</label>
+        <label className="text-sm font-medium text-ink-muted">Email</label>
         <Input
           type="email"
           required
@@ -48,7 +48,7 @@ export function LoginForm() {
         />
       </div>
       <div>
-        <label className="text-sm font-medium text-text-muted">Password</label>
+        <label className="text-sm font-medium text-ink-muted">Password</label>
         <Input
           type="password"
           required

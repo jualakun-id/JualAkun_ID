@@ -1,4 +1,4 @@
-import { DashboardTabs } from '@/components/dashboard-tabs'
+﻿import { DashboardTabs } from '@/components/dashboard-tabs'
 import { ReferralCopy } from './referral-copy'
 import { createServerClient } from '@/lib/supabase-server'
 import { serverFetch } from '@/lib/server-fetch'
@@ -23,7 +23,7 @@ export default async function DashboardReferralPage() {
     <section className="container mx-auto px-4 py-8">
       <DashboardTabs active="/dashboard/referral" />
       <h1 className="mt-8 font-heading text-h1">Program Referral</h1>
-      <p className="mt-2 text-text-muted">
+      <p className="mt-2 text-ink-muted">
         Bagikan link referral. Setiap teman yang transaksi pertama, Anda dapat kredit Rp 5.000.
       </p>
 
@@ -36,9 +36,9 @@ export default async function DashboardReferralPage() {
             <Stat label="Total Earned" value={formatRupiah(data.stats.total_earned)} />
           </div>
 
-          <div className="mt-6 rounded-xl border border-border bg-surface p-6">
-            <div className="text-sm text-text-muted">Kode referral kamu</div>
-            <div className="mt-2 font-mono text-h2 text-primary">{data.referral_code}</div>
+          <div className="mt-6 rounded-xl border border-gray-200 bg-white p-6">
+            <div className="text-sm text-ink-muted">Kode referral kamu</div>
+            <div className="mt-2 font-mono text-h2 text-brand-500">{data.referral_code}</div>
             <ReferralCopy link={data.referral_link} />
           </div>
 
@@ -46,15 +46,15 @@ export default async function DashboardReferralPage() {
             <h2 className="font-heading text-h3">Riwayat</h2>
             <div className="mt-3 space-y-2">
               {data.history.length === 0 ? (
-                <div className="rounded-lg border border-border bg-surface p-8 text-center text-text-muted">
+                <div className="rounded-lg border border-gray-200 bg-white p-8 text-center text-ink-muted">
                   Belum ada teman yang daftar via link Anda.
                 </div>
               ) : (
                 data.history.map((h, i) => (
-                  <div key={i} className="flex items-center justify-between rounded-lg border border-border bg-surface p-4">
+                  <div key={i} className="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-4">
                     <div>
-                      <div className="text-text">{h.referred_email}</div>
-                      <div className="text-xs text-text-subtle">{h.status}</div>
+                      <div className="text-ink">{h.referred_email}</div>
+                      <div className="text-xs text-ink-subtle">{h.status}</div>
                     </div>
                     <span className="font-heading font-semibold text-success">+{formatRupiah(h.credit_amount)}</span>
                   </div>
@@ -70,9 +70,9 @@ export default async function DashboardReferralPage() {
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl border border-border bg-surface p-5">
-      <div className="text-sm text-text-muted">{label}</div>
-      <div className="mt-1 font-heading text-h3 text-text">{value}</div>
+    <div className="rounded-xl border border-gray-200 bg-white p-5">
+      <div className="text-sm text-ink-muted">{label}</div>
+      <div className="mt-1 font-heading text-h3 text-ink">{value}</div>
     </div>
   )
 }

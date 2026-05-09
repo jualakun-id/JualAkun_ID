@@ -51,22 +51,22 @@ export default async function ProductDetailPage({ params }: Props) {
 
   return (
     <section className="container mx-auto px-4 py-10">
-      <nav className="text-sm text-text-muted">
-        <Link href="/" className="hover:text-text">Home</Link>
+      <nav className="text-sm text-ink-muted">
+        <Link href="/" className="hover:text-brand-600">Home</Link>
         {product.category ? (
           <>
             {' / '}
-            <Link href={`/${product.category.slug}`} className="hover:text-text">
+            <Link href={`/${product.category.slug}`} className="hover:text-brand-600">
               {product.category.name}
             </Link>
           </>
         ) : null}
         {' / '}
-        <span className="text-text">{product.name}</span>
+        <span className="text-ink">{product.name}</span>
       </nav>
 
       <div className="mt-6 grid gap-10 md:grid-cols-2">
-        <div className="relative aspect-square overflow-hidden rounded-xl border border-border bg-surface-2">
+        <div className="relative aspect-square overflow-hidden rounded-xl border border-gray-200 bg-gray-50">
           {product.thumbnail_url ? (
             <Image
               src={product.thumbnail_url}
@@ -77,7 +77,7 @@ export default async function ProductDetailPage({ params }: Props) {
               priority
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center text-text-subtle">No image</div>
+            <div className="flex h-full w-full items-center justify-center text-ink-subtle">No image</div>
           )}
         </div>
 
@@ -90,7 +90,7 @@ export default async function ProductDetailPage({ params }: Props) {
 
           <h1 className="mt-3 font-heading text-h1">{product.name}</h1>
 
-          <div className="mt-3 flex items-center gap-3 text-sm text-text-muted">
+          <div className="mt-3 flex items-center gap-3 text-sm text-ink-muted">
             {product.rating_count > 0 ? (
               <span className="flex items-center gap-1 text-warning">
                 <Star size={14} strokeWidth={1.5} fill="currentColor" />
@@ -100,15 +100,15 @@ export default async function ProductDetailPage({ params }: Props) {
             <span>· {product.sold_count.toLocaleString('id-ID')} terjual</span>
           </div>
 
-          <div className="mt-6 rounded-xl border border-border bg-surface p-5">
-            <div className="font-heading text-3xl font-bold text-primary">
+          <div className="mt-6 rounded-xl border border-gray-200 bg-white p-5">
+            <div className="font-heading text-3xl font-bold text-brand-500">
               {formatRupiah(product.price)}
             </div>
-            <div className="mt-3 flex flex-col gap-2 text-sm text-text-muted">
+            <div className="mt-3 flex flex-col gap-2 text-sm text-ink-muted">
               <span className="flex items-center gap-2"><Clock size={16} strokeWidth={1.5} /> Durasi {product.duration_days} hari</span>
               <span className="flex items-center gap-2"><Shield size={16} strokeWidth={1.5} /> Garansi {product.guarantee_days} hari</span>
               <span className="flex items-center gap-2"><Zap size={16} strokeWidth={1.5} /> Pengiriman otomatis</span>
-              <span className="text-text-subtle">Stok: {product.stock_count} unit</span>
+              <span className="text-ink-subtle">Stok: {product.stock_count} unit</span>
             </div>
             <BuyButton productId={product.id} disabled={isOutOfStock} />
           </div>
@@ -116,7 +116,7 @@ export default async function ProductDetailPage({ params }: Props) {
           {product.description ? (
             <div className="mt-6">
               <h3 className="font-heading text-h3">Deskripsi</h3>
-              <div className="mt-2 whitespace-pre-line text-text-muted">{product.description}</div>
+              <div className="mt-2 whitespace-pre-line text-ink-muted">{product.description}</div>
             </div>
           ) : null}
         </div>
@@ -127,14 +127,14 @@ export default async function ProductDetailPage({ params }: Props) {
           <h3 className="font-heading text-h2">Ulasan Pembeli</h3>
           <div className="mt-4 space-y-4">
             {product.reviews.map((r) => (
-              <div key={r.id} className="rounded-lg border border-border bg-surface p-4">
+              <div key={r.id} className="rounded-lg border border-gray-200 bg-white p-4">
                 <div className="flex items-center gap-2 text-warning">
                   {Array.from({ length: r.rating }).map((_, i) => (
                     <Star key={i} size={14} strokeWidth={1.5} fill="currentColor" />
                   ))}
-                  <span className="ml-2 text-xs text-text-subtle">{formatDate(r.created_at)}</span>
+                  <span className="ml-2 text-xs text-ink-subtle">{formatDate(r.created_at)}</span>
                 </div>
-                {r.comment ? <p className="mt-2 text-sm text-text">{r.comment}</p> : null}
+                {r.comment ? <p className="mt-2 text-sm text-ink">{r.comment}</p> : null}
               </div>
             ))}
           </div>
@@ -151,8 +151,8 @@ function BuyButton({ productId, disabled }: { productId: string; disabled: boole
       aria-disabled={disabled}
       className={`mt-5 inline-flex w-full items-center justify-center rounded-lg px-6 py-3 font-semibold transition-colors ${
         disabled
-          ? 'pointer-events-none bg-surface-2 text-text-subtle'
-          : 'bg-primary text-white hover:bg-primary-hover'
+          ? 'pointer-events-none bg-gray-50 text-ink-subtle'
+          : 'bg-brand-500 text-white hover:bg-brand-600'
       }`}
     >
       {disabled ? 'Stok Habis' : 'Beli Sekarang'}
