@@ -43,7 +43,7 @@ export function LandingProductCard({
       </div>
 
       {/* Content */}
-      <div className="px-4 py-4 flex-1">
+      <div className="px-4 py-4 flex-1 flex flex-col items-center text-center">
         <h3 className="font-bold text-ink text-base leading-tight">{product.name}</h3>
         {product.category && (
           <span className="mt-1.5 inline-block text-[11px] font-medium text-brand-700 bg-brand-50 px-2 py-0.5 rounded-full">
@@ -51,7 +51,7 @@ export function LandingProductCard({
           </span>
         )}
 
-        <div className="mt-3 flex items-baseline gap-2">
+        <div className="mt-3 flex items-baseline justify-center gap-2">
           <span className="text-ink font-bold text-lg">
             Rp {product.price.toLocaleString('id-ID')}
           </span>
@@ -62,7 +62,7 @@ export function LandingProductCard({
           )}
         </div>
 
-        <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-ink-subtle">
+        <div className="mt-2 flex flex-wrap items-center justify-center gap-2 text-xs text-ink-subtle">
           {product.duration_label && (
             <span className="inline-flex items-center gap-1 bg-brand-50 text-brand-700 px-2 py-0.5 rounded-full font-medium">
               {product.duration_label}
