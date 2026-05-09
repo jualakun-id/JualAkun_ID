@@ -67,11 +67,11 @@ export function Logo({
       </div>
       <div className="flex flex-col leading-none">
         <div className={`font-extrabold ${s.wordmark} ${wordmarkColor} tracking-tight`}>
-          Jualakun<span className={accentColor}>.id</span>
+          Jualakun<span className={`${accentColor} font-extrabold`}>.id</span>
         </div>
         {showTagline && (
           <div
-            className={`${s.tagline} ${taglineColor} font-semibold italic ${s.taglineMt} tracking-tight whitespace-nowrap`}
+            className={`${s.tagline} ${taglineColor} font-extrabold italic ${s.taglineMt} tracking-tight whitespace-nowrap`}
           >
             Anti Mainstream, Tetap Asli.
           </div>
