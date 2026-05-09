@@ -249,7 +249,7 @@ export default async function HomePage() {
             <TestimonialCard
               name="Rizki Pratama"
               handle="@rizkipratama"
-              avatarColor="#0089A8"
+              avatarColor="#06B6D4"
               rating={5}
               text="Beli Netflix di sini udah 3 bulan, lancar terus. Harganya jauh lebih murah dari resmi, garansi ada, support fast respon. Recommended!"
             />

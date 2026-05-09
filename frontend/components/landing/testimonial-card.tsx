@@ -5,7 +5,7 @@ export function TestimonialCard({
   handle,
   text,
   rating = 5,
-  avatarColor = '#0089A8',
+  avatarColor = '#06B6D4',
 }: {
   name: string
   handle: string
