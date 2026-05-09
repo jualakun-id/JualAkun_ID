@@ -76,7 +76,7 @@ export default async function HomePage() {
               </p>
               <div className="mt-8 flex flex-wrap items-center gap-4">
                 <Link
-                  href="/streaming"
+                  href="/#streaming"
                   className="bg-brand-700 hover:bg-brand-800 text-white font-semibold px-8 py-3.5 rounded-lg shadow-lg shadow-brand-900/20 transition-colors text-base inline-flex items-center gap-2"
                 >
                   Lihat Layanan
@@ -280,17 +280,6 @@ export default async function HomePage() {
             </p>
           </div>
           <FAQAccordion items={FAQS} />
-          <div className="mt-8 text-center">
-            <Link
-              href="/faq"
-              className="text-brand-600 font-semibold hover:text-brand-700 hover:underline text-sm inline-flex items-center gap-1"
-            >
-              Lihat semua pertanyaan
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-              </svg>
-            </Link>
-          </div>
         </div>
       </section>
 
@@ -334,20 +323,9 @@ function CategorySection({ section, bgAlt }: { section: SectionData; bgAlt: bool
       className={`scroll-mt-20 py-16 md:py-20 ${bgAlt ? 'bg-brand-50' : 'bg-white'}`}
     >
       <div className="container mx-auto px-4 max-w-7xl">
-        <div className="flex flex-wrap items-end justify-between gap-4 mb-8">
-          <div>
-            <h2 className="text-3xl md:text-4xl font-bold text-ink">{section.label}</h2>
-            <p className="text-ink-subtle mt-2 max-w-xl">{section.desc}</p>
-          </div>
-          <Link
-            href={`/${section.slug}`}
-            className="text-brand-600 hover:text-brand-700 font-semibold text-sm inline-flex items-center gap-1 shrink-0"
-          >
-            Lihat semua
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-            </svg>
-          </Link>
+        <div className="text-center mb-10">
+          <h2 className="text-3xl md:text-4xl font-bold text-ink">{section.label}</h2>
+          <p className="text-ink-subtle mt-3 max-w-xl mx-auto">{section.desc}</p>
         </div>
 
         {products.length ? (
@@ -369,23 +347,35 @@ function CategorySection({ section, bgAlt }: { section: SectionData; bgAlt: bool
 
 const FAQS = [
   {
+    q: 'Bagaimana cara membeli akun di JualAkun?',
+    a: 'Pilih produk di salah satu kategori → klik "Pesan Sekarang" → login/daftar → bayar via Duitku → akun otomatis terkirim ke dashboard kamu dalam < 5 menit.',
+  },
+  {
     q: 'Kapan akun aktif setelah pembayaran?',
-    a: 'Akun otomatis terkirim ke dashboard kamu dalam hitungan menit setelah pembayaran berhasil dikonfirmasi. Pemberitahuan juga akan dikirim via email dan WhatsApp.',
+    a: 'Akun otomatis terkirim ke dashboard kamu dalam hitungan menit setelah pembayaran berhasil dikonfirmasi. Notifikasi juga akan dikirim via email dan WhatsApp.',
+  },
+  {
+    q: 'Apakah akun yang dijual legal dan aman?',
+    a: 'Ya. Kami menjual akun premium yang sah dari distributor resmi, bukan akun bajakan. Setiap akun digaransi sesuai durasi yang tertera di halaman produk.',
   },
   {
     q: 'Apa itu garansi dan bagaimana cara klaimnya?',
-    a: 'Setiap produk memiliki masa garansi tertulis (umumnya 14–30 hari). Jika akun bermasalah dalam masa garansi, kamu bisa klaim langsung dari dashboard — kami akan ganti akun atau refund penuh.',
+    a: 'Setiap produk memiliki masa garansi (umumnya 14–30 hari). Jika akun bermasalah dalam masa garansi, klik tombol "Klaim Garansi" di halaman pesanan, sertakan screenshot — admin akan kirim akun pengganti dalam 1×24 jam.',
   },
   {
     q: 'Metode pembayaran apa saja yang tersedia?',
-    a: 'Kami menerima transfer bank (BCA, Mandiri, BRI, BNI), e-wallet (GoPay, OVO, DANA, ShopeePay), QRIS, dan pembayaran retail (Indomaret, Alfamart) via Duitku Payment Gateway.',
+    a: 'Semua metode di Duitku: GoPay, OVO, DANA, ShopeePay, QRIS, Virtual Account (BCA, BNI, BRI, Mandiri, Permata), retail (Indomaret, Alfamart), dan kartu kredit.',
+  },
+  {
+    q: 'Berapa lama masa garansi yang berlaku?',
+    a: 'Garansi default 30 hari untuk akun streaming, AI, dan produktif. Cek halaman detail produk untuk durasi spesifik per layanan.',
   },
   {
     q: 'Bagaimana jika akun yang saya beli bermasalah?',
     a: 'Tenang — selama dalam masa garansi, hubungi CS kami di dashboard atau WhatsApp. Kami akan kirim akun pengganti atau refund penuh sesuai pilihan kamu.',
   },
   {
-    q: 'Apakah akun yang dijual legal dan aman?',
-    a: 'Ya. Semua akun bersumber dari distributor resmi dan licensed. Privasi kamu juga aman — tidak ada data pribadi yang dibagikan ke pihak ketiga.',
+    q: 'Apakah ada program referral?',
+    a: 'Ya. Setiap teman yang daftar via link referral kamu dan transaksi pertama, kamu dapat kredit Rp 5.000 yang bisa langsung dipakai belanja di JualAkun.',
   },
 ]

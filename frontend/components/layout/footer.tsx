@@ -28,7 +28,7 @@ export function Footer() {
           title="JualAkun"
           links={[
             { href: '/tentang', label: 'Tentang Kami' },
-            { href: '/faq', label: 'Cara Pesan' },
+            { href: '/#faq', label: 'Cara Pesan' },
             { href: '/syarat-ketentuan', label: 'Syarat & Ketentuan' },
             { href: '/kebijakan-privasi', label: 'Kebijakan Privasi' },
             { href: '/kontak', label: 'Laporan Kendala' },
@@ -38,11 +38,10 @@ export function Footer() {
         <FooterColumn
           title="Produk"
           links={[
-            { href: '/streaming', label: 'Streaming' },
-            { href: '/gaming', label: 'Gaming' },
-            { href: '/ai-produktif', label: 'AI & Produktif' },
-            { href: '/vpn', label: 'VPN' },
-            { href: '/edukasi', label: 'Edukasi' },
+            { href: '/#streaming', label: 'Streaming' },
+            { href: '/#gaming', label: 'Gaming' },
+            { href: '/#ai-produktif', label: 'AI & Produktif' },
+            { href: '/#faq', label: 'FAQ' },
           ]}
         />
 
