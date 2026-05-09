@@ -2,6 +2,7 @@ name = "jualakun-backend"
 main = "src/index.ts"
 compatibility_date = "2025-01-15"
 compatibility_flags = ["nodejs_compat"]
+account_id = "821071ae5e28d3de9dc3635acd10db72"
 
 # Non-secret env vars only — secrets via: wrangler secret put NAMA_KEY
 [vars]
