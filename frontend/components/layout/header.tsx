@@ -91,9 +91,9 @@ export function Header() {
         </button>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu — line-art card style */}
       {menuOpen && (
-        <div className="border-t border-gray-100 bg-white px-4 py-4 md:hidden animate-fade-in">
+        <div className="md:hidden bg-white border-y-2 border-black px-4 py-5 animate-fade-in shadow-[0_6px_0_rgba(0,0,0,0.9)] relative">
           <nav className="flex flex-col gap-1 text-sm font-medium" aria-label="Mobile">
             {NAV_ITEMS.map((item) => {
               const active = isActive(item.href)
@@ -111,7 +111,7 @@ export function Header() {
                 </Link>
               )
             })}
-            <hr className="border-gray-100 my-2" />
+            <hr className="border-gray-200 my-3 border-dashed" />
             <Link
               href="/masuk"
               onClick={() => setMenuOpen(false)}
@@ -122,7 +122,7 @@ export function Header() {
             <Link
               href="/daftar"
               onClick={() => setMenuOpen(false)}
-              className="mt-1 px-5 py-2.5 rounded-lg border-2 border-black bg-brand-700 text-white text-center font-semibold shadow-[0_3px_0_rgba(0,0,0,0.9)] active:translate-y-1 active:shadow-[0_1px_0_rgba(0,0,0,0.9)]"
+              className="mt-2 px-5 py-2.5 rounded-lg border-2 border-black bg-brand-700 text-white text-center font-semibold shadow-[0_3px_0_rgba(0,0,0,0.9)] active:translate-y-1 active:shadow-[0_1px_0_rgba(0,0,0,0.9)]"
             >
               Daftar Sekarang
             </Link>
