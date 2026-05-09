@@ -67,12 +67,11 @@ export default async function HomePage() {
                 Anti Mainstream, Tetap Asli.
               </span>
               <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-white leading-[1.05] tracking-tight">
-                Akun Digital<br />
-                Murah &amp;{' '}
-                <span className="text-brand-900">Langsung Aktif</span>
+                Akun Langka,<br />
+                <span className="text-brand-900">Tetap Asli</span> &amp; Aktif.
               </h1>
               <p className="mt-5 sm:mt-6 text-white/90 text-base sm:text-lg max-w-md mx-auto md:mx-0 leading-relaxed">
-                Netflix, Spotify, ChatGPT, Canva, dan ratusan layanan premium lainnya — harga hemat, garansi resmi, kirim instan ke dashboard.
+                Akun premium yang sulit kamu temui di tempat lain — Cursor, Claude Pro, ChatGPT Plus, dan layanan eksklusif lainnya. <strong className="text-white">Asli</strong>, bergaransi, kirim instan.
               </p>
               <div className="mt-7 sm:mt-8 flex flex-wrap items-center justify-center md:justify-start gap-4">
                 <Link
@@ -95,16 +94,16 @@ export default async function HomePage() {
               {/* Trust indicators */}
               <div className="mt-8 sm:mt-10 flex flex-wrap items-center justify-center md:justify-start gap-x-5 gap-y-2 text-white/85 text-xs">
                 <div className="flex items-center gap-1.5">
-                  <Shield className="w-4 h-4" aria-hidden="true" />
-                  <span>100% Garansi</span>
+                  <CheckCircle className="w-4 h-4" aria-hidden="true" />
+                  <span>100% Asli &amp; Resmi</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <Zap className="w-4 h-4" aria-hidden="true" />
                   <span>Kirim &lt; 5 menit</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <Headphones className="w-4 h-4" aria-hidden="true" />
-                  <span>Support 24/7</span>
+                  <Shield className="w-4 h-4" aria-hidden="true" />
+                  <span>Garansi Terjamin</span>
                 </div>
               </div>
             </div>
@@ -128,16 +127,16 @@ export default async function HomePage() {
       <section className="bg-white py-16 md:py-20">
         <div className="container mx-auto px-4 max-w-6xl text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-ink">
-            Bergabung dengan Jualakun.id!
+            Bukan Marketplace Biasa
           </h2>
           <p className="text-ink-subtle mt-3 max-w-xl mx-auto">
-            Nikmati layanan premium dengan lebih hemat, aman, dan pastinya terpercaya — bersama ribuan pengguna setia.
+            Kami fokus ke akun yang jarang dijual di tempat lain — semua resmi, semua bergaransi.
           </p>
           <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-5">
-            <StatCard variant="blue"   value="10+"   label="Layanan Tersedia"  icon={Users} />
-            <StatCard variant="red"    value="500+"  label="Target Transaksi"  icon={TrendingUp} />
-            <StatCard variant="green"  value="24/7"  label="Support Aktif"     icon={Headphones} />
-            <StatCard variant="yellow" value="4.8/5" label="Rating Kepuasan"   icon={Award} />
+            <StatCard variant="blue"   value="10+"    label="Akun Eksklusif"    icon={Award} />
+            <StatCard variant="red"    value="100%"   label="Asli &amp; Resmi"  icon={CheckCircle} />
+            <StatCard variant="green"  value="< 5m"   label="Kirim Otomatis"    icon={Zap} />
+            <StatCard variant="yellow" value="24/7"   label="Support Cepat"     icon={Headphones} />
           </div>
         </div>
       </section>
@@ -147,17 +146,17 @@ export default async function HomePage() {
         <div className="container mx-auto px-4 max-w-6xl">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-ink">
-              Manfaat Yang Kamu Dapatkan
+              Kenapa Beda dari yang Lain?
             </h2>
             <p className="text-ink-subtle mt-3">
-              Kenapa ribuan pengguna memilih Jualakun.id untuk langganan digital mereka.
+              Ini yang bikin Jualakun.id worth di-cek sebelum kamu pesan di tempat lain.
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-10 lg:gap-16 items-center">
             <div className="space-y-6 order-2 md:order-1">
-              <BenefitItem icon={Percent}       title="Hemat Hingga 70%"     desc="Harga jauh lebih murah dari langganan resmi." />
-              <BenefitItem icon={Lock}          title="Privasi Aman"          desc="Data pribadi terenkripsi, akun tetap miliki kamu." />
-              <BenefitItem icon={MessageCircle} title="CS Cepat Tanggap"      desc="Tim support siap bantu via WhatsApp 24 jam." />
+              <BenefitItem icon={Award}         title="Akun yang Sulit Dicari" desc="Kami stock layanan yang jarang ada di marketplace lain." />
+              <BenefitItem icon={CheckCircle}   title="100% Asli & Resmi"      desc="Bukan akun bajakan. Semua bersumber dari distributor licensed." />
+              <BenefitItem icon={Percent}       title="Lebih Hemat 60–70%"     desc="Harga di bawah langganan resmi langsung." />
             </div>
 
             {/* Center illustration */}
@@ -178,9 +177,9 @@ export default async function HomePage() {
             </div>
 
             <div className="space-y-6 order-3">
-              <BenefitItem icon={CheckCircle} title="100% Legal & Resmi" desc="Akun bersumber dari distributor resmi terpercaya." />
-              <BenefitItem icon={CreditCard}  title="Bayar Apa Saja"     desc="Transfer bank, e-wallet, QRIS, virtual account." />
-              <BenefitItem icon={Bell}        title="Notifikasi Otomatis" desc="Update status pesanan via email & WhatsApp." />
+              <BenefitItem icon={Lock}          title="Privasi Aman"            desc="Data pribadi terenkripsi, tidak dibagikan ke pihak ketiga." />
+              <BenefitItem icon={CreditCard}    title="Bayar Apa Saja"          desc="Transfer bank, e-wallet, QRIS, virtual account, retail." />
+              <BenefitItem icon={MessageCircle} title="CS Real Person"          desc="Bukan bot. Tim support manusia siap bantu kapan saja." />
             </div>
           </div>
         </div>
@@ -213,25 +212,25 @@ export default async function HomePage() {
       {/* ── TRUST ──────────────────────────────────────────── */}
       <section className="bg-brand-50 py-16">
         <div className="container mx-auto px-4 max-w-5xl text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-ink mb-4">Kenapa Pilih Jualakun.id?</h2>
+          <h2 className="text-3xl md:text-4xl font-bold text-ink mb-4">Yang Bikin Kami Beda</h2>
           <p className="text-ink-subtle mb-12 max-w-xl mx-auto">
-            Tiga alasan utama kenapa kami jadi pilihan terpercaya untuk akun digital.
+            Bukan janji marketing — ini standar yang kami pegang untuk setiap pesanan.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             <TrustCard
-              icon={Zap}
-              title="Instan"
-              desc="Akun terkirim otomatis ke dashboard dalam hitungan menit setelah pembayaran."
+              icon={Award}
+              title="Akun Langka"
+              desc="Layanan yang jarang dijual di marketplace lain — Cursor, Claude Pro, Linear, dan lainnya."
+            />
+            <TrustCard
+              icon={CheckCircle}
+              title="Bukan Akun Bajakan"
+              desc="Semua bersumber dari distributor resmi & licensed. Asli, bisa dicek validitasnya."
             />
             <TrustCard
               icon={Shield}
-              title="Bergaransi"
-              desc="Garansi penggantian akun atau refund penuh jika ada masalah dalam masa berlaku."
-            />
-            <TrustCard
-              icon={Headphones}
-              title="Support 24/7"
-              desc="Tim CS siap membantu via WhatsApp dan email kapan saja kamu butuh."
+              title="Garansi Sampai Tuntas"
+              desc="Akun bermasalah? Ganti baru atau refund penuh, tanpa drama."
             />
           </div>
         </div>
@@ -291,10 +290,10 @@ export default async function HomePage() {
           <div className="flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
             <div>
               <h3 className="text-2xl md:text-3xl font-bold text-white">
-                Siap mulai berlangganan hemat?
+                Cari yang nggak ada di tempat lain?
               </h3>
               <p className="text-white/85 mt-1 text-base">
-                Daftar gratis sekarang dan dapatkan akses ke semua produk terbaik.
+                Daftar gratis dan langsung akses koleksi akun langka kami.
               </p>
             </div>
             <Link
