@@ -8,9 +8,9 @@ const SIZES: Record<
   { mark: number; wordmark: string; tagline: string; gap: string; taglineMt: string }
 > = {
   // Sized so wordmark width ≈ tagline width below it (visual alignment)
-  sm: { mark: 32, wordmark: 'text-lg',    tagline: 'text-[10px]', gap: 'gap-2',   taglineMt: 'mt-0.5' },
-  md: { mark: 44, wordmark: 'text-2xl',   tagline: 'text-xs',     gap: 'gap-2',   taglineMt: 'mt-0.5' },
-  lg: { mark: 56, wordmark: 'text-3xl',   tagline: 'text-sm',     gap: 'gap-2.5', taglineMt: 'mt-1' },
+  sm: { mark: 38, wordmark: 'text-lg',    tagline: 'text-[10px]', gap: 'gap-1.5', taglineMt: 'mt-0' },
+  md: { mark: 56, wordmark: 'text-2xl',   tagline: 'text-xs',     gap: 'gap-1.5', taglineMt: 'mt-0' },
+  lg: { mark: 72, wordmark: 'text-3xl',   tagline: 'text-sm',     gap: 'gap-2',   taglineMt: 'mt-0' },
 }
 
 const LOGO_DOODLE_URL =
@@ -54,13 +54,13 @@ export function Logo({
 
   const inner = (
     <div className={`inline-flex items-center ${s.gap} ${className}`}>
-      <div className="relative shrink-0" style={{ width: s.mark, height: s.mark }}>
+      <div className="relative shrink-0 overflow-visible" style={{ width: s.mark, height: s.mark }}>
         <Image
           src={LOGO_DOODLE_URL}
           alt="Jualakun.id logo"
           fill
           sizes={`${s.mark}px`}
-          className="object-contain"
+          className="object-contain scale-125"
           priority
         />
       </div>
