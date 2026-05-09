@@ -27,7 +27,7 @@ export default function KebijakanPrivasiPage() {
 
       <h2 className="mt-6 font-heading text-h2 text-text">4. Pihak Ketiga</h2>
       <p className="mt-2">
-        Kami menggunakan: Supabase (database/auth), Midtrans (payment), WAHA (WhatsApp), Resend
+        Kami menggunakan: Supabase (database/auth), Duitku (payment), WAHA (WhatsApp), Resend
         (email), Cloudflare (hosting). Setiap pihak punya kebijakan privasi sendiri.
       </p>
 

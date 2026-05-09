@@ -21,7 +21,7 @@ export default function SyaratKetentuanPage() {
       <h2 className="mt-6 font-heading text-h2 text-text">3. Pembelian &amp; Pengiriman</h2>
       <p className="mt-2">
         Akun digital akan dikirim otomatis ke dashboard buyer setelah pembayaran berhasil dikonfirmasi
-        oleh Midtrans. Pesanan yang tidak dibayar dalam 24 jam akan otomatis kedaluwarsa.
+        oleh Duitku. Pesanan yang tidak dibayar dalam 24 jam akan otomatis kedaluwarsa.
       </p>
 
       <h2 className="mt-6 font-heading text-h2 text-text">4. Garansi</h2>

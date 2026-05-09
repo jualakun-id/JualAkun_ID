@@ -3,9 +3,11 @@ export type Bindings = {
   SUPABASE_ANON_KEY: string
   SUPABASE_SERVICE_ROLE_KEY: string
   ENCRYPTION_KEY: string
-  MIDTRANS_SERVER_KEY: string
-  MIDTRANS_CLIENT_KEY: string
-  MIDTRANS_IS_PRODUCTION: string
+  DUITKU_MERCHANT_CODE: string
+  DUITKU_API_KEY: string
+  DUITKU_IS_PRODUCTION: string
+  PUBLIC_API_URL: string
+  PUBLIC_SITE_URL: string
   WAHA_BASE_URL: string
   WAHA_API_KEY: string
   WAHA_SESSION: string

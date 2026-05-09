@@ -18,7 +18,7 @@ type OrderDetail = {
   coupon_code: string | null
   status: OrderStatus
   payment_method: string | null
-  payment_snap_url: string | null
+  payment_url: string | null
   delivered_at: string | null
   buyer_confirmed_at: string | null
   guarantee_expires_at: string | null
@@ -64,9 +64,9 @@ export default async function DashboardPesananDetailPage({ params }: Props) {
           {order.guarantee_expires_at ? <Row label="Garansi sampai" value={formatDateTime(order.guarantee_expires_at)} /> : null}
         </dl>
 
-        {order.status === 'pending_payment' && order.payment_snap_url ? (
+        {order.status === 'pending_payment' && order.payment_url ? (
           <a
-            href={order.payment_snap_url}
+            href={order.payment_url}
             target="_blank"
             rel="noopener"
             className="mt-6 inline-flex items-center justify-center rounded-lg bg-primary px-6 py-2.5 font-semibold text-white hover:bg-primary-hover"

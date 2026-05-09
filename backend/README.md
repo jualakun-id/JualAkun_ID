@@ -23,7 +23,7 @@ npm run dev                       # wrangler dev → http://localhost:8787
 - `src/middleware/` — env (Bindings → process.env), cors, rate-limit, auth, admin, cron
 - `src/routes/` — endpoint groups (publik + auth-required + admin)
 - `src/services/` — business logic (payment, notification, crypto, delivery)
-- `src/lib/` — Supabase client, Midtrans SDK wrapper
+- `src/lib/` — Supabase client, Duitku client (inquiry + MD5 signature)
 - `src/types/` — `Bindings`, `Variables`, `ApiError`
 
 ## Konvensi
@@ -33,7 +33,7 @@ npm run dev                       # wrangler dev → http://localhost:8787
 - Buyer endpoints pakai `createUserClient(jwt)` (RLS aktif)
 - Admin / cron / webhook pakai `createAdminClient()` (bypass RLS)
 - Stok akun WAJIB lewat RPC `deliver_order_account` — jangan UPDATE langsung
-- Webhook Midtrans wajib verifikasi SHA-512 signature dulu, selalu return 200
+- Callback Duitku (`POST /payment/callback`) wajib verifikasi MD5 signature dulu (formula `MD5(merchantCode + amount + merchantOrderId + apiKey)`), body x-www-form-urlencoded, selalu return 200
 
 ## Cron triggers
 
@@ -50,8 +50,8 @@ wrangler secret put SUPABASE_URL
 wrangler secret put SUPABASE_ANON_KEY
 wrangler secret put SUPABASE_SERVICE_ROLE_KEY
 wrangler secret put ENCRYPTION_KEY
-wrangler secret put MIDTRANS_SERVER_KEY
-wrangler secret put MIDTRANS_CLIENT_KEY
+wrangler secret put DUITKU_MERCHANT_CODE
+wrangler secret put DUITKU_API_KEY
 wrangler secret put WAHA_BASE_URL
 wrangler secret put WAHA_API_KEY
 wrangler secret put WAHA_SESSION

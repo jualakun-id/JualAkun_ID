@@ -7,7 +7,7 @@ Platform marketplace akun digital Indonesia, admin-managed, domain `jualakun.id`
 - **Frontend:** Next.js 15 App Router + Tailwind CSS + Shadcn/ui — deploy Vercel
 - **Backend:** Hono + Cloudflare Workers — `wrangler dev` untuk local
 - **Database:** Supabase (PostgreSQL + Auth + Storage)
-- **Payment:** Midtrans (Snap)
+- **Payment:** Duitku (POP popup) — sebelumnya Midtrans, di-migrasi 2026-05-09 karena Midtrans menolak pendaftaran merchant
 - **Email:** Resend
 - **WA Notif:** WAHA (self-hosted WhatsApp HTTP API)
 - **Language:** TypeScript throughout
@@ -104,7 +104,8 @@ RPC penting (jangan bypass dengan raw SQL kecuali debugging):
 Template lengkap di `.env.example`. Variabel kritis:
 - `ENCRYPTION_KEY` — harus sama di semua deployment, jangan pernah rotate tanpa migrate data
 - `SUPABASE_SERVICE_ROLE_KEY` — HANYA di backend, jangan pernah di frontend atau commit ke git
-- `MIDTRANS_SERVER_KEY` — HANYA di backend
+- `DUITKU_API_KEY` & `DUITKU_MERCHANT_CODE` — HANYA di backend
+- `PUBLIC_API_URL` & `PUBLIC_SITE_URL` — dipakai backend untuk menyusun `callbackUrl` & `returnUrl` saat inquiry Duitku
 
 ## Hal yang Perlu Diingat
 
@@ -115,7 +116,8 @@ Template lengkap di `.env.example`. Variabel kritis:
 - Review hanya bisa dibuat setelah order status `confirmed` (bukan `delivered`)
 - Checkout **wajib login** — tidak ada guest checkout (keputusan final di PRD V1.0)
 - Gunakan `envMiddleware` (Cloudflare bindings → process.env) agar service code bisa pakai `process.env` standar
-- Webhook Midtrans: validasi SHA-512 signature dulu sebelum proses apapun, selalu return HTTP 200
+- Callback Duitku (`POST /payment/callback`): body `application/x-www-form-urlencoded`, validasi MD5 signature dulu (`MD5(merchantCode + amount + merchantOrderId + apiKey)` — perhatikan urutan amount/merchantOrderId yang tertukar dari formula inquiry) sebelum proses apapun, selalu return HTTP 200
+- Frontend pakai Duitku POP SDK (`window.checkout.process(reference, callbacks)`) — `reference` didapat dari backend `POST /checkout/create-order`, bukan order_number
 
 ## Skills Tersedia
 

@@ -1,39 +1,47 @@
 import { Hono } from 'hono'
 import { zValidator } from '@hono/zod-validator'
 import { z } from 'zod'
-import { PaymentService } from '@/services/payment.service'
+import { PaymentService, type DuitkuCallback } from '@/services/payment.service'
 import type { AppEnv } from '@/types/bindings'
 
 export const paymentRoute = new Hono<AppEnv>()
 
 /**
- * Midtrans webhook — public endpoint, signature-verified inside the service.
- * Always returns HTTP 200 so Midtrans doesn't retry on internal failures
+ * Duitku callback — public endpoint, signature-verified inside the service.
+ * Always returns HTTP 200 so Duitku doesn't retry on internal failures
  * (we self-recover via cron retry-notifications + admin alerts).
  *
- * Spec: docs/api-spec.md § POST /payment/webhook
+ * Body is application/x-www-form-urlencoded — see docs/api-spec.md.
  */
-const midtransNotifSchema = z.object({
-  order_id: z.string(),
-  transaction_id: z.string(),
-  transaction_status: z.string(),
-  fraud_status: z.string().optional(),
-  status_code: z.string(),
-  gross_amount: z.string(),
-  payment_type: z.string().optional(),
-  signature_key: z.string(),
-  settlement_time: z.string().optional(),
+const duitkuCallbackSchema = z.object({
+  merchantCode: z.string(),
+  amount: z.string(),
+  merchantOrderId: z.string(),
+  signature: z.string(),
+  reference: z.string(),
+  resultCode: z.string(),
+  paymentCode: z.string().optional(),
+  productDetail: z.string().optional(),
+  additionalParam: z.string().optional(),
+  merchantUserId: z.string().optional(),
+  publisherOrderId: z.string().optional(),
+  spUserHash: z.string().optional(),
+  settlementDate: z.string().optional(),
+  issuerCode: z.string().optional(),
 })
 
-paymentRoute.post('/webhook', zValidator('json', midtransNotifSchema), async (c) => {
-  const notif = c.req.valid('json')
+paymentRoute.post('/callback', zValidator('form', duitkuCallbackSchema), async (c) => {
+  const notif = c.req.valid('form') as DuitkuCallback
   try {
-    const outcome = await PaymentService.processWebhook(notif)
+    const outcome = await PaymentService.processCallback(notif)
     if (!outcome.ok) {
-      console.warn('[payment/webhook] rejected', { reason: outcome.reason, order_id: notif.order_id })
+      console.warn('[payment/callback] rejected', {
+        reason: outcome.reason,
+        merchantOrderId: notif.merchantOrderId,
+      })
     }
   } catch (err) {
-    console.error('[payment/webhook] unhandled', err)
+    console.error('[payment/callback] unhandled', err)
   }
   return c.json({ ok: true }, 200)
 })

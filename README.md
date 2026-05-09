@@ -8,7 +8,7 @@
 - **Frontend** — Next.js 15 App Router + Tailwind CSS · [`frontend/`](frontend/)
 - **Backend** — Hono + Cloudflare Workers · [`backend/`](backend/)
 - **Database** — Supabase (PostgreSQL + Auth + Storage) · [`supabase/migrations/`](supabase/migrations/)
-- **Payment** — Midtrans (Snap)
+- **Payment** — Duitku (POP)
 - **WA Notif** — WAHA (self-hosted WhatsApp HTTP API)
 - **Email** — Resend
 

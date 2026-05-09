@@ -1,7 +1,7 @@
 const FAQS = [
   {
     q: 'Bagaimana cara membeli akun di JualAkun?',
-    a: 'Pilih produk → klik "Beli Sekarang" → login/daftar → bayar via Midtrans → akun otomatis terkirim ke dashboard Anda dalam < 5 menit.',
+    a: 'Pilih produk → klik "Beli Sekarang" → login/daftar → bayar via Duitku → akun otomatis terkirim ke dashboard Anda dalam < 5 menit.',
   },
   {
     q: 'Apakah akunnya legal & aman?',
@@ -13,7 +13,7 @@ const FAQS = [
   },
   {
     q: 'Metode pembayaran apa saja yang didukung?',
-    a: 'Semua metode di Midtrans: GoPay, OVO, DANA, ShopeePay, QRIS, Virtual Account (BCA, BNI, BRI, Mandiri, Permata), dan kartu kredit.',
+    a: 'Semua metode di Duitku: GoPay, OVO, DANA, ShopeePay, QRIS, Virtual Account (BCA, BNI, BRI, Mandiri, Permata), dan kartu kredit.',
   },
   {
     q: 'Berapa lama garansinya?',

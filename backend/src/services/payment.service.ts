@@ -1,30 +1,41 @@
 import { createAdminClient } from '@/lib/supabase'
-import { createSnapTransaction, verifyMidtransSignature } from '@/lib/midtrans'
+import { createInquiry, verifyCallbackSignature } from '@/lib/duitku'
 import { ApiError } from '@/types/errors'
 import { DeliveryService } from './delivery.service'
 import { CryptoService } from './crypto.service'
 import { NotificationService } from './notification.service'
 import { templates } from '@/templates/messages'
 
-type SnapResult = {
-  snap_token: string
-  snap_url: string
+type CreateTransactionResult = {
+  reference: string
+  payment_url: string
+  va_number: string | null
+  qr_string: string | null
 }
 
-type MidtransNotification = {
-  order_id: string
-  transaction_id: string
-  transaction_status: string
-  fraud_status?: string
-  status_code: string
-  gross_amount: string
-  payment_type?: string
-  signature_key: string
-  settlement_time?: string
+/**
+ * Subset of Duitku callback fields we act on.
+ * Full list: https://docs.duitku.com/api/id (Callback API)
+ */
+export type DuitkuCallback = {
+  merchantCode: string
+  amount: string
+  merchantOrderId: string
+  signature: string
+  reference: string
+  resultCode: string // '00' success, '01' failed
+  paymentCode?: string
+  productDetail?: string
+  additionalParam?: string
+  merchantUserId?: string
+  publisherOrderId?: string
+  spUserHash?: string
+  settlementDate?: string
+  issuerCode?: string
 }
 
 type WebhookOutcome =
-  | { ok: true; effect: 'paid' | 'expired' | 'cancelled' | 'refunded' | 'pending' | 'noop' }
+  | { ok: true; effect: 'paid' | 'failed' | 'noop' }
   | { ok: false; reason: string }
 
 type OrderForPayment = {
@@ -40,10 +51,11 @@ const TERMINAL_PAID_STATUSES = new Set(['paid', 'delivering', 'delivered', 'conf
 
 export class PaymentService {
   /**
-   * Create a Midtrans Snap token for an order in pending_payment state.
-   * Persists snap_token + snap_url + payment_external_id back to the order row.
+   * Create a Duitku transaction for an order in pending_payment state.
+   * Persists reference + paymentUrl back to the order row so the buyer can
+   * resume payment from their order detail page.
    */
-  static async createSnapForOrder(orderId: string): Promise<SnapResult> {
+  static async createTransactionForOrder(orderId: string): Promise<CreateTransactionResult> {
     const supabase = createAdminClient()
     const { data: order, error } = await supabase
       .from('orders')
@@ -71,58 +83,77 @@ export class PaymentService {
     const profile = Array.isArray(profileRel) ? profileRel[0] : profileRel
 
     const { data: authUser } = await supabase.auth.admin.getUserById(order.user_id)
+    const email = authUser.user?.email ?? `${order.order_number.toLowerCase()}@no-reply.jualakun.id`
+    const fullName = profile?.full_name ?? 'JualAkun Buyer'
+    const [firstName, ...lastParts] = fullName.split(' ')
 
-    const snap = await createSnapTransaction({
-      transaction_details: {
-        order_id: order.order_number,
-        gross_amount: order.total_idr,
-      },
-      customer_details: {
-        first_name: profile?.full_name ?? 'JualAkun Buyer',
-        email: authUser.user?.email ?? undefined,
-        phone: profile?.phone_wa ?? undefined,
-      },
-      item_details: [
+    const apiBase = process.env.PUBLIC_API_URL ?? ''
+    const siteBase = process.env.PUBLIC_SITE_URL ?? ''
+    if (!apiBase || !siteBase) {
+      throw new ApiError('INTERNAL_ERROR', 'PUBLIC_API_URL / PUBLIC_SITE_URL belum di-set', 500)
+    }
+
+    const inquiry = await createInquiry({
+      merchantOrderId: order.order_number,
+      paymentAmount: order.total_idr,
+      productDetails: product.name.slice(0, 80),
+      email,
+      customerVaName: fullName.slice(0, 50),
+      phoneNumber: profile?.phone_wa,
+      callbackUrl: `${apiBase}/payment/callback`,
+      returnUrl: `${siteBase}/checkout/selesai?order_id=${order.id}`,
+      itemDetails: [
         {
-          id: order.id,
+          name: product.name.slice(0, 50),
           price: order.total_idr,
           quantity: 1,
-          name: product.name.slice(0, 50),
         },
       ],
+      customerDetail: {
+        firstName: firstName || 'Buyer',
+        lastName: lastParts.join(' ') || undefined,
+        email,
+        phoneNumber: profile?.phone_wa,
+      },
     })
 
     await supabase
       .from('orders')
       .update({
-        payment_snap_token: snap.token,
-        payment_snap_url: snap.redirect_url,
+        payment_reference: inquiry.reference,
+        payment_url: inquiry.paymentUrl,
         payment_external_id: order.order_number,
       })
       .eq('id', orderId)
 
-    return { snap_token: snap.token, snap_url: snap.redirect_url }
+    return {
+      reference: inquiry.reference,
+      payment_url: inquiry.paymentUrl,
+      va_number: inquiry.vaNumber ?? null,
+      qr_string: inquiry.qrString ?? null,
+    }
   }
 
   /**
-   * Process a Midtrans webhook notification.
-   * Returns an outcome — caller (route) always responds 200 to Midtrans.
+   * Process a Duitku callback notification.
+   * Returns an outcome — caller (route) always responds 200 to Duitku to
+   * suppress retries; we self-recover via cron + admin alerts.
    *
    * Flow:
-   *  1. Verify SHA-512 signature
-   *  2. Map transaction_status → order status
-   *  3. On 'paid': update order, call deliver_order_account RPC, notify buyer
-   *  4. On terminal failure: mark expired/cancelled, alert admin if needed
+   *  1. Verify MD5 signature (formula in lib/duitku.ts)
+   *  2. Map resultCode → order status
+   *  3. On '00': mark paid, call deliver_order_account RPC, notify buyer
+   *  4. On '01': mark expired (final state per Duitku — they don't retry)
    */
-  static async processWebhook(notif: MidtransNotification): Promise<WebhookOutcome> {
-    const valid = await verifyMidtransSignature(
-      notif.order_id,
-      notif.status_code,
-      notif.gross_amount,
-      notif.signature_key,
-    )
+  static async processCallback(notif: DuitkuCallback): Promise<WebhookOutcome> {
+    const valid = await verifyCallbackSignature({
+      merchantCode: notif.merchantCode,
+      amount: notif.amount,
+      merchantOrderId: notif.merchantOrderId,
+      signature: notif.signature,
+    })
     if (!valid) {
-      console.warn('[midtrans] invalid signature', { order_id: notif.order_id })
+      console.warn('[duitku] invalid signature', { merchantOrderId: notif.merchantOrderId })
       return { ok: false, reason: 'INVALID_SIGNATURE' }
     }
 
@@ -130,12 +161,12 @@ export class PaymentService {
 
     const { data: order } = await supabase
       .from('orders')
-      .select('id, user_id, product_id, total_idr, status, order_number, payment_status')
-      .eq('order_number', notif.order_id)
-      .maybeSingle<OrderForPayment & { payment_status: string }>()
+      .select('id, user_id, product_id, total_idr, status, order_number')
+      .eq('order_number', notif.merchantOrderId)
+      .maybeSingle<OrderForPayment>()
 
     if (!order) {
-      console.warn('[midtrans] order not found', { order_id: notif.order_id })
+      console.warn('[duitku] order not found', { merchantOrderId: notif.merchantOrderId })
       return { ok: false, reason: 'ORDER_NOT_FOUND' }
     }
 
@@ -144,39 +175,44 @@ export class PaymentService {
       return { ok: true, effect: 'noop' }
     }
 
-    const effect = mapMidtransStatus(notif)
+    // Defense in depth: amount tamper check. Duitku already signs amount but we
+    // double-check it matches the order we're acting on.
+    const amountNum = Number(notif.amount)
+    if (Number.isFinite(amountNum) && amountNum !== order.total_idr) {
+      console.warn('[duitku] amount mismatch', {
+        order_id: order.id,
+        notif: amountNum,
+        order: order.total_idr,
+      })
+      return { ok: false, reason: 'AMOUNT_MISMATCH' }
+    }
 
     // Always log the latest payment metadata regardless of effect.
     await supabase
       .from('orders')
       .update({
-        payment_transaction_id: notif.transaction_id,
-        payment_method: notif.payment_type ?? null,
-        payment_status: notif.transaction_status,
+        payment_transaction_id: notif.reference,
+        payment_method: notif.paymentCode ?? null,
+        payment_status: notif.resultCode,
         payment_metadata: notif as unknown as Record<string, unknown>,
       })
       .eq('id', order.id)
 
-    if (effect === 'paid') {
+    if (notif.resultCode === '00') {
       await this.handlePaid(order)
       return { ok: true, effect: 'paid' }
     }
 
-    if (effect === 'expired' || effect === 'cancelled') {
+    if (notif.resultCode === '01') {
       await supabase
         .from('orders')
         .update({ status: 'expired' })
         .eq('id', order.id)
         .eq('status', 'pending_payment')
-      return { ok: true, effect }
+      return { ok: true, effect: 'failed' }
     }
 
-    if (effect === 'refunded') {
-      await supabase.from('orders').update({ status: 'refunded' }).eq('id', order.id)
-      return { ok: true, effect }
-    }
-
-    return { ok: true, effect: 'pending' }
+    return { ok: true, effect: 'noop' }
   }
 
   private static async handlePaid(order: OrderForPayment): Promise<void> {
@@ -192,7 +228,7 @@ export class PaymentService {
       .maybeSingle()
 
     if (updateErr || !updated) {
-      console.warn('[midtrans] paid update skipped (already advanced?)', { order_id: order.id })
+      console.warn('[duitku] paid update skipped (already advanced?)', { order_id: order.id })
       return
     }
 
@@ -200,7 +236,7 @@ export class PaymentService {
       await DeliveryService.deliverOrder(order.id)
       await this.notifyBuyerDelivered(order)
     } catch (err) {
-      console.error('[midtrans] delivery failed', { order_id: order.id, err })
+      console.error('[duitku] delivery failed', { order_id: order.id, err })
       await this.alertAdminDeliveryFailed(order)
     }
   }
@@ -274,28 +310,5 @@ export class PaymentService {
       template: tpl.template,
       orderId: order.id,
     })
-  }
-}
-
-function mapMidtransStatus(
-  n: Pick<MidtransNotification, 'transaction_status' | 'fraud_status'>,
-): 'paid' | 'pending' | 'expired' | 'cancelled' | 'refunded' | 'noop' {
-  switch (n.transaction_status) {
-    case 'settlement':
-      return 'paid'
-    case 'capture':
-      return n.fraud_status === 'accept' ? 'paid' : 'pending'
-    case 'pending':
-      return 'pending'
-    case 'expire':
-      return 'expired'
-    case 'cancel':
-    case 'deny':
-      return 'cancelled'
-    case 'refund':
-    case 'partial_refund':
-      return 'refunded'
-    default:
-      return 'noop'
   }
 }

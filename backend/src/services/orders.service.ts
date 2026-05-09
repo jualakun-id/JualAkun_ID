@@ -57,7 +57,7 @@ export class OrdersService {
       .from('orders')
       .select(
         `id, order_number, amount_idr, discount_idr, credit_used_idr, total_idr,
-         coupon_code, status, payment_method, payment_snap_url,
+         coupon_code, status, payment_method, payment_url,
          delivered_at, buyer_confirmed_at, guarantee_expires_at, expires_at, created_at,
          products!inner ( id, name, slug, thumbnail_url, duration_days, guarantee_days )`,
       )

@@ -16,8 +16,10 @@ type CreateOrderResult = {
   discount_idr: number
   credit_used_idr: number
   total_idr: number
-  snap_token: string
-  snap_url: string
+  payment_reference: string
+  payment_url: string
+  va_number: string | null
+  qr_string: string | null
   expires_at: string
 }
 
@@ -168,8 +170,8 @@ export class CheckoutService {
       await supabase.rpc('increment_coupon_usage', { p_code: appliedCouponCode })
     }
 
-    // 8. Create Midtrans Snap token (writes snap_token/url back to the order)
-    const snap = await PaymentService.createSnapForOrder(insertedOrder.id)
+    // 8. Create Duitku transaction (writes reference + payment_url back to the order)
+    const tx = await PaymentService.createTransactionForOrder(insertedOrder.id)
 
     return {
       order_id: insertedOrder.id,
@@ -178,8 +180,10 @@ export class CheckoutService {
       discount_idr: discountIdr,
       credit_used_idr: creditUsedIdr,
       total_idr: totalIdr,
-      snap_token: snap.snap_token,
-      snap_url: snap.snap_url,
+      payment_reference: tx.reference,
+      payment_url: tx.payment_url,
+      va_number: tx.va_number,
+      qr_string: tx.qr_string,
       expires_at: insertedOrder.expires_at,
     }
   }

@@ -353,7 +353,7 @@ const FAQS = [
   },
   {
     q: 'Metode pembayaran apa saja yang tersedia?',
-    a: 'Kami menerima transfer bank (BCA, Mandiri, BRI, BNI), e-wallet (GoPay, OVO, DANA, ShopeePay), QRIS, dan pembayaran retail (Indomaret, Alfamart) via Midtrans Payment Gateway.',
+    a: 'Kami menerima transfer bank (BCA, Mandiri, BRI, BNI), e-wallet (GoPay, OVO, DANA, ShopeePay), QRIS, dan pembayaran retail (Indomaret, Alfamart) via Duitku Payment Gateway.',
   },
   {
     q: 'Bagaimana jika akun yang saya beli bermasalah?',

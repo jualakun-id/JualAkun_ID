@@ -27,38 +27,39 @@ type CreateOrderResponse = {
   discount_idr: number
   credit_used_idr: number
   total_idr: number
-  snap_token: string
-  snap_url: string
+  payment_reference: string
+  payment_url: string
+  va_number: string | null
+  qr_string: string | null
   expires_at: string
 }
 
-type SnapResult = {
-  order_id?: string
-  status_code?: string
-  transaction_status?: string
+type DuitkuResult = {
+  merchantOrderId?: string
+  reference?: string
+  resultCode?: string
 }
 
 declare global {
   interface Window {
-    snap?: {
-      pay: (
-        token: string,
+    checkout?: {
+      process: (
+        reference: string,
         callbacks: {
-          onSuccess?: (r: SnapResult) => void
-          onPending?: (r: SnapResult) => void
-          onError?: (r: SnapResult) => void
-          onClose?: () => void
+          successEvent?: (r: DuitkuResult) => void
+          pendingEvent?: (r: DuitkuResult) => void
+          errorEvent?: (r: DuitkuResult) => void
+          closeEvent?: (r: DuitkuResult) => void
         },
       ) => void
     }
   }
 }
 
-const IS_PROD = process.env.NEXT_PUBLIC_MIDTRANS_IS_PRODUCTION === 'true'
-const SNAP_SRC = IS_PROD
-  ? 'https://app.midtrans.com/snap/snap.js'
-  : 'https://app.sandbox.midtrans.com/snap/snap.js'
-const CLIENT_KEY = process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY ?? ''
+const IS_PROD = process.env.NEXT_PUBLIC_DUITKU_IS_PRODUCTION === 'true'
+const POP_SRC = IS_PROD
+  ? 'https://app-prod.duitku.com/lib/js/duitku.min.js'
+  : 'https://app-sandbox.duitku.com/lib/js/duitku.min.js'
 
 export function CheckoutClient({ product }: { product: Product }) {
   const router = useRouter()
@@ -82,21 +83,22 @@ export function CheckoutClient({ product }: { product: Product }) {
       setError(result.message ?? 'Gagal membuat order')
       return
     }
-    if (window.snap) {
-      window.snap.pay(result.data.snap_token, {
-        onSuccess: () => router.push(`/checkout/selesai?order_id=${result.data.order_id}`),
-        onPending: () => router.push(`/checkout/selesai?order_id=${result.data.order_id}`),
-        onError: () => setError('Pembayaran gagal. Silakan coba lagi.'),
-        onClose: () => router.push(`/dashboard/pesanan/${result.data.order_id}`),
+    if (window.checkout?.process) {
+      window.checkout.process(result.data.payment_reference, {
+        successEvent: () => router.push(`/checkout/selesai?order_id=${result.data.order_id}`),
+        pendingEvent: () => router.push(`/checkout/selesai?order_id=${result.data.order_id}`),
+        errorEvent: () => setError('Pembayaran gagal. Silakan coba lagi.'),
+        closeEvent: () => router.push(`/dashboard/pesanan/${result.data.order_id}`),
       })
     } else {
-      window.location.href = result.data.snap_url
+      // POP SDK belum siap (script gagal load) — fallback ke halaman hosted Duitku.
+      window.location.href = result.data.payment_url
     }
   }
 
   return (
     <div className="grid gap-6 md:grid-cols-[1fr_360px]">
-      <Script src={SNAP_SRC} data-client-key={CLIENT_KEY} strategy="afterInteractive" />
+      <Script src={POP_SRC} strategy="afterInteractive" />
 
       <div className="rounded-xl border border-border bg-surface p-5">
         <h2 className="font-heading text-h3">Detail Pesanan</h2>
