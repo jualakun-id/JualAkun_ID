@@ -73,21 +73,24 @@ export default async function HomePage() {
               <p className="mt-5 sm:mt-6 text-white/90 text-base sm:text-lg max-w-md mx-auto md:mx-0 leading-relaxed">
                 Akun premium yang sulit kamu temui di tempat lain — Cursor, Claude Pro, ChatGPT Plus, dan layanan eksklusif lainnya. <strong className="text-white">Asli</strong>, kirim instan, banyak yang bergaransi.
               </p>
-              <div className="mt-7 sm:mt-8 flex flex-wrap items-center justify-center md:justify-start gap-4">
+              <div className="mt-7 sm:mt-8 flex flex-wrap items-center justify-center md:justify-start gap-3 sm:gap-4">
                 <Link
                   href="/#streaming"
-                  className="bg-brand-700 hover:bg-brand-800 text-white font-semibold px-7 sm:px-8 py-3.5 rounded-lg shadow-lg shadow-brand-900/20 transition-colors text-base inline-flex items-center gap-2"
+                  className="group bg-white text-brand-700 hover:text-brand-800 font-semibold px-7 sm:px-8 py-3.5 rounded-lg shadow-lg shadow-brand-900/25 hover:shadow-xl hover:shadow-brand-900/30 hover:-translate-y-0.5 active:translate-y-0 active:shadow-md transition-all duration-200 text-base inline-flex items-center gap-2"
                 >
                   Lihat Layanan
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" aria-hidden="true">
+                  <svg className="w-4 h-4 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
                   </svg>
                 </Link>
                 <Link
-                  href="/#faq"
-                  className="text-white font-semibold underline-offset-4 hover:underline text-base"
+                  href="/#cara-pesan"
+                  className="group border-2 border-white/80 text-white hover:bg-white hover:text-brand-700 hover:border-white font-semibold px-7 sm:px-8 py-3 rounded-lg transition-all duration-200 text-base inline-flex items-center gap-2"
                 >
-                  Cara Pesan →
+                  Cara Pesan
+                  <svg className="w-4 h-4 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
                 </Link>
               </div>
 
@@ -191,7 +194,7 @@ export default async function HomePage() {
       ))}
 
       {/* ── HOW IT WORKS ───────────────────────────────────── */}
-      <section className="bg-white py-16 md:py-20">
+      <section id="cara-pesan" className="bg-white py-16 md:py-20 scroll-mt-24">
         <div className="container mx-auto px-4 max-w-6xl text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-ink">Cara Berlangganan</h2>
           <p className="text-ink-subtle mt-3">
@@ -272,7 +275,7 @@ export default async function HomePage() {
       </section>
 
       {/* ── FAQ ────────────────────────────────────────────── */}
-      <section id="faq" className="bg-brand-50 py-16 md:py-20 scroll-mt-20">
+      <section id="faq" className="bg-brand-50 py-16 md:py-20 scroll-mt-24">
         <div className="container mx-auto px-4 max-w-3xl">
           <div className="text-center mb-10">
             <h2 className="text-3xl md:text-4xl font-bold text-ink">Pertanyaan Umum</h2>
@@ -321,7 +324,7 @@ function CategorySection({ section, bgAlt }: { section: SectionData; bgAlt: bool
   return (
     <section
       id={section.slug}
-      className={`scroll-mt-20 py-16 md:py-20 ${bgAlt ? 'bg-brand-50' : 'bg-white'}`}
+      className={`scroll-mt-24 py-16 md:py-20 ${bgAlt ? 'bg-brand-50' : 'bg-white'}`}
     >
       <div className="container mx-auto px-4 max-w-7xl">
         <div className="text-center mb-10">

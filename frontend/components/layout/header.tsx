@@ -65,13 +65,13 @@ export function Header() {
         <div className="hidden md:flex items-center gap-2">
           <Link
             href="/masuk"
-            className="text-sm font-medium px-3 py-2 rounded-lg text-ink-muted hover:text-ink hover:bg-gray-50 transition-colors"
+            className="text-sm font-semibold px-4 py-2 rounded-lg text-ink-muted hover:text-brand-600 hover:bg-brand-50 transition-all duration-150"
           >
             Masuk
           </Link>
           <Link
             href="/daftar"
-            className="text-sm font-semibold px-5 py-2 rounded-lg bg-brand-500 text-white hover:bg-brand-600 shadow-sm transition-colors"
+            className="text-sm font-semibold px-5 py-2 rounded-lg bg-brand-500 text-white hover:bg-brand-600 shadow-sm hover:shadow-md hover:shadow-brand-500/30 hover:-translate-y-0.5 active:translate-y-0 active:shadow-sm transition-all duration-200"
           >
             Daftar
           </Link>
