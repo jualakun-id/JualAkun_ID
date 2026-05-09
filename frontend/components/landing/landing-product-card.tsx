@@ -20,18 +20,26 @@ export function LandingProductCard({
     : 0
 
   return (
-    <div className="bg-white rounded-xl border border-gray-100 shadow-[0_2px_12px_rgba(0,0,0,0.06)] flex flex-col overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 relative aspect-[3/4]">
+    <div
+      className="rounded-xl border border-gray-100 shadow-[0_2px_12px_rgba(0,0,0,0.06)] flex flex-col overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 relative aspect-[3/4] p-2.5"
+      style={{
+        backgroundColor: '#FAF7F2',
+        backgroundImage:
+          'radial-gradient(circle at 1.5px 1.5px, rgba(0,137,168,0.10) 1.5px, transparent 0)',
+        backgroundSize: '14px 14px',
+      }}
+    >
       {/* Discount badge */}
       {hasDiscount && (
-        <span className="absolute top-3 left-3 bg-gradient-to-r from-purple-600 to-pink-500 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-sm z-10">
+        <span className="absolute top-4 left-4 bg-gradient-to-r from-purple-600 to-pink-500 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-sm z-10">
           Diskon {discountPct}%
         </span>
       )}
 
-      {/* Art / Brand area — 55% of card height */}
+      {/* Art / Brand area — wrapped in framed container with cream margin all sides */}
       <div
-        className="relative bg-[#FAF7F2] flex items-center justify-center overflow-hidden shrink-0"
-        style={{ height: '55%' }}
+        className="relative rounded-lg overflow-hidden bg-white shrink-0"
+        style={{ height: 'calc(55% - 8px)' }}
       >
         {product.thumbnail_url ? (
           <Image
@@ -42,30 +50,24 @@ export function LandingProductCard({
             className="object-cover"
           />
         ) : brand !== 'generic' ? (
-          <BrandLogo brand={brand} size={72} />
+          <div className="w-full h-full flex items-center justify-center">
+            <BrandLogo brand={brand} size={72} />
+          </div>
         ) : (
-          <div className="text-center px-4">
-            <div className="text-2xl font-extrabold text-ink leading-tight tracking-tight">
+          <div className="w-full h-full flex items-center justify-center px-4">
+            <div className="text-center text-2xl font-extrabold text-ink leading-tight tracking-tight">
               {product.name.split(' ').slice(0, 2).join(' ')}
             </div>
           </div>
         )}
       </div>
 
-      {/* Content + CTA — fills remaining 45% with cream + dot texture */}
-      <div
-        className="flex-1 flex flex-col px-4 py-3 min-h-0 relative"
-        style={{
-          backgroundColor: '#FAF7F2',
-          backgroundImage:
-            'radial-gradient(circle at 1.5px 1.5px, rgba(0,137,168,0.10) 1.5px, transparent 0)',
-          backgroundSize: '14px 14px',
-        }}
-      >
+      {/* Content + CTA — fills remaining space */}
+      <div className="flex-1 flex flex-col px-1.5 pt-3 pb-1 min-h-0 relative">
         <div className="flex-1 flex flex-col items-center text-center">
           <h3 className="font-bold text-ink text-sm leading-tight line-clamp-2">{product.name}</h3>
           {product.category && (
-            <span className="mt-1.5 inline-block text-[11px] font-medium text-brand-700 bg-brand-50 px-2 py-0.5 rounded-full">
+            <span className="mt-1.5 inline-block text-xs font-medium text-brand-700 bg-brand-50 px-2 py-0.5 rounded-full">
               {product.category.name}
             </span>
           )}
