@@ -35,6 +35,34 @@ const config: Config = {
         warning: '#F59E0B',
         danger: '#EF4444',
         info: '#38BDF8',
+
+        // Light system (akunmu.id-style for public pages)
+        brand: {
+          50:  '#EBF5FF',
+          100: '#D6EAFD',
+          200: '#A8D5F2',
+          300: '#5BB5DD',
+          400: '#1AA1CC',
+          500: '#0089A8',  // primary CTA — kontras AA pass
+          600: '#007089',
+          700: '#005770',
+          800: '#003E50',
+          900: '#1A4480',  // navy heading accent
+        },
+        ink: {
+          DEFAULT: '#1A2340',
+          muted: '#4A5568',
+          subtle: '#718096',
+        },
+        sky: {
+          hero: '#5BB5DD',
+        },
+        stat: {
+          blue:   '#1567C8',
+          red:    '#D9304B',
+          green:  '#0F8F4F',
+          yellow: '#F5A623',
+        },
       },
       fontFamily: {
         heading: ['var(--font-heading)', 'sans-serif'],

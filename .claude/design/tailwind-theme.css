@@ -1,0 +1,127 @@
+/* Design: jualakun-hybrid
+ * Source: project audit
+ * Extracted: 2026-05-09
+ * Migration: from Tailwind v3 (tailwind.config.ts) + hardcoded hex in (public) pages
+ *
+ * NOTE: Project saat ini di Tailwind v3.4.14. File ini adalah preview migrasi ke Tailwind v4 @theme syntax.
+ * Untuk pakai sekarang (masih v3), salin token ke tailwind.config.ts theme.extend.colors.
+ *
+ * Untuk pakai langsung di Tailwind v4 (saat upgrade nanti):
+ *   @import "./tailwind-theme.css";
+ *
+ * Atau salin block @theme ke globals.css.
+ */
+
+@theme {
+  /* ─── COLORS ──────────────────────────────────────────── */
+
+  /* Light system (akunmu.id-style — public pages) */
+  --color-background: #FFFFFF;             /* source: (public)/layout.tsx:8 */
+  --color-text: #1A2340;                   /* source: (public)/layout.tsx:8 — heading & body navy */
+  --color-text-muted: #4A5568;             /* source: (public)/page.tsx:143 */
+  --color-text-subtle: #718096;            /* source: (public)/page.tsx:85 */
+
+  --color-primary: #00B8D9;                /* source: hardcoded teal (akunmu CTA) */
+  --color-primary-hover: #009EB8;          /* source: (public)/page.tsx:298 */
+  --color-primary-dark: #007FA5;           /* source: (public)/page.tsx:41 — hero CTA filled */
+  --color-primary-darker: #006080;         /* source: (public)/page.tsx:41 — hero CTA hover */
+
+  --color-secondary: #1A4480;              /* source: (public)/page.tsx:33 — navy accent */
+  --color-accent: #1D7FE8;                 /* source: (public)/page.tsx:89 — stat blue */
+
+  --color-surface: #FFFFFF;                /* source: card bg public */
+  --color-surface-2: #EBF5FF;              /* source: alt section bg */
+  --color-surface-3: #E0F2FE;              /* source: pill badge bg */
+  --color-border: #E2E8F0;                 /* inferred from gray-200 usage */
+  --color-border-subtle: #F1F5F9;          /* inferred */
+
+  --color-hero-bg: #7EC8E3;                /* source: (public)/page.tsx:26 */
+
+  /* Status — DICONSOLIDASI dari 2 set yang konflik */
+  --color-success: #10B981;                /* source: tailwind.config.ts:34 — chosen over #2DB87A */
+  --color-warning: #F59E0B;                /* source: tailwind.config.ts:35 — chosen over #F5A623 */
+  --color-error: #EF4444;                  /* source: tailwind.config.ts:36 — chosen over #E8334A */
+  --color-info: #38BDF8;                   /* source: tailwind.config.ts:37 */
+
+  /* Stat card backgrounds (legitimate decorative use, kept) */
+  --color-stat-blue: #1D7FE8;              /* source: (public)/page.tsx:89 */
+  --color-stat-red: #E8334A;               /* source: (public)/page.tsx:90 — only for stat card */
+  --color-stat-green: #2DB87A;             /* source: (public)/page.tsx:91 — only for stat card */
+  --color-stat-yellow: #F5A623;            /* source: (public)/page.tsx:92 — only for stat card */
+
+  /* Footer */
+  --color-footer-bg: #1F2937;              /* source: components/layout/footer.tsx:6 */
+
+  /* ─── FONT FAMILY ─────────────────────────────────────── */
+  --font-sans: var(--font-poppins), 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-heading: var(--font-heading), 'Plus Jakarta Sans', sans-serif;
+  --font-body: var(--font-body), 'Inter', sans-serif;
+  --font-mono: var(--font-mono), 'JetBrains Mono', monospace;
+
+  /* ─── FLUID SPACING ───────────────────────────────────── */
+  --spacing-0: 0;
+  --spacing-xxs: clamp(0.25rem, 1vw, 0.5rem);
+  --spacing-xs: clamp(0.5rem, 1.5vw, 0.75rem);
+  --spacing-s: clamp(0.75rem, 2vw, 1rem);
+  --spacing-m: 1.25rem;
+  --spacing-l: clamp(1.25rem, 3vw, 2.5rem);
+  --spacing-xl: clamp(1.25rem, 5vw, 3.75rem);
+  --spacing-xxl: clamp(1.25rem, 10vw, 7.5rem);
+
+  /* ─── BORDER RADIUS ───────────────────────────────────── */
+  --radius-micro: 0.25rem;       /* source: rounded — small elements */
+  --radius-button: 0.5rem;       /* source: rounded-lg — CTA buttons */
+  --radius-card: 0.75rem;        /* source: rounded-xl — product cards, FAQ */
+  --radius-featured: 1rem;       /* source: rounded-2xl — stat cards, trust */
+  --radius-pill: 9999px;         /* source: rounded-full — pills, header CTA */
+}
+
+/* Color variants (auto-generated via color-mix in oklch) */
+:root {
+  --color-primary-light: color-mix(in oklch, var(--color-primary), white 30%);
+  --color-secondary-light: color-mix(in oklch, var(--color-secondary), white 30%);
+  --color-secondary-dark: color-mix(in oklch, var(--color-secondary), black 20%);
+  --color-accent-light: color-mix(in oklch, var(--color-accent), white 30%);
+  --color-accent-dark: color-mix(in oklch, var(--color-accent), black 20%);
+}
+
+/* ─── DARK MODE ───────────────────────────────────────────
+ * Saat ini project FORCED-DARK via <html class="dark"> dan darkMode: 'class' di Tailwind v3.
+ * Untuk dual-mode (light/dark toggle), aktifkan block .dark di bawah dan refactor public pages
+ * untuk pakai token (bukan hex hardcoded).
+ *
+ * Saat ini palette dark hanya dipakai di route group (admin), (buyer), (auth).
+ * Public pages override secara lokal.
+ */
+.dark {
+  --color-background: #09090B;             /* source: tailwind.config.ts:20 */
+  --color-text: #FAFAFA;                   /* source: tailwind.config.ts:30 */
+  --color-text-muted: #A1A1AA;             /* source: tailwind.config.ts:31 */
+  --color-text-subtle: #71717A;            /* source: tailwind.config.ts:32 */
+
+  --color-primary: #6366F1;                /* source: tailwind.config.ts:14 — INDIGO, KONFLIK dgn light teal */
+  --color-primary-hover: #4F46E5;          /* source: tailwind.config.ts:15 */
+  --color-primary-light: #818CF8;          /* source: tailwind.config.ts:16 */
+
+  --color-secondary: #8B5CF6;              /* source: tailwind.config.ts:18 */
+  --color-accent: #22D3EE;                 /* source: tailwind.config.ts:19 — cyan */
+
+  --color-surface: #18181B;                /* source: tailwind.config.ts:22 */
+  --color-surface-2: #27272A;              /* source: tailwind.config.ts:23 */
+  --color-border: #3F3F46;                 /* source: tailwind.config.ts:26 */
+  --color-border-subtle: #27272A;          /* source: tailwind.config.ts:27 */
+}
+
+/* ─── MIGRATION TODO ──────────────────────────────────────
+ * 1. Pilih primary tunggal: teal #00B8D9 (light) atau indigo #6366F1 (dark)?
+ *    Saat ini dua brand identity konflik dalam satu codebase.
+ *
+ * 2. Jika teal dipilih: update .dark { --color-primary } ke teal-equivalent gelap.
+ *    Jika indigo dipilih: refactor public pages dari teal ke indigo.
+ *
+ * 3. Ganti semua bg-[#xxxxxx] arbitrary values di (public)/page.tsx
+ *    dengan token Tailwind: bg-primary, text-primary, dst.
+ *
+ * 4. Hapus shadow-glow* tokens kalau sudah pindah ke akunmu light style
+ *    (glow indigo tidak cocok dengan teal).
+ */

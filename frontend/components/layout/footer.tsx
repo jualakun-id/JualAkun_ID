@@ -8,11 +8,11 @@ export function Footer() {
         {/* Brand */}
         <div className="md:col-span-1">
           <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#00B8D9] text-sm font-black text-white">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-500 text-base font-black text-white">
               J
             </div>
             <span className="font-bold text-lg text-white">
-              Jual<span className="text-[#00B8D9]">Akun</span>
+              Jual<span className="text-brand-400">Akun</span>
             </span>
           </div>
           <p className="mt-3 text-sm text-white/60 leading-relaxed">
@@ -51,15 +51,15 @@ export function Footer() {
           <h4 className="text-sm font-semibold text-white mb-3">Hubungi Kami</h4>
           <ul className="space-y-3 text-sm text-white/60">
             <li className="flex items-center gap-2">
-              <Mail size={14} className="text-[#00B8D9] shrink-0" />
+              <Mail size={14} className="text-brand-400 shrink-0" />
               <span>cs@jualakun.id</span>
             </li>
             <li className="flex items-center gap-2">
-              <Phone size={14} className="text-[#00B8D9] shrink-0" />
+              <Phone size={14} className="text-brand-400 shrink-0" />
               <span>WhatsApp Support</span>
             </li>
             <li className="flex items-start gap-2">
-              <Clock size={14} className="text-[#00B8D9] shrink-0 mt-0.5" />
+              <Clock size={14} className="text-brand-400 shrink-0 mt-0.5" />
               <span>Jam Operasional<br />06.00 – 00.00 WIB</span>
             </li>
           </ul>
@@ -80,7 +80,7 @@ function FooterColumn({ title, links }: { title: string; links: { href: string; 
       <ul className="space-y-2 text-sm text-white/60">
         {links.map((link) => (
           <li key={link.href}>
-            <Link href={link.href} className="hover:text-[#00B8D9] transition-colors">
+            <Link href={link.href} className="hover:text-brand-400 transition-colors">
               {link.label}
             </Link>
           </li>

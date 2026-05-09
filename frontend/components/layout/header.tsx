@@ -1,72 +1,91 @@
 'use client'
 
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { Menu, X } from 'lucide-react'
 
+const NAV_ITEMS = [
+  { href: '/streaming', label: 'Streaming' },
+  { href: '/gaming', label: 'Gaming' },
+  { href: '/ai-produktif', label: 'AI & Produktif' },
+  { href: '/faq', label: 'FAQ' },
+]
+
 export function Header() {
+  const pathname = usePathname()
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 10)
+    handler()
     window.addEventListener('scroll', handler)
     return () => window.removeEventListener('scroll', handler)
   }, [])
 
+  const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/')
+
   return (
     <header
       className={`sticky top-0 z-40 transition-all duration-200 ${
-        scrolled ? 'bg-white shadow-sm' : 'bg-transparent'
+        scrolled ? 'bg-white shadow-sm border-b border-gray-100' : 'bg-transparent'
       }`}
     >
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
+      <div className="container mx-auto flex h-16 items-center justify-between px-4 max-w-7xl">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#00B8D9] text-sm font-black text-white">
+        <Link href="/" className="flex items-center gap-2 shrink-0" aria-label="JualAkun home">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-500 text-base font-black text-white shadow-md">
             J
           </div>
-          <span className={`font-bold text-lg ${scrolled ? 'text-[#1A2340]' : 'text-white'}`}>
-            Jual<span className="text-[#00B8D9]">Akun</span>
+          <span className={`font-bold text-lg ${scrolled ? 'text-ink' : 'text-white'}`}>
+            Jual<span className="text-brand-500">Akun</span>
           </span>
         </Link>
 
         {/* Desktop Nav */}
-        <nav className="hidden items-center gap-7 text-sm font-medium md:flex">
-          {[
-            { href: '/streaming', label: 'Streaming' },
-            { href: '/gaming', label: 'Gaming' },
-            { href: '/ai-produktif', label: 'AI & Produktif' },
-            { href: '/faq', label: 'FAQ' },
-          ].map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`hover:text-[#00B8D9] transition-colors ${
-                scrolled ? 'text-[#4A5568]' : 'text-white/90 hover:text-white'
-              }`}
-            >
-              {item.label}
-            </Link>
-          ))}
+        <nav className="hidden md:flex items-center gap-1 text-sm font-medium" aria-label="Main">
+          {NAV_ITEMS.map((item) => {
+            const active = isActive(item.href)
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                aria-current={active ? 'page' : undefined}
+                className={`px-3 py-2 rounded-lg transition-colors ${
+                  scrolled
+                    ? active
+                      ? 'text-brand-600 bg-brand-50'
+                      : 'text-ink-muted hover:text-ink hover:bg-gray-50'
+                    : active
+                    ? 'text-white bg-white/15'
+                    : 'text-white/90 hover:bg-white/10 hover:text-white'
+                }`}
+              >
+                {item.label}
+              </Link>
+            )
+          })}
         </nav>
 
         {/* CTA */}
-        <div className="hidden items-center gap-3 md:flex">
+        <div className="hidden md:flex items-center gap-2">
           <Link
             href="/masuk"
-            className={`text-sm font-medium transition-colors ${
-              scrolled ? 'text-[#4A5568] hover:text-[#1A2340]' : 'text-white/90 hover:text-white'
+            className={`text-sm font-medium px-3 py-2 rounded-lg transition-colors ${
+              scrolled
+                ? 'text-ink-muted hover:text-ink hover:bg-gray-50'
+                : 'text-white/90 hover:text-white hover:bg-white/10'
             }`}
           >
             Masuk
           </Link>
           <Link
             href="/daftar"
-            className={`rounded-full px-5 py-2 text-sm font-semibold transition-all ${
+            className={`text-sm font-semibold px-5 py-2 rounded-lg transition-all ${
               scrolled
-                ? 'bg-[#00B8D9] text-white hover:bg-[#009EB8]'
-                : 'border-2 border-white text-white hover:bg-white hover:text-[#00B8D9]'
+                ? 'bg-brand-500 text-white hover:bg-brand-600 shadow-sm'
+                : 'border-2 border-white text-white hover:bg-white hover:text-brand-600'
             }`}
           >
             Daftar
@@ -75,7 +94,9 @@ export function Header() {
 
         {/* Mobile hamburger */}
         <button
-          className={`md:hidden p-2 ${scrolled ? 'text-[#1A2340]' : 'text-white'}`}
+          aria-label={menuOpen ? 'Tutup menu' : 'Buka menu'}
+          aria-expanded={menuOpen}
+          className={`md:hidden p-2 rounded-lg ${scrolled ? 'text-ink' : 'text-white'}`}
           onClick={() => setMenuOpen(!menuOpen)}
         >
           {menuOpen ? <X size={22} /> : <Menu size={22} />}
@@ -84,18 +105,36 @@ export function Header() {
 
       {/* Mobile Menu */}
       {menuOpen && (
-        <div className="border-t border-gray-100 bg-white px-4 py-4 md:hidden">
-          <nav className="flex flex-col gap-3 text-sm font-medium text-[#4A5568]">
-            <Link href="/streaming" onClick={() => setMenuOpen(false)} className="hover:text-[#00B8D9]">Streaming</Link>
-            <Link href="/gaming" onClick={() => setMenuOpen(false)} className="hover:text-[#00B8D9]">Gaming</Link>
-            <Link href="/ai-produktif" onClick={() => setMenuOpen(false)} className="hover:text-[#00B8D9]">AI & Produktif</Link>
-            <Link href="/faq" onClick={() => setMenuOpen(false)} className="hover:text-[#00B8D9]">FAQ</Link>
-            <hr className="border-gray-100" />
-            <Link href="/masuk" onClick={() => setMenuOpen(false)} className="hover:text-[#00B8D9]">Masuk</Link>
+        <div className="border-t border-gray-100 bg-white px-4 py-4 md:hidden animate-fade-in">
+          <nav className="flex flex-col gap-1 text-sm font-medium" aria-label="Mobile">
+            {NAV_ITEMS.map((item) => {
+              const active = isActive(item.href)
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setMenuOpen(false)}
+                  aria-current={active ? 'page' : undefined}
+                  className={`px-3 py-2.5 rounded-lg ${
+                    active ? 'bg-brand-50 text-brand-600 font-semibold' : 'text-ink-muted hover:bg-gray-50'
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              )
+            })}
+            <hr className="border-gray-100 my-2" />
+            <Link
+              href="/masuk"
+              onClick={() => setMenuOpen(false)}
+              className="px-3 py-2.5 rounded-lg text-ink-muted hover:bg-gray-50"
+            >
+              Masuk
+            </Link>
             <Link
               href="/daftar"
               onClick={() => setMenuOpen(false)}
-              className="inline-block rounded-full bg-[#00B8D9] px-5 py-2 text-center font-semibold text-white"
+              className="mt-1 px-5 py-2.5 rounded-lg bg-brand-500 text-white text-center font-semibold hover:bg-brand-600"
             >
               Daftar Sekarang
             </Link>

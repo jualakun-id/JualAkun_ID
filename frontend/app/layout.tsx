@@ -7,13 +7,15 @@ const poppins = Poppins({
   weight: ['400', '500', '600', '700', '800'],
   variable: '--font-poppins',
   display: 'swap',
+  preload: true,
 })
 
 const heading = Plus_Jakarta_Sans({
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700', '800'],
+  weight: ['600', '700', '800'],
   variable: '--font-heading',
   display: 'swap',
+  preload: false,
 })
 
 const body = Inter({
@@ -21,6 +23,7 @@ const body = Inter({
   weight: ['400', '500', '600'],
   variable: '--font-body',
   display: 'swap',
+  preload: false,
 })
 
 const mono = JetBrains_Mono({
@@ -28,6 +31,7 @@ const mono = JetBrains_Mono({
   weight: ['400', '500'],
   variable: '--font-mono',
   display: 'swap',
+  preload: false,
 })
 
 export const metadata: Metadata = {
