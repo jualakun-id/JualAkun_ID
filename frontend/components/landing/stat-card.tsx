@@ -42,17 +42,13 @@ type StatCardProps = {
   variant: StatVariant
   value: string
   label: string
-  /** Pakai icon Lucide (legacy / fallback) */
   icon?: LucideIcon
-  /** Pakai gambar art generated (URL Supabase Storage) */
   imageUrl?: string
 }
 
 /**
  * Stat Card 4:3 aspect ratio.
- *
- * Dua mode:
- *  - imageUrl: art image fills card with text overlay (recommended)
+ *  - imageUrl: art image framed dengan padding seragam atas/bawah/kiri/kanan
  *  - icon: Lucide icon centered above value (fallback)
  */
 export function StatCard({ variant, value, label, icon: Icon, imageUrl }: StatCardProps) {
@@ -62,36 +58,36 @@ export function StatCard({ variant, value, label, icon: Icon, imageUrl }: StatCa
   if (imageUrl) {
     return (
       <div
-        className={`${v.bg} rounded-2xl border-2 border-black shadow-[0_4px_0_rgba(0,0,0,0.9)] overflow-hidden relative aspect-[4/3] flex flex-col`}
+        className={`${v.bg} rounded-2xl border-2 border-black shadow-[0_4px_0_rgba(0,0,0,0.9)] relative aspect-[4/3] flex flex-col p-3 gap-2`}
       >
-        {/* Art image — fills top portion */}
-        <div className="relative flex-1 overflow-hidden">
+        {/* Art image — framed dengan border + colored padding all sides */}
+        <div className="relative rounded-lg border-2 border-black overflow-hidden bg-[#FAF7F2] flex-1">
           <Image
             src={imageUrl}
             alt={label}
             fill
             sizes="(max-width: 640px) 50vw, 25vw"
-            className="object-cover"
+            className="object-contain"
           />
         </div>
-        {/* Bottom solid color band with value + label */}
-        <div className="px-4 py-3 text-center">
-          <div className={`text-2xl sm:text-3xl font-extrabold tracking-tight leading-none ${v.text}`}>
+        {/* Value + label below */}
+        <div className="shrink-0 text-center px-1">
+          <div className={`text-xl sm:text-2xl font-extrabold tracking-tight leading-none ${v.text}`}>
             {value}
           </div>
-          <div className={`text-[11px] sm:text-xs font-medium mt-1 ${v.label}`}>{label}</div>
+          <div className={`text-[10px] sm:text-xs font-medium mt-1 ${v.label}`}>{label}</div>
         </div>
       </div>
     )
   }
 
-  // Fallback: icon mode (current behavior, dengan aspect 4:3)
+  // Fallback: icon mode
   return (
     <div
       className={`${v.bg} rounded-2xl border-2 border-black shadow-[0_4px_0_rgba(0,0,0,0.9)] flex flex-col items-center justify-center text-center gap-2 aspect-[4/3] px-4 py-3`}
     >
       {Icon && (
-        <div className={`w-12 h-12 rounded-xl ${v.iconBg} flex items-center justify-center shrink-0`}>
+        <div className={`w-12 h-12 rounded-xl border-2 border-black ${v.iconBg} flex items-center justify-center shrink-0`}>
           <Icon className={`w-6 h-6 ${v.iconColor}`} strokeWidth={2} aria-hidden="true" />
         </div>
       )}
