@@ -18,7 +18,7 @@ export function FAQAccordion({ items }: { items: FAQ[] }) {
         return (
           <div
             key={item.q}
-            className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:border-brand-300 transition-colors"
+            className="bg-white border-2 border-black rounded-xl overflow-hidden shadow-[0_3px_0_rgba(0,0,0,0.9)] hover:shadow-[0_4px_0_rgba(0,0,0,0.9)] hover:-translate-y-0.5 transition-all duration-200"
           >
             <button
               onClick={() => setOpenIdx(isOpen ? null : idx)}

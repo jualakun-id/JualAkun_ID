@@ -62,7 +62,7 @@ export function StatCard({ variant, value, label, icon: Icon, imageUrl }: StatCa
   if (imageUrl) {
     return (
       <div
-        className={`${v.bg} rounded-2xl shadow-lg overflow-hidden relative aspect-[4/3] flex flex-col`}
+        className={`${v.bg} rounded-2xl border-2 border-black shadow-[0_4px_0_rgba(0,0,0,0.9)] overflow-hidden relative aspect-[4/3] flex flex-col`}
       >
         {/* Art image — fills top portion */}
         <div className="relative flex-1 overflow-hidden">
@@ -88,7 +88,7 @@ export function StatCard({ variant, value, label, icon: Icon, imageUrl }: StatCa
   // Fallback: icon mode (current behavior, dengan aspect 4:3)
   return (
     <div
-      className={`${v.bg} rounded-2xl shadow-lg flex flex-col items-center justify-center text-center gap-2 aspect-[4/3] px-4 py-3`}
+      className={`${v.bg} rounded-2xl border-2 border-black shadow-[0_4px_0_rgba(0,0,0,0.9)] flex flex-col items-center justify-center text-center gap-2 aspect-[4/3] px-4 py-3`}
     >
       {Icon && (
         <div className={`w-12 h-12 rounded-xl ${v.iconBg} flex items-center justify-center shrink-0`}>

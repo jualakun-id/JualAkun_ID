@@ -21,7 +21,7 @@ export function TestimonialCard({
     .toUpperCase()
 
   return (
-    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow flex flex-col gap-3 h-full text-center md:text-left">
+    <div className="bg-white rounded-2xl p-6 border-2 border-black shadow-[0_4px_0_rgba(0,0,0,0.9)] hover:shadow-[0_6px_0_rgba(0,0,0,0.9)] hover:-translate-y-0.5 transition-all duration-200 flex flex-col gap-3 h-full text-center md:text-left">
       <div className="flex items-center gap-3 justify-center md:justify-start">
         <div
           className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0"

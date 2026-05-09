@@ -21,7 +21,7 @@ export function LandingProductCard({
 
   return (
     <div
-      className="rounded-xl border border-gray-100 shadow-[0_2px_12px_rgba(0,0,0,0.06)] flex flex-col overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 relative aspect-[3/4] p-4 gap-3"
+      className="rounded-xl border-2 border-black shadow-[0_4px_0_rgba(0,0,0,0.9)] flex flex-col overflow-hidden hover:shadow-[0_6px_0_rgba(0,0,0,0.9)] hover:-translate-y-0.5 transition-all duration-200 relative aspect-[3/4] p-4 gap-3"
       style={{
         backgroundColor: '#FAF7F2',
         backgroundImage:
@@ -38,7 +38,7 @@ export function LandingProductCard({
 
       {/* Art / Brand area — wrapped in framed container with uniform cream margin all sides */}
       <div
-        className="relative rounded-lg overflow-hidden bg-white shrink-0"
+        className="relative rounded-lg overflow-hidden bg-white shrink-0 border-2 border-black"
         style={{ height: '50%' }}
       >
         {product.thumbnail_url ? (
