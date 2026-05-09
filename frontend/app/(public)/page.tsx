@@ -26,33 +26,26 @@ export const revalidate = 300
 
 const CATEGORY_SECTIONS = [
   {
-    slug: 'streaming',
-    label: 'Streaming',
-    desc: 'Netflix, Spotify, Disney+, YouTube Premium, dan layanan streaming favorit lainnya.',
+    slug: 'ai',
+    label: 'AI & Asisten',
+    desc: 'ChatGPT Plus, Claude Pro, Grok Super, Gemini AI, Google Ultra — chatbot & asisten AI premium.',
   },
   {
-    slug: 'gaming',
-    label: 'Gaming',
-    desc: 'Game Pass, PlayStation Plus, Steam Wallet untuk para gamer.',
-  },
-  {
-    slug: 'ai-produktif',
-    label: 'AI & Produktif',
-    desc: 'ChatGPT, Canva Pro, Notion AI, dan tools produktivitas terkini.',
+    slug: 'kreator',
+    label: 'Kreator & Multimedia',
+    desc: 'Adobe CC, Canva Pro, CapCut Pro, Suno Music, Kling AI, ElevenLabs — tools content creator.',
   },
 ] as const
 
 export default async function HomePage() {
-  const [streaming, gaming, aiProduktif] = await Promise.all([
-    serverFetch<CatalogResponse>('/catalog?category_slug=streaming&sort=sold_count&limit=8', { revalidate: 300 }),
-    serverFetch<CatalogResponse>('/catalog?category_slug=gaming&sort=sold_count&limit=8', { revalidate: 300 }),
-    serverFetch<CatalogResponse>('/catalog?category_slug=ai-produktif&sort=sold_count&limit=8', { revalidate: 300 }),
+  const [ai, kreator] = await Promise.all([
+    serverFetch<CatalogResponse>('/catalog?category_slug=ai&sort=sold_count&limit=8', { revalidate: 300 }),
+    serverFetch<CatalogResponse>('/catalog?category_slug=kreator&sort=sold_count&limit=8', { revalidate: 300 }),
   ])
 
   const sectionsData = [
-    { ...CATEGORY_SECTIONS[0], data: streaming },
-    { ...CATEGORY_SECTIONS[1], data: gaming },
-    { ...CATEGORY_SECTIONS[2], data: aiProduktif },
+    { ...CATEGORY_SECTIONS[0], data: ai },
+    { ...CATEGORY_SECTIONS[1], data: kreator },
   ]
 
   return (
@@ -75,7 +68,7 @@ export default async function HomePage() {
               </p>
               <div className="mt-7 sm:mt-8 flex flex-wrap items-center justify-center md:justify-start gap-3 sm:gap-4">
                 <Link
-                  href="/#streaming"
+                  href="/#ai"
                   className="group bg-white text-brand-700 hover:text-brand-800 font-semibold px-7 sm:px-8 py-3.5 rounded-lg shadow-lg shadow-brand-900/25 hover:shadow-xl hover:shadow-brand-900/30 hover:-translate-y-0.5 active:translate-y-0 active:shadow-md transition-all duration-200 text-base inline-flex items-center gap-2"
                 >
                   Lihat Layanan
@@ -166,7 +159,7 @@ export default async function HomePage() {
             <div className="flex justify-center order-1 md:order-2">
               <div className="relative w-64 h-64 bg-brand-50 rounded-3xl p-6 flex items-center justify-center">
                 <div className="grid grid-cols-3 gap-3">
-                  {(['netflix','spotify','youtube','disneyplus','chatgpt','canva'] as const).map((b, i) => (
+                  {(['chatgpt','canva','notion','applemusic','duolingo','discord'] as const).map((b, i) => (
                     <div
                       key={b}
                       className="w-14 h-14 bg-white rounded-2xl shadow-sm flex items-center justify-center animate-float"

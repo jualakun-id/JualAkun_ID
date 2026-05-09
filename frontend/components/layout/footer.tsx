@@ -36,9 +36,9 @@ export function Footer() {
           <FooterColumn
             title="Produk"
             links={[
-              { href: '/#streaming', label: 'Streaming' },
-              { href: '/#gaming', label: 'Gaming' },
-              { href: '/#ai-produktif', label: 'AI & Produktif' },
+              { href: '/#ai', label: 'AI & Asisten' },
+              { href: '/#kreator', label: 'Kreator & Multimedia' },
+              { href: '/#cara-pesan', label: 'Cara Pesan' },
               { href: '/#faq', label: 'FAQ' },
             ]}
           />

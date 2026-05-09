@@ -7,9 +7,9 @@ import { Menu, X } from 'lucide-react'
 import { Logo } from '@/components/branding/logo'
 
 const NAV_ITEMS = [
-  { href: '/#streaming', label: 'Streaming' },
-  { href: '/#gaming', label: 'Gaming' },
-  { href: '/#ai-produktif', label: 'AI & Produktif' },
+  { href: '/#ai', label: 'AI & Asisten' },
+  { href: '/#kreator', label: 'Kreator' },
+  { href: '/#cara-pesan', label: 'Cara Pesan' },
   { href: '/#faq', label: 'FAQ' },
 ]
 
