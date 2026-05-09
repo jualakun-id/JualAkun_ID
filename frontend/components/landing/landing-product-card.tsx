@@ -21,7 +21,7 @@ export function LandingProductCard({
 
   return (
     <div
-      className="rounded-xl border border-gray-100 shadow-[0_2px_12px_rgba(0,0,0,0.06)] flex flex-col overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 relative aspect-[3/4] p-2.5"
+      className="rounded-xl border border-gray-100 shadow-[0_2px_12px_rgba(0,0,0,0.06)] flex flex-col overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 relative aspect-[3/4] p-4 gap-3"
       style={{
         backgroundColor: '#FAF7F2',
         backgroundImage:
@@ -31,15 +31,15 @@ export function LandingProductCard({
     >
       {/* Discount badge */}
       {hasDiscount && (
-        <span className="absolute top-4 left-4 bg-gradient-to-r from-purple-600 to-pink-500 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-sm z-10">
+        <span className="absolute top-5 left-5 bg-gradient-to-r from-purple-600 to-pink-500 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-sm z-10">
           Diskon {discountPct}%
         </span>
       )}
 
-      {/* Art / Brand area — wrapped in framed container with cream margin all sides */}
+      {/* Art / Brand area — wrapped in framed container with uniform cream margin all sides */}
       <div
         className="relative rounded-lg overflow-hidden bg-white shrink-0"
-        style={{ height: 'calc(55% - 8px)' }}
+        style={{ height: '50%' }}
       >
         {product.thumbnail_url ? (
           <Image
@@ -63,7 +63,7 @@ export function LandingProductCard({
       </div>
 
       {/* Content + CTA — fills remaining space */}
-      <div className="flex-1 flex flex-col px-1.5 pt-3 pb-1 min-h-0 relative">
+      <div className="flex-1 flex flex-col px-1.5 min-h-0 relative">
         <div className="flex-1 flex flex-col items-center text-center">
           <h3 className="font-bold text-ink text-sm leading-tight line-clamp-2">{product.name}</h3>
           {product.category && (
