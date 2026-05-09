@@ -30,7 +30,7 @@ export function LandingProductCard({
 
       {/* Art / Brand area — 55% of card height */}
       <div
-        className="relative bg-gradient-to-br from-brand-50 via-white to-gray-50 flex items-center justify-center overflow-hidden border-b border-gray-100 shrink-0"
+        className="relative bg-[#FAF7F2] flex items-center justify-center overflow-hidden shrink-0"
         style={{ height: '55%' }}
       >
         {product.thumbnail_url ? (
@@ -52,8 +52,16 @@ export function LandingProductCard({
         )}
       </div>
 
-      {/* Content + CTA — fills remaining 45% */}
-      <div className="flex-1 flex flex-col px-4 py-3 min-h-0">
+      {/* Content + CTA — fills remaining 45% with cream + dot texture */}
+      <div
+        className="flex-1 flex flex-col px-4 py-3 min-h-0 relative"
+        style={{
+          backgroundColor: '#FAF7F2',
+          backgroundImage:
+            'radial-gradient(circle at 1.5px 1.5px, rgba(0,137,168,0.10) 1.5px, transparent 0)',
+          backgroundSize: '14px 14px',
+        }}
+      >
         <div className="flex-1 flex flex-col items-center text-center">
           <h3 className="font-bold text-ink text-sm leading-tight line-clamp-2">{product.name}</h3>
           {product.category && (
