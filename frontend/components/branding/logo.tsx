@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 
 type LogoSize = 'sm' | 'md' | 'lg'
 
@@ -11,6 +12,9 @@ const SIZES: Record<
   md: { mark: 44, wordmark: 'text-2xl',   tagline: 'text-xs',     gap: 'gap-2',   taglineMt: 'mt-0.5' },
   lg: { mark: 56, wordmark: 'text-3xl',   tagline: 'text-sm',     gap: 'gap-2.5', taglineMt: 'mt-1' },
 }
+
+const LOGO_DOODLE_URL =
+  'https://clfewheqatyaefohmdpn.supabase.co/storage/v1/object/public/product-thumbnails/logo-doodle-transparent.webp'
 
 type LogoProps = {
   /** Tampilkan tagline di bawah wordmark */
@@ -25,11 +29,12 @@ type LogoProps = {
 }
 
 /**
- * Logo Jualakun.id — diamond+checkmark mark + wordmark + tagline.
+ * Logo Jualakun.id — Vexx-style doodle diamond+checkmark (image) + wordmark + tagline.
  *
  * Symbology:
  *  - Diamond  → "Akun Langka" (rare, premium)
  *  - Checkmark → "Tetap Asli" (authentic, verified)
+ *  - Vexx doodle marker style → match dengan brand visual identity
  *
  * Pemakaian:
  *  - Header: <Logo />                         (medium with tagline)
@@ -45,12 +50,20 @@ export function Logo({
   const s = SIZES[size]
   const wordmarkColor = inverted ? 'text-white' : 'text-ink'
   const accentColor   = inverted ? 'text-brand-400' : 'text-brand-500'
-  const markColor     = inverted ? 'text-brand-400' : 'text-brand-500'
   const taglineColor  = inverted ? 'text-brand-400/90' : 'text-brand-600'
 
   const inner = (
     <div className={`inline-flex items-center ${s.gap} ${className}`}>
-      <LogoMark size={s.mark} className={markColor} />
+      <div className="relative shrink-0" style={{ width: s.mark, height: s.mark }}>
+        <Image
+          src={LOGO_DOODLE_URL}
+          alt="Jualakun.id logo"
+          fill
+          sizes={`${s.mark}px`}
+          className="object-contain"
+          priority
+        />
+      </div>
       <div className="flex flex-col leading-none">
         <div className={`font-extrabold ${s.wordmark} ${wordmarkColor} tracking-tight`}>
           Jualakun<span className={accentColor}>.id</span>
@@ -75,8 +88,9 @@ export function Logo({
 }
 
 /**
- * SVG mark — pakai standalone untuk favicon, social share, dll.
+ * SVG mark — pakai standalone untuk favicon, social share, fallback.
  * Diamond shape (langka) + checkmark inside (asli).
+ * Tetap di-export untuk kompatibilitas (favicon icon.svg, apple-icon.tsx).
  */
 export function LogoMark({
   size = 36,
@@ -95,18 +109,8 @@ export function LogoMark({
       className={className}
       aria-hidden="true"
     >
-      {/* Outer diamond — fill current color */}
-      <path
-        d="M20 3 L37 20 L20 37 L3 20 Z"
-        fill="currentColor"
-      />
-      {/* Inner subtle highlight on top-left edge for depth */}
-      <path
-        d="M20 3 L37 20 L20 20 Z"
-        fill="white"
-        fillOpacity="0.15"
-      />
-      {/* Authenticity checkmark */}
+      <path d="M20 3 L37 20 L20 37 L3 20 Z" fill="currentColor" />
+      <path d="M20 3 L37 20 L20 20 Z" fill="white" fillOpacity="0.15" />
       <path
         d="M12 20.5 L17.5 26 L28 14"
         stroke="white"
