@@ -37,8 +37,11 @@ export function Header() {
         scrolled ? 'shadow-sm border-b border-gray-100' : ''
       }`}
     >
-      <div className="container mx-auto flex h-[88px] items-center justify-between px-4 max-w-7xl">
-        <Logo size="md" showTagline />
+      <div className="container mx-auto flex h-[88px] items-center justify-end md:justify-between px-4 max-w-7xl relative">
+        {/* Logo — centered on mobile, left-aligned on desktop */}
+        <div className="absolute left-1/2 -translate-x-1/2 md:static md:translate-x-0">
+          <Logo size="md" showTagline />
+        </div>
 
         {/* Desktop Nav */}
         <nav className="hidden md:flex items-center gap-1 text-sm font-medium" aria-label="Main">
@@ -77,14 +80,14 @@ export function Header() {
           </Link>
         </div>
 
-        {/* Mobile hamburger */}
+        {/* Mobile hamburger — line art style with neo-brutalist shadow */}
         <button
           aria-label={menuOpen ? 'Tutup menu' : 'Buka menu'}
           aria-expanded={menuOpen}
-          className="md:hidden p-2 rounded-lg text-ink hover:bg-gray-50"
+          className="md:hidden relative p-2 rounded-lg text-ink bg-white border-2 border-black shadow-[0_3px_0_rgba(0,0,0,0.9)] hover:shadow-[0_4px_0_rgba(0,0,0,0.9)] hover:-translate-y-0.5 active:translate-y-1 active:shadow-[0_1px_0_rgba(0,0,0,0.9)] transition-all duration-150"
           onClick={() => setMenuOpen(!menuOpen)}
         >
-          {menuOpen ? <X size={22} /> : <Menu size={22} />}
+          {menuOpen ? <X size={22} strokeWidth={3} /> : <Menu size={22} strokeWidth={3} />}
         </button>
       </div>
 
