@@ -59,25 +59,25 @@ export default async function HomePage() {
     <div>
       {/* ── HERO ───────────────────────────────────────────── */}
       <section className="relative bg-sky-hero overflow-hidden">
-        <div className="container mx-auto px-4 pt-16 pb-24 md:pt-24 md:pb-32 max-w-7xl">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-16 items-center">
+        <div className="container mx-auto px-4 pt-12 pb-20 sm:pt-16 sm:pb-24 md:pt-24 md:pb-32 max-w-7xl">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10 lg:gap-16 items-center">
             {/* Text */}
-            <div className="animate-fade-up">
+            <div className="animate-fade-up text-center md:text-left">
               <span className="inline-block bg-white/20 backdrop-blur-sm border border-white/30 text-white text-xs font-semibold px-3 py-1.5 rounded-full mb-5">
                 #1 Marketplace Akun Digital Indonesia
               </span>
-              <h1 className="text-5xl md:text-6xl font-extrabold text-white leading-[1.05] tracking-tight">
+              <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-white leading-[1.05] tracking-tight">
                 Akun Digital<br />
                 Murah &amp;{' '}
                 <span className="text-brand-900">Langsung Aktif</span>
               </h1>
-              <p className="mt-6 text-white/90 text-lg max-w-md leading-relaxed">
+              <p className="mt-5 sm:mt-6 text-white/90 text-base sm:text-lg max-w-md mx-auto md:mx-0 leading-relaxed">
                 Netflix, Spotify, ChatGPT, Canva, dan ratusan layanan premium lainnya — harga hemat, garansi resmi, kirim instan ke dashboard.
               </p>
-              <div className="mt-8 flex flex-wrap items-center gap-4">
+              <div className="mt-7 sm:mt-8 flex flex-wrap items-center justify-center md:justify-start gap-4">
                 <Link
                   href="/#streaming"
-                  className="bg-brand-700 hover:bg-brand-800 text-white font-semibold px-8 py-3.5 rounded-lg shadow-lg shadow-brand-900/20 transition-colors text-base inline-flex items-center gap-2"
+                  className="bg-brand-700 hover:bg-brand-800 text-white font-semibold px-7 sm:px-8 py-3.5 rounded-lg shadow-lg shadow-brand-900/20 transition-colors text-base inline-flex items-center gap-2"
                 >
                   Lihat Layanan
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" aria-hidden="true">
@@ -93,7 +93,7 @@ export default async function HomePage() {
               </div>
 
               {/* Trust indicators */}
-              <div className="mt-10 flex items-center gap-5 text-white/80 text-xs">
+              <div className="mt-8 sm:mt-10 flex flex-wrap items-center justify-center md:justify-start gap-x-5 gap-y-2 text-white/85 text-xs">
                 <div className="flex items-center gap-1.5">
                   <Shield className="w-4 h-4" aria-hidden="true" />
                   <span>100% Garansi</span>
@@ -110,7 +110,7 @@ export default async function HomePage() {
             </div>
 
             {/* Illustration */}
-            <div className="animate-fade-in delay-150">
+            <div className="animate-fade-in delay-150 max-w-xs sm:max-w-sm md:max-w-md mx-auto w-full">
               <HeroIllustration />
             </div>
           </div>
@@ -198,12 +198,14 @@ export default async function HomePage() {
           <p className="text-ink-subtle mt-3">
             5 langkah mudah untuk mendapatkan akun digital favorit kamu.
           </p>
-          <div className="mt-12 grid grid-cols-2 md:grid-cols-5 gap-6 md:gap-4">
+          <div className="mt-12 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6 md:gap-4 max-w-3xl md:max-w-none mx-auto">
             <StepCard num={1} label="Pilih Produk"     icon={Package} />
             <StepCard num={2} label="Checkout"         icon={ShoppingCart} />
             <StepCard num={3} label="Bayar"            icon={Wallet} />
             <StepCard num={4} label="Pesanan Diterima" icon={Bell} />
-            <StepCard num={5} label="Nikmati Akun"     icon={Star} />
+            <div className="col-span-2 sm:col-span-3 md:col-span-1 flex justify-center">
+              <StepCard num={5} label="Nikmati Akun" icon={Star} />
+            </div>
           </div>
         </div>
       </section>
