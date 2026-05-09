@@ -2,10 +2,14 @@ import Link from 'next/link'
 
 type LogoSize = 'sm' | 'md' | 'lg'
 
-const SIZES: Record<LogoSize, { mark: number; wordmark: string; tagline: string; gap: string }> = {
-  sm: { mark: 28, wordmark: 'text-base',  tagline: 'text-[9px]',  gap: 'gap-2' },
-  md: { mark: 36, wordmark: 'text-lg',    tagline: 'text-[10px]', gap: 'gap-2.5' },
-  lg: { mark: 48, wordmark: 'text-2xl',   tagline: 'text-xs',     gap: 'gap-3' },
+const SIZES: Record<
+  LogoSize,
+  { mark: number; wordmark: string; tagline: string; gap: string; taglineMt: string }
+> = {
+  // Sized so wordmark width ≈ tagline width below it (visual alignment)
+  sm: { mark: 32, wordmark: 'text-lg',    tagline: 'text-[10px]', gap: 'gap-2',   taglineMt: 'mt-0.5' },
+  md: { mark: 44, wordmark: 'text-2xl',   tagline: 'text-xs',     gap: 'gap-2',   taglineMt: 'mt-0.5' },
+  lg: { mark: 56, wordmark: 'text-3xl',   tagline: 'text-sm',     gap: 'gap-2.5', taglineMt: 'mt-1' },
 }
 
 type LogoProps = {
@@ -28,7 +32,7 @@ type LogoProps = {
  *  - Checkmark → "Tetap Asli" (authentic, verified)
  *
  * Pemakaian:
- *  - Header: <Logo />                         (compact, no tagline)
+ *  - Header: <Logo />                         (medium with tagline)
  *  - Footer: <Logo size="lg" showTagline inverted />
  */
 export function Logo({
@@ -45,14 +49,16 @@ export function Logo({
   const taglineColor  = inverted ? 'text-brand-400/90' : 'text-brand-600'
 
   const inner = (
-    <div className={`flex items-center ${s.gap} ${className}`}>
+    <div className={`inline-flex items-center ${s.gap} ${className}`}>
       <LogoMark size={s.mark} className={markColor} />
       <div className="flex flex-col leading-none">
-        <div className={`font-bold ${s.wordmark} ${wordmarkColor} tracking-tight`}>
+        <div className={`font-extrabold ${s.wordmark} ${wordmarkColor} tracking-tight`}>
           Jualakun<span className={accentColor}>.id</span>
         </div>
         {showTagline && (
-          <div className={`${s.tagline} ${taglineColor} font-semibold italic mt-1 tracking-tight`}>
+          <div
+            className={`${s.tagline} ${taglineColor} font-semibold italic ${s.taglineMt} tracking-tight whitespace-nowrap`}
+          >
             Anti Mainstream, Tetap Asli.
           </div>
         )}
@@ -62,7 +68,7 @@ export function Logo({
 
   if (!asLink) return inner
   return (
-    <Link href="/" aria-label="Jualakun.id — kembali ke beranda" className="shrink-0">
+    <Link href="/" aria-label="Jualakun.id — kembali ke beranda" className="shrink-0 inline-block">
       {inner}
     </Link>
   )

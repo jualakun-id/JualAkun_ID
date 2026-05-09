@@ -37,7 +37,7 @@ export function Header() {
         scrolled ? 'shadow-sm border-b border-gray-100' : ''
       }`}
     >
-      <div className="container mx-auto flex h-20 items-center justify-between px-4 max-w-7xl">
+      <div className="container mx-auto flex h-[88px] items-center justify-between px-4 max-w-7xl">
         <Logo size="md" showTagline />
 
         {/* Desktop Nav */}
