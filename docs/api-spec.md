@@ -13,7 +13,7 @@
 - `✅ Public` — tidak perlu auth
 - `🔐 Auth` — perlu JWT buyer
 - `🛡️ Admin` — perlu JWT + role `admin`
-- Semua response error: `{ "error": "KODE_ERROR", "message": "..." }`
+- Semua response error: `{ "ok": false, "code": "KODE_ERROR", "message": "...", "details"?: {...} }`
 - Semua response sukses: `{ "data": {...} }` atau `{ "data": [...] }`
 - Timestamp: ISO 8601 (`2026-05-09T10:00:00Z`)
 - Harga: integer Rupiah (`47500` = Rp 47.500)
@@ -686,18 +686,18 @@ KPI utama (calls `get_admin_kpis()` RPC).
 
 ## 13. Cron (Internal — Cloudflare Cron Trigger)
 
-### `GET /cron/expire-orders`
-Internal — dipanggil oleh Cloudflare Cron setiap 30 menit.
+### `POST /api/cron/expire-orders`
+Internal — dipanggil oleh Cloudflare Cron setiap 5 menit. Header: `x-cron-secret`.
 
 Calls `expire_old_orders()` RPC.
 
-### `GET /cron/stock-alerts`
-Internal — dipanggil setiap 1 jam.
+### `POST /api/cron/stock-alerts`
+Internal — dipanggil setiap 30 menit.
 
 Cek produk dengan `stock_count <= 5`, kirim notif WA ke admin.
 
-### `GET /cron/retry-notifications`
-Internal — dipanggil setiap 15 menit.
+### `POST /api/cron/retry-notifications`
+Internal — dipanggil setiap 10 menit.
 
 Retry notif WA/email yang `status = 'failed'`.
 

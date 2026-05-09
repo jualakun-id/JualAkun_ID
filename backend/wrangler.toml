@@ -1,0 +1,32 @@
+name = "jualakun-backend"
+main = "src/index.ts"
+compatibility_date = "2025-01-15"
+compatibility_flags = ["nodejs_compat"]
+
+# Non-secret env vars only — secrets via: wrangler secret put NAMA_KEY
+[vars]
+MIDTRANS_IS_PRODUCTION = "false"
+CORS_ORIGINS = "https://jualakun.id,http://localhost:3000"
+
+# Cron triggers (3 jadwal sesuai PRD Appendix E.7)
+[triggers]
+crons = [
+  "*/5 * * * *",   # expire orders (24h timeout check)
+  "*/30 * * * *",  # stock alerts (low-stock notifications)
+  "*/10 * * * *",  # retry failed notifications
+]
+
+# Secrets to set via: wrangler secret put <NAME>
+# - SUPABASE_URL
+# - SUPABASE_ANON_KEY
+# - SUPABASE_SERVICE_ROLE_KEY
+# - ENCRYPTION_KEY
+# - MIDTRANS_SERVER_KEY
+# - MIDTRANS_CLIENT_KEY
+# - WAHA_BASE_URL
+# - WAHA_API_KEY
+# - WAHA_SESSION
+# - RESEND_API_KEY
+# - RESEND_FROM_EMAIL
+# - ADMIN_WHATSAPP_NUMBER
+# - CRON_SECRET

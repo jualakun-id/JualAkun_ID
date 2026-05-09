@@ -33,7 +33,7 @@ Secara strategis, platform ini mengisi gap di pasar Indonesia di mana tidak ada 
 | Target Release | 2026-Q3 (MVP) |
 | Tech Stack | Next.js 15 + Vercel (frontend), Hono + Cloudflare Workers (backend API), Supabase (database + auth + storage) |
 | Payment | Midtrans Payment Gateway |
-| Notifikasi | Fonnte / WhatsApp Business API + Resend (email) |
+| Notifikasi | WAHA (self-hosted WhatsApp HTTP API) + Resend (email) |
 | PM Owner | Zeo Studio |
 
 ---
@@ -235,7 +235,7 @@ Cron handler dipanggil via `scheduled(event, env, ctx)` di Worker entry point. P
 #### Notifikasi
 
 **Business rule:**
-- WhatsApp notif (via Fonnte) pada event: order created, payment confirmed, akun terkirim, garansi aktif, tiket komplain update
+- WhatsApp notif (via WAHA) pada event: order created, payment confirmed, akun terkirim, garansi aktif, tiket komplain update
 - Email notif (via Resend) pada event yang sama sebagai backup
 - Admin notif via WhatsApp: pesanan baru, stok kritis, tiket komplain baru
 
@@ -341,7 +341,7 @@ Cron handler dipanggil via `scheduled(event, env, ctx)` di Worker entry point. P
 | Dependency | Tipe | Fungsi | Status |
 |-----------|------|--------|--------|
 | **Midtrans** | Eksternal | Payment gateway | Perlu mendaftar akun merchant |
-| **Fonnte / WA Business API** | Eksternal | Notifikasi WhatsApp | Perlu mendaftar + verifikasi nomor |
+| **WAHA (WhatsApp HTTP API)** | Eksternal (self-hosted) | Notifikasi WhatsApp | Self-host WAHA + scan QR untuk session, set WAHA_BASE_URL/API_KEY/SESSION |
 | **Resend** | Eksternal | Email transaksional | Perlu mendaftar + verifikasi domain |
 | **Supabase** | Eksternal | Database, auth, storage | Setup project |
 | **Cloudflare Workers** | Eksternal | Backend API hosting | Setup account |
@@ -417,7 +417,7 @@ R = Responsible (author/PIC), C = Consulted (reviewer), I = Informed
 | File Storage | Supabase Storage | Cloudflare R2 | Sudah terintegrasi dengan Supabase, cukup untuk MVP |
 | Payment | Midtrans | Xendit, Duitku | Coverage bank & e-wallet Indonesia terluas, dokumentasi solid |
 | Email | Resend | SendGrid, Mailgun | Developer-friendly, pricing murah, deliverability baik |
-| WA Notif | Fonnte | Wablas, WA Business API langsung | Biaya terjangkau, setup cepat untuk MVP |
+| WA Notif | WAHA (self-hosted) | Fonnte, Wablas, WA Business API | Self-host WAHA: tanpa biaya per pesan, kontrol penuh, mudah swap engine (Core/Plus/NoWeb) |
 | Auth | Supabase Auth | NextAuth, Clerk | Sudah satu ekosistem dengan DB, gratis di free tier |
 
 ---

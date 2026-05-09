@@ -9,7 +9,7 @@ Platform marketplace akun digital Indonesia, admin-managed, domain `jualakun.id`
 - **Database:** Supabase (PostgreSQL + Auth + Storage)
 - **Payment:** Midtrans (Snap)
 - **Email:** Resend
-- **WA Notif:** Fonnte
+- **WA Notif:** WAHA (self-hosted WhatsApp HTTP API)
 - **Language:** TypeScript throughout
 
 ## Struktur Repo

@@ -60,6 +60,8 @@
 | `/admin/kupon` | Manajemen kupon | |
 | `/admin/pengguna` | Daftar buyer | |
 | `/admin/analytics` | Revenue, top produk | |
+| `/admin/notifikasi` | Log notif WA + email | Filter channel/status, retry failed |
+| `/admin/stok-monitor` | Monitor stok semua produk | Quick upload inline, alert kritis |
 
 ---
 
@@ -163,7 +165,7 @@ src/
 │       └── retry-notifications.ts
 ├── services/
 │   ├── payment.service.ts           → Midtrans integration
-│   ├── notification.service.ts      → WA (Fonnte) + Email (Resend)
+│   ├── notification.service.ts      → WA (WAHA) + Email (Resend)
 │   ├── crypto.service.ts            → AES-256 encrypt/decrypt credentials
 │   └── delivery.service.ts          → Orchestrate deliver_order_account RPC
 └── lib/

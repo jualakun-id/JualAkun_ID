@@ -96,7 +96,7 @@ Pembeli ingin menemukan, membeli, dan langsung mengakses akun digital premium ya
 | Dashboard pembeli (riwayat, akun aktif, garansi) | Multi-bahasa (selain Indonesia) |
 | Admin panel (manajemen produk, stok, pesanan) | Internasional (luar Indonesia) |
 | Sistem garansi & komplain | Program affiliate/reseller |
-| Notifikasi WhatsApp (Fonnte/WA Business API) + email | Flash sale / auction system |
+| Notifikasi WhatsApp (WAHA self-hosted) + email | Flash sale / auction system |
 | Program referral sederhana | |
 | SEO-optimized landing pages per kategori | |
 
