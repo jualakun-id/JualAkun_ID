@@ -78,7 +78,7 @@ export default async function HomePage() {
                 </Link>
                 <Link
                   href="/#cara-pesan"
-                  className="group bg-brand-700 text-white hover:bg-brand-800 font-semibold px-7 sm:px-8 py-3 rounded-lg border-2 border-black shadow-[0_4px_0_rgba(0,0,0,0.9)] hover:shadow-[0_6px_0_rgba(0,0,0,0.9)] hover:-translate-y-0.5 active:translate-y-1 active:shadow-[0_2px_0_rgba(0,0,0,0.9)] transition-all duration-150 text-base inline-flex items-center gap-2"
+                  className="group bg-brand-500 text-ink hover:bg-brand-400 font-bold px-7 sm:px-8 py-3 rounded-lg border-2 border-black shadow-[0_4px_0_rgba(0,0,0,0.9)] hover:shadow-[0_6px_0_rgba(0,0,0,0.9)] hover:-translate-y-0.5 active:translate-y-1 active:shadow-[0_2px_0_rgba(0,0,0,0.9)] transition-all duration-150 text-base inline-flex items-center gap-2"
                 >
                   Cara Pesan
                   <svg className="w-4 h-4 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" aria-hidden="true">
