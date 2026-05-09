@@ -37,11 +37,11 @@ const mono = JetBrains_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'https://jualakun.id'),
   title: {
-    default: 'Jualakun.id — Akun Digital. Murah. Langsung Aktif.',
+    default: 'Jualakun.id — Anti Mainstream, Tetap Asli.',
     template: '%s | Jualakun.id',
   },
   description:
-    'Marketplace akun digital terpercaya di Indonesia. Netflix, Spotify, ChatGPT, Canva, dan lainnya — harga murah, garansi resmi, langsung aktif.',
+    'Marketplace akun digital langka & sulit dicari di tempat lain. Akun premium asli, garansi resmi, kirim instan ke dashboard. Anti mainstream, tetap asli.',
   keywords: ['akun digital', 'jual akun', 'netflix murah', 'spotify premium', 'chatgpt', 'canva pro'],
   openGraph: {
     type: 'website',

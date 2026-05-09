@@ -5,7 +5,7 @@ export const runtime = 'edge'
 export async function GET(req: Request): Promise<Response> {
   const { searchParams } = new URL(req.url)
   const title = searchParams.get('title') ?? 'Jualakun.id'
-  const subtitle = searchParams.get('subtitle') ?? 'Akun Digital. Murah. Langsung Aktif.'
+  const subtitle = searchParams.get('subtitle') ?? 'Anti Mainstream, Tetap Asli.'
   const price = searchParams.get('price')
 
   return new ImageResponse(

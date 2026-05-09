@@ -64,7 +64,7 @@ export default async function HomePage() {
             {/* Text */}
             <div className="animate-fade-up text-center md:text-left">
               <span className="inline-block bg-white/20 backdrop-blur-sm border border-white/30 text-white text-xs font-semibold px-3 py-1.5 rounded-full mb-5">
-                #1 Marketplace Akun Digital Indonesia
+                Anti Mainstream, Tetap Asli.
               </span>
               <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-white leading-[1.05] tracking-tight">
                 Akun Digital<br />

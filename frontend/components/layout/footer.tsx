@@ -15,8 +15,11 @@ export function Footer() {
               Jualakun<span className="text-brand-400">.id</span>
             </span>
           </div>
+          <p className="mt-2 text-xs font-semibold text-brand-400 italic">
+            Anti Mainstream, Tetap Asli.
+          </p>
           <p className="mt-3 text-sm text-white/60 leading-relaxed">
-            Jualakun.id hadir untuk bantu kamu mendapatkan akses ke layanan favorit dengan cara yang aman, mudah, dan hemat.
+            Marketplace akun digital langka & sulit dicari di tempat lain — premium, asli, dengan garansi resmi.
           </p>
           <div className="mt-4 flex items-center gap-1.5 text-xs text-white/40">
             <span>Terdaftar dan aman</span>
