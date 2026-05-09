@@ -61,13 +61,13 @@ export function StatCard({ variant, value, label, icon: Icon, imageUrl }: StatCa
         className={`${v.bg} rounded-2xl border-2 border-black shadow-[0_4px_0_rgba(0,0,0,0.9)] relative aspect-[4/3] flex flex-col p-3 gap-2`}
       >
         {/* Art image — framed dengan border + colored padding all sides */}
-        <div className="relative rounded-lg border-2 border-black overflow-hidden bg-[#FAF7F2] flex-1">
+        <div className="relative rounded-lg border-2 border-black overflow-hidden flex-1">
           <Image
             src={imageUrl}
             alt={label}
             fill
             sizes="(max-width: 640px) 50vw, 25vw"
-            className="object-contain"
+            className="object-cover object-center"
           />
         </div>
         {/* Value + label below */}
