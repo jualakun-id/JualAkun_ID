@@ -6,10 +6,10 @@ import { useState, useEffect } from 'react'
 import { Menu, X } from 'lucide-react'
 
 const NAV_ITEMS = [
-  { href: '/streaming', label: 'Streaming' },
-  { href: '/gaming', label: 'Gaming' },
-  { href: '/ai-produktif', label: 'AI & Produktif' },
-  { href: '/faq', label: 'FAQ' },
+  { href: '/#streaming', label: 'Streaming' },
+  { href: '/#gaming', label: 'Gaming' },
+  { href: '/#ai-produktif', label: 'AI & Produktif' },
+  { href: '/#faq', label: 'FAQ' },
 ]
 
 export function Header() {
@@ -24,7 +24,11 @@ export function Header() {
     return () => window.removeEventListener('scroll', handler)
   }, [])
 
-  const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/')
+  const isActive = (href: string) => {
+    // Anchor link (e.g. /#streaming) only active when on homepage
+    if (href.includes('#')) return false
+    return pathname === href || pathname.startsWith(href + '/')
+  }
 
   return (
     <header

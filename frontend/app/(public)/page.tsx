@@ -5,7 +5,7 @@ import {
   Wallet, Package, Star, Users, TrendingUp, Award,
 } from 'lucide-react'
 import { serverFetch } from '@/lib/server-fetch'
-import type { Product, Category } from '@/types'
+import type { Product } from '@/types'
 
 import { HeroIllustration } from '@/components/landing/hero-illustration'
 import { StatCard } from '@/components/landing/stat-card'
@@ -24,11 +24,36 @@ type CatalogResponse = {
 
 export const revalidate = 300
 
+const CATEGORY_SECTIONS = [
+  {
+    slug: 'streaming',
+    label: 'Streaming',
+    desc: 'Netflix, Spotify, Disney+, YouTube Premium, dan layanan streaming favorit lainnya.',
+  },
+  {
+    slug: 'gaming',
+    label: 'Gaming',
+    desc: 'Game Pass, PlayStation Plus, Steam Wallet untuk para gamer.',
+  },
+  {
+    slug: 'ai-produktif',
+    label: 'AI & Produktif',
+    desc: 'ChatGPT, Canva Pro, Notion AI, dan tools produktivitas terkini.',
+  },
+] as const
+
 export default async function HomePage() {
-  const [popular, categories] = await Promise.all([
-    serverFetch<CatalogResponse>('/catalog?sort=sold_count&limit=8', { revalidate: 300 }),
-    serverFetch<(Category & { product_count: number })[]>('/catalog/categories', { revalidate: 600 }),
+  const [streaming, gaming, aiProduktif] = await Promise.all([
+    serverFetch<CatalogResponse>('/catalog?category_slug=streaming&sort=sold_count&limit=8', { revalidate: 300 }),
+    serverFetch<CatalogResponse>('/catalog?category_slug=gaming&sort=sold_count&limit=8', { revalidate: 300 }),
+    serverFetch<CatalogResponse>('/catalog?category_slug=ai-produktif&sort=sold_count&limit=8', { revalidate: 300 }),
   ])
+
+  const sectionsData = [
+    { ...CATEGORY_SECTIONS[0], data: streaming },
+    { ...CATEGORY_SECTIONS[1], data: gaming },
+    { ...CATEGORY_SECTIONS[2], data: aiProduktif },
+  ]
 
   return (
     <div>
@@ -60,7 +85,7 @@ export default async function HomePage() {
                   </svg>
                 </Link>
                 <Link
-                  href="/faq"
+                  href="/#faq"
                   className="text-white font-semibold underline-offset-4 hover:underline text-base"
                 >
                   Cara Pesan →
@@ -161,58 +186,10 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── PRODUCTS ───────────────────────────────────────── */}
-      <section className="bg-brand-50 py-16 md:py-20">
-        <div className="container mx-auto px-4 max-w-7xl">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl md:text-4xl font-bold text-ink">Produk Digital Populer</h2>
-            <p className="text-ink-subtle mt-3">
-              Pilih dari koleksi layanan terbaik dengan harga terjangkau.
-            </p>
-          </div>
-
-          {/* Category pills */}
-          {categories && categories.length > 0 && (
-            <div className="flex flex-wrap justify-center gap-2 mb-10">
-              <span className="bg-brand-500 text-white px-4 py-1.5 rounded-full text-sm font-semibold shadow-sm">
-                Semua
-              </span>
-              {categories.map((c) => (
-                <Link
-                  key={c.slug}
-                  href={`/${c.slug}`}
-                  className="bg-white text-ink-muted border border-gray-200 px-4 py-1.5 rounded-full text-sm font-medium hover:bg-brand-500 hover:text-white hover:border-brand-500 transition-all"
-                >
-                  {c.name}
-                </Link>
-              ))}
-            </div>
-          )}
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-            {popular?.products?.length ? (
-              popular.products.map((p) => <LandingProductCard key={p.id} product={p} />)
-            ) : (
-              <div className="col-span-4 text-center text-ink-subtle py-12">
-                <Package className="w-12 h-12 mx-auto text-ink-subtle/40 mb-3" aria-hidden="true" />
-                <p>Belum ada produk tersedia.</p>
-              </div>
-            )}
-          </div>
-
-          <div className="mt-10 text-center">
-            <Link
-              href="/streaming"
-              className="inline-flex items-center gap-2 bg-brand-500 hover:bg-brand-600 text-white font-semibold px-8 py-3 rounded-lg transition-colors shadow-md"
-            >
-              Lihat Semua Produk
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-              </svg>
-            </Link>
-          </div>
-        </div>
-      </section>
+      {/* ── CATEGORY SECTIONS ──────────────────────────────── */}
+      {sectionsData.map((section, idx) => (
+        <CategorySection key={section.slug} section={section} bgAlt={idx % 2 === 0} />
+      ))}
 
       {/* ── HOW IT WORKS ───────────────────────────────────── */}
       <section className="bg-white py-16 md:py-20">
@@ -294,7 +271,7 @@ export default async function HomePage() {
       </section>
 
       {/* ── FAQ ────────────────────────────────────────────── */}
-      <section className="bg-brand-50 py-16 md:py-20">
+      <section id="faq" className="bg-brand-50 py-16 md:py-20 scroll-mt-20">
         <div className="container mx-auto px-4 max-w-3xl">
           <div className="text-center mb-10">
             <h2 className="text-3xl md:text-4xl font-bold text-ink">Pertanyaan Umum</h2>
@@ -339,6 +316,54 @@ export default async function HomePage() {
         </div>
       </section>
     </div>
+  )
+}
+
+type SectionData = {
+  slug: string
+  label: string
+  desc: string
+  data: CatalogResponse | null
+}
+
+function CategorySection({ section, bgAlt }: { section: SectionData; bgAlt: boolean }) {
+  const products = section.data?.products ?? []
+  return (
+    <section
+      id={section.slug}
+      className={`scroll-mt-20 py-16 md:py-20 ${bgAlt ? 'bg-brand-50' : 'bg-white'}`}
+    >
+      <div className="container mx-auto px-4 max-w-7xl">
+        <div className="flex flex-wrap items-end justify-between gap-4 mb-8">
+          <div>
+            <h2 className="text-3xl md:text-4xl font-bold text-ink">{section.label}</h2>
+            <p className="text-ink-subtle mt-2 max-w-xl">{section.desc}</p>
+          </div>
+          <Link
+            href={`/${section.slug}`}
+            className="text-brand-600 hover:text-brand-700 font-semibold text-sm inline-flex items-center gap-1 shrink-0"
+          >
+            Lihat semua
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+          </Link>
+        </div>
+
+        {products.length ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+            {products.map((p) => (
+              <LandingProductCard key={p.id} product={p} />
+            ))}
+          </div>
+        ) : (
+          <div className={`text-center py-12 rounded-2xl border border-dashed border-gray-200 ${bgAlt ? 'bg-white/50' : 'bg-brand-50/50'}`}>
+            <Package className="w-10 h-10 mx-auto text-ink-subtle/40 mb-2" aria-hidden="true" />
+            <p className="text-ink-subtle text-sm">Belum ada produk di kategori {section.label}.</p>
+          </div>
+        )}
+      </div>
+    </section>
   )
 }
 
