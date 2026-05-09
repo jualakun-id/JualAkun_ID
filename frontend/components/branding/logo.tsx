@@ -49,7 +49,8 @@ export function Logo({
 }: LogoProps) {
   const s = SIZES[size]
   const wordmarkColor = inverted ? 'text-white' : 'text-ink'
-  const accentColor   = inverted ? 'text-brand-400' : 'text-brand-500'
+  // ".id" accent uses brighter cyan (brand-400) to match the vibrant logo image rendering
+  const accentColor   = inverted ? 'text-brand-300' : 'text-brand-400'
   const taglineColor  = inverted ? 'text-brand-400/90' : 'text-brand-600'
 
   const inner = (

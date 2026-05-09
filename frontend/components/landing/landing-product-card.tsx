@@ -112,7 +112,7 @@ export function LandingProductCard({
           ) : (
             <Link
               href={`/produk/${product.slug}`}
-              className="block w-full bg-brand-600 hover:bg-brand-700 text-white font-semibold py-2 rounded-lg text-center text-xs border-2 border-black shadow-[0_3px_0_rgba(0,0,0,0.9)] hover:shadow-[0_4px_0_rgba(0,0,0,0.9)] hover:-translate-y-0.5 active:translate-y-1 active:shadow-[0_1px_0_rgba(0,0,0,0.9)] transition-all duration-150"
+              className="block w-full bg-brand-700 hover:bg-brand-800 text-white font-semibold py-2 rounded-lg text-center text-xs border-2 border-black shadow-[0_3px_0_rgba(0,0,0,0.9)] hover:shadow-[0_4px_0_rgba(0,0,0,0.9)] hover:-translate-y-0.5 active:translate-y-1 active:shadow-[0_1px_0_rgba(0,0,0,0.9)] transition-all duration-150"
             >
               Pesan Sekarang
             </Link>
