@@ -129,10 +129,14 @@ export default async function HomePage() {
             Kami fokus ke akun yang jarang dijual di tempat lain — semua resmi, mayoritas bergaransi.
           </p>
           <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-5">
-            <StatCard variant="blue"   value="10+"    label="Akun Eksklusif"    icon={Award} />
-            <StatCard variant="red"    value="100%"   label="Asli &amp; Resmi"  icon={CheckCircle} />
-            <StatCard variant="green"  value="< 5m"   label="Kirim Otomatis"    icon={Zap} />
-            <StatCard variant="yellow" value="24/7"   label="Support Cepat"     icon={Headphones} />
+            <StatCard variant="blue"   value="10+"  label="Akun Eksklusif"
+              imageUrl="https://clfewheqatyaefohmdpn.supabase.co/storage/v1/object/public/product-thumbnails/stat-blue.webp" />
+            <StatCard variant="red"    value="100%" label="Asli &amp; Resmi"
+              imageUrl="https://clfewheqatyaefohmdpn.supabase.co/storage/v1/object/public/product-thumbnails/stat-red.webp" />
+            <StatCard variant="green"  value="< 5m" label="Kirim Otomatis"
+              imageUrl="https://clfewheqatyaefohmdpn.supabase.co/storage/v1/object/public/product-thumbnails/stat-green.webp" />
+            <StatCard variant="yellow" value="24/7" label="Support Cepat"
+              imageUrl="https://clfewheqatyaefohmdpn.supabase.co/storage/v1/object/public/product-thumbnails/stat-yellow.webp" />
           </div>
         </div>
       </section>
