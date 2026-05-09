@@ -21,8 +21,8 @@ export function TestimonialCard({
     .toUpperCase()
 
   return (
-    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow flex flex-col gap-3 h-full">
-      <div className="flex items-center gap-3">
+    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow flex flex-col gap-3 h-full text-center md:text-left">
+      <div className="flex items-center gap-3 justify-center md:justify-start">
         <div
           className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0"
           style={{ backgroundColor: avatarColor }}
@@ -30,12 +30,12 @@ export function TestimonialCard({
         >
           {initials}
         </div>
-        <div className="min-w-0">
+        <div className="min-w-0 text-left">
           <div className="text-ink font-semibold text-sm truncate">{name}</div>
           <div className="text-ink-subtle text-xs truncate">{handle}</div>
         </div>
       </div>
-      <div className="flex gap-0.5" aria-label={`${rating} dari 5 bintang`}>
+      <div className="flex gap-0.5 justify-center md:justify-start" aria-label={`${rating} dari 5 bintang`}>
         {Array.from({ length: 5 }).map((_, i) => (
           <Star
             key={i}

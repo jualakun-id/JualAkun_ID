@@ -8,20 +8,20 @@ export function Footer() {
       <div className="container mx-auto px-4 py-14 max-w-7xl">
         {/* ── TOP: Brand intro ─────────────────────────────── */}
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-8 pb-10 border-b border-white/10">
-          <div className="max-w-sm">
+          <div className="max-w-sm w-full flex flex-col items-center md:items-start text-center md:text-left">
             <Logo size="lg" showTagline inverted />
             <p className="mt-5 text-sm text-white/60 leading-relaxed">
               Marketplace akun digital langka & sulit dicari di tempat lain — premium, asli, dengan garansi resmi.
             </p>
           </div>
-          <div className="flex items-center gap-2 self-start md:self-end text-xs text-white/50">
+          <div className="flex items-center gap-2 self-center md:self-end text-xs text-white/50">
             <ShieldCheck size={14} className="text-brand-400" />
             <span>Terdaftar &amp; Aman</span>
           </div>
         </div>
 
         {/* ── BOTTOM: Links + Contact ──────────────────────── */}
-        <div className="grid gap-10 pt-10 grid-cols-1 sm:grid-cols-3">
+        <div className="grid gap-10 pt-10 grid-cols-1 sm:grid-cols-3 text-center sm:text-left">
           <FooterColumn
             title="Jualakun.id"
             links={[
@@ -47,17 +47,17 @@ export function Footer() {
           <div>
             <h4 className="text-sm font-semibold text-white mb-4">Hubungi Kami</h4>
             <ul className="space-y-3 text-sm text-white/60">
-              <li className="flex items-center gap-2.5">
+              <li className="flex items-center gap-2.5 justify-center sm:justify-start">
                 <Mail size={14} className="text-brand-400 shrink-0" />
                 <a href="mailto:cs@jualakun.id" className="hover:text-brand-400 transition-colors">
                   cs@jualakun.id
                 </a>
               </li>
-              <li className="flex items-center gap-2.5">
+              <li className="flex items-center gap-2.5 justify-center sm:justify-start">
                 <Phone size={14} className="text-brand-400 shrink-0" />
                 <span>WhatsApp Support</span>
               </li>
-              <li className="flex items-start gap-2.5">
+              <li className="flex items-start gap-2.5 justify-center sm:justify-start">
                 <Clock size={14} className="text-brand-400 shrink-0 mt-0.5" />
                 <span>Setiap hari, 06.00 – 00.00 WIB</span>
               </li>
