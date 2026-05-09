@@ -71,7 +71,7 @@ export default async function HomePage() {
                 <span className="text-brand-900">Tetap Asli</span> &amp; Aktif.
               </h1>
               <p className="mt-5 sm:mt-6 text-white/90 text-base sm:text-lg max-w-md mx-auto md:mx-0 leading-relaxed">
-                Akun premium yang sulit kamu temui di tempat lain — Cursor, Claude Pro, ChatGPT Plus, dan layanan eksklusif lainnya. <strong className="text-white">Asli</strong>, bergaransi, kirim instan.
+                Akun premium yang sulit kamu temui di tempat lain — Cursor, Claude Pro, ChatGPT Plus, dan layanan eksklusif lainnya. <strong className="text-white">Asli</strong>, kirim instan, banyak yang bergaransi.
               </p>
               <div className="mt-7 sm:mt-8 flex flex-wrap items-center justify-center md:justify-start gap-4">
                 <Link
@@ -103,7 +103,7 @@ export default async function HomePage() {
                 </div>
                 <div className="flex items-center gap-1.5">
                   <Shield className="w-4 h-4" aria-hidden="true" />
-                  <span>Garansi Terjamin</span>
+                  <span>Garansi Tersedia</span>
                 </div>
               </div>
             </div>
@@ -130,7 +130,7 @@ export default async function HomePage() {
             Bukan Marketplace Biasa
           </h2>
           <p className="text-ink-subtle mt-3 max-w-xl mx-auto">
-            Kami fokus ke akun yang jarang dijual di tempat lain — semua resmi, semua bergaransi.
+            Kami fokus ke akun yang jarang dijual di tempat lain — semua resmi, mayoritas bergaransi.
           </p>
           <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-5">
             <StatCard variant="blue"   value="10+"    label="Akun Eksklusif"    icon={Award} />
@@ -230,7 +230,7 @@ export default async function HomePage() {
             <TrustCard
               icon={Shield}
               title="Garansi Sampai Tuntas"
-              desc="Akun bermasalah? Ganti baru atau refund penuh, tanpa drama."
+              desc="Untuk produk bergaransi: akun bermasalah? Ganti baru atau refund penuh, tanpa drama."
             />
           </div>
         </div>
@@ -357,11 +357,11 @@ const FAQS = [
   },
   {
     q: 'Apakah akun yang dijual legal dan aman?',
-    a: 'Ya. Kami menjual akun premium yang sah dari distributor resmi, bukan akun bajakan. Setiap akun digaransi sesuai durasi yang tertera di halaman produk.',
+    a: 'Ya. Kami menjual akun premium yang sah dari distributor resmi, bukan akun bajakan. Mayoritas produk bergaransi — durasi spesifik tertera di halaman tiap produk.',
   },
   {
     q: 'Apa itu garansi dan bagaimana cara klaimnya?',
-    a: 'Setiap produk memiliki masa garansi (umumnya 14–30 hari). Jika akun bermasalah dalam masa garansi, klik tombol "Klaim Garansi" di halaman pesanan, sertakan screenshot — admin akan kirim akun pengganti dalam 1×24 jam.',
+    a: 'Mayoritas produk kami punya masa garansi (umumnya 14–30 hari, cek halaman produk untuk detail). Jika akun bergaransi bermasalah, klik tombol "Klaim Garansi" di halaman pesanan, sertakan screenshot — admin akan kirim akun pengganti dalam 1×24 jam.',
   },
   {
     q: 'Metode pembayaran apa saja yang tersedia?',
@@ -369,11 +369,11 @@ const FAQS = [
   },
   {
     q: 'Berapa lama masa garansi yang berlaku?',
-    a: 'Garansi default 30 hari untuk akun streaming, AI, dan produktif. Cek halaman detail produk untuk durasi spesifik per layanan.',
+    a: 'Untuk produk bergaransi, default 30 hari untuk akun streaming, AI, dan produktif. Sebagian akun (terutama yang sangat langka) tidak bergaransi — selalu cek halaman detail produk sebelum membeli.',
   },
   {
     q: 'Bagaimana jika akun yang saya beli bermasalah?',
-    a: 'Tenang — selama dalam masa garansi, hubungi CS kami di dashboard atau WhatsApp. Kami akan kirim akun pengganti atau refund penuh sesuai pilihan kamu.',
+    a: 'Untuk produk bergaransi: selama masih dalam masa garansi, hubungi CS kami di dashboard atau WhatsApp. Kami akan kirim akun pengganti atau refund penuh sesuai pilihan kamu. Untuk produk tanpa garansi, ini di luar tanggungan kami — pastikan baca info produk sebelum membeli.',
   },
   {
     q: 'Apakah ada program referral?',
