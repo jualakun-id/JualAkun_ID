@@ -25,7 +25,7 @@ export function LandingProductCard({
       style={{
         backgroundColor: '#FAF7F2',
         backgroundImage:
-          'radial-gradient(circle at 1.5px 1.5px, rgba(0,137,168,0.10) 1.5px, transparent 0)',
+          'radial-gradient(circle at 1.5px 1.5px, rgba(6,182,212,0.12) 1.5px, transparent 0)',
         backgroundSize: '14px 14px',
       }}
     >
@@ -112,7 +112,7 @@ export function LandingProductCard({
           ) : (
             <Link
               href={`/produk/${product.slug}`}
-              className="block w-full bg-brand-500 hover:bg-brand-600 text-white font-semibold py-2 rounded-lg text-center text-xs border-2 border-black shadow-[0_3px_0_rgba(0,0,0,0.9)] hover:shadow-[0_4px_0_rgba(0,0,0,0.9)] hover:-translate-y-0.5 active:translate-y-1 active:shadow-[0_1px_0_rgba(0,0,0,0.9)] transition-all duration-150"
+              className="block w-full bg-brand-600 hover:bg-brand-700 text-white font-semibold py-2 rounded-lg text-center text-xs border-2 border-black shadow-[0_3px_0_rgba(0,0,0,0.9)] hover:shadow-[0_4px_0_rgba(0,0,0,0.9)] hover:-translate-y-0.5 active:translate-y-1 active:shadow-[0_1px_0_rgba(0,0,0,0.9)] transition-all duration-150"
             >
               Pesan Sekarang
             </Link>

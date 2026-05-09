@@ -17,7 +17,7 @@ export default function AppleIcon() {
         }}
       >
         <svg width="170" height="170" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
-          <path d="M20 1 L39 20 L20 39 L1 20 Z" fill="#0089A8" />
+          <path d="M20 1 L39 20 L20 39 L1 20 Z" fill="#06B6D4" />
           <path d="M20 1 L39 20 L20 20 Z" fill="white" fillOpacity="0.15" />
           <path
             d="M11 20.5 L17 26.5 L29 13.5"

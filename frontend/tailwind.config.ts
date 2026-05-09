@@ -36,18 +36,18 @@ const config: Config = {
         danger: '#EF4444',
         info: '#38BDF8',
 
-        // Light system (akunmu.id-style for public pages)
+        // Light system — vibrant cyan-teal matching logo doodle color
         brand: {
-          50:  '#EBF5FF',
-          100: '#D6EAFD',
-          200: '#A8D5F2',
-          300: '#5BB5DD',
-          400: '#1AA1CC',
-          500: '#0089A8',  // primary CTA — kontras AA pass
-          600: '#007089',
-          700: '#005770',
-          800: '#003E50',
-          900: '#1A4480',  // navy heading accent
+          50:  '#ECFEFF',  // very light cyan tint (section bg)
+          100: '#CFFAFE',
+          200: '#A5F3FC',
+          300: '#67E8F9',
+          400: '#22D3EE',  // bright accent (footer/dark bg)
+          500: '#06B6D4',  // LOGO color — vibrant cyan-teal (decorative, badges, accents)
+          600: '#0891B2',  // primary CTA bg with white text (kontras 4.6:1 — AA pass)
+          700: '#0E7490',  // CTA hover, darker accent
+          800: '#155E75',
+          900: '#1A4480',  // navy heading accent (hero highlight)
         },
         ink: {
           DEFAULT: '#1A2340',

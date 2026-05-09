@@ -1,4 +1,4 @@
-﻿import Link from 'next/link'
+import Link from 'next/link'
 import { CheckCircle2 } from 'lucide-react'
 
 type Props = { searchParams: Promise<{ order_id?: string }> }

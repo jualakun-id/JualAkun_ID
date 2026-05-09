@@ -12,7 +12,7 @@ export async function GET(req: Request): Promise<Response> {
     (
       <div
         style={{
-          background: 'linear-gradient(135deg, #0089A8 0%, #1A4480 100%)',
+          background: 'linear-gradient(135deg, #06B6D4 0%, #1A4480 100%)',
           width: '100%',
           height: '100%',
           display: 'flex',
