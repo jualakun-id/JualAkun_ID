@@ -105,7 +105,7 @@ export default async function HomePage() {
             </div>
 
             {/* Illustration */}
-            <div className="animate-fade-in delay-150 max-w-xs sm:max-w-sm md:max-w-md mx-auto w-full">
+            <div className="animate-fade-in delay-150 w-full max-w-md sm:max-w-lg md:max-w-none mx-auto">
               <HeroIllustration />
             </div>
           </div>
