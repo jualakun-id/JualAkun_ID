@@ -293,7 +293,7 @@ export default async function HomePage() {
               <h3 className="text-2xl md:text-3xl font-bold text-white">
                 Siap mulai berlangganan hemat?
               </h3>
-              <p className="text-white/85 mt-1 text-sm md:text-base">
+              <p className="text-white/85 mt-1 text-base">
                 Daftar gratis sekarang dan dapatkan akses ke semua produk terbaik.
               </p>
             </div>

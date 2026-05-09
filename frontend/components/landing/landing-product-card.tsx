@@ -22,7 +22,7 @@ export function LandingProductCard({
     <div className="bg-white rounded-xl border border-gray-100 shadow-[0_2px_12px_rgba(0,0,0,0.06)] flex flex-col overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 relative">
       {/* Discount badge */}
       {hasDiscount && (
-        <span className="absolute top-3 left-3 bg-gradient-to-r from-purple-600 to-pink-500 text-white text-[11px] font-bold px-2.5 py-1 rounded-full shadow-sm z-10">
+        <span className="absolute top-3 left-3 bg-gradient-to-r from-purple-600 to-pink-500 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-sm z-10">
           Diskon {discountPct}%
         </span>
       )}
@@ -46,7 +46,7 @@ export function LandingProductCard({
       <div className="px-4 py-4 flex-1 flex flex-col items-center text-center">
         <h3 className="font-bold text-ink text-base leading-tight">{product.name}</h3>
         {product.category && (
-          <span className="mt-1.5 inline-block text-[11px] font-medium text-brand-700 bg-brand-50 px-2 py-0.5 rounded-full">
+          <span className="mt-1.5 inline-block text-xs font-medium text-brand-700 bg-brand-50 px-2 py-0.5 rounded-full">
             {product.category.name}
           </span>
         )}
