@@ -38,12 +38,12 @@ export function Header() {
     >
       <div className="container mx-auto flex h-16 items-center justify-between px-4 max-w-7xl">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 shrink-0" aria-label="JualAkun home">
+        <Link href="/" className="flex items-center gap-2 shrink-0" aria-label="Jualakun.id home">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-500 text-base font-black text-white shadow-sm">
             J
           </div>
           <span className="font-bold text-lg text-ink">
-            Jual<span className="text-brand-500">Akun</span>
+            Jualakun<span className="text-brand-500">.id</span>
           </span>
         </Link>
 

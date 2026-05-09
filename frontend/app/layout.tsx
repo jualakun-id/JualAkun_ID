@@ -37,8 +37,8 @@ const mono = JetBrains_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'https://jualakun.id'),
   title: {
-    default: 'JualAkun — Akun Digital. Murah. Langsung Aktif.',
-    template: '%s | JualAkun',
+    default: 'Jualakun.id — Akun Digital. Murah. Langsung Aktif.',
+    template: '%s | Jualakun.id',
   },
   description:
     'Marketplace akun digital terpercaya di Indonesia. Netflix, Spotify, ChatGPT, Canva, dan lainnya — harga murah, garansi resmi, langsung aktif.',
@@ -46,7 +46,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'id_ID',
-    siteName: 'JualAkun',
+    siteName: 'Jualakun.id',
   },
   robots: {
     index: true,

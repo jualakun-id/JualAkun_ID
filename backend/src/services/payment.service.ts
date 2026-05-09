@@ -84,7 +84,7 @@ export class PaymentService {
 
     const { data: authUser } = await supabase.auth.admin.getUserById(order.user_id)
     const email = authUser.user?.email ?? `${order.order_number.toLowerCase()}@no-reply.jualakun.id`
-    const fullName = profile?.full_name ?? 'JualAkun Buyer'
+    const fullName = profile?.full_name ?? 'Jualakun.id Buyer'
     const [firstName, ...lastParts] = fullName.split(' ')
 
     const apiBase = process.env.PUBLIC_API_URL ?? ''

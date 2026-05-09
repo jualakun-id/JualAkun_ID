@@ -4,7 +4,7 @@ export const runtime = 'edge'
 
 export async function GET(req: Request): Promise<Response> {
   const { searchParams } = new URL(req.url)
-  const title = searchParams.get('title') ?? 'JualAkun'
+  const title = searchParams.get('title') ?? 'Jualakun.id'
   const subtitle = searchParams.get('subtitle') ?? 'Akun Digital. Murah. Langsung Aktif.'
   const price = searchParams.get('price')
 
@@ -12,7 +12,7 @@ export async function GET(req: Request): Promise<Response> {
     (
       <div
         style={{
-          background: 'linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)',
+          background: 'linear-gradient(135deg, #0089A8 0%, #1A4480 100%)',
           width: '100%',
           height: '100%',
           display: 'flex',
@@ -24,8 +24,8 @@ export async function GET(req: Request): Promise<Response> {
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', fontSize: 32, fontWeight: 800 }}>
-          <span style={{ color: 'white' }}>Jual</span>
-          <span style={{ color: '#22D3EE' }}>Akun</span>
+          <span style={{ color: 'white' }}>Jualakun</span>
+          <span style={{ color: '#22D3EE' }}>.id</span>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div style={{ fontSize: 64, fontWeight: 800, lineHeight: 1.1 }}>{title}</div>

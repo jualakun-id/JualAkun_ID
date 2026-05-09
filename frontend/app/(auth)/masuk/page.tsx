@@ -7,7 +7,7 @@ export const metadata = { title: 'Masuk' }
 export default function MasukPage() {
   return (
     <>
-      <h1 className="font-heading text-h2">Masuk ke JualAkun</h1>
+      <h1 className="font-heading text-h2">Masuk ke Jualakun.id</h1>
       <p className="mt-2 text-sm text-text-muted">Akses dashboard dan riwayat pesanan Anda.</p>
       <div className="mt-6">
         <Suspense fallback={<div className="h-40" />}>

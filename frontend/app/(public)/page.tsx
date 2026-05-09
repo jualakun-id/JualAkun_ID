@@ -128,7 +128,7 @@ export default async function HomePage() {
       <section className="bg-white py-16 md:py-20">
         <div className="container mx-auto px-4 max-w-6xl text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-ink">
-            Bergabung dengan JualAkun!
+            Bergabung dengan Jualakun.id!
           </h2>
           <p className="text-ink-subtle mt-3 max-w-xl mx-auto">
             Nikmati layanan premium dengan lebih hemat, aman, dan pastinya terpercaya — bersama ribuan pengguna setia.
@@ -150,7 +150,7 @@ export default async function HomePage() {
               Manfaat Yang Kamu Dapatkan
             </h2>
             <p className="text-ink-subtle mt-3">
-              Kenapa ribuan pengguna memilih JualAkun untuk langganan digital mereka.
+              Kenapa ribuan pengguna memilih Jualakun.id untuk langganan digital mereka.
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-10 lg:gap-16 items-center">
@@ -213,7 +213,7 @@ export default async function HomePage() {
       {/* ── TRUST ──────────────────────────────────────────── */}
       <section className="bg-brand-50 py-16">
         <div className="container mx-auto px-4 max-w-5xl text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-ink mb-4">Kenapa Pilih JualAkun?</h2>
+          <h2 className="text-3xl md:text-4xl font-bold text-ink mb-4">Kenapa Pilih Jualakun.id?</h2>
           <p className="text-ink-subtle mb-12 max-w-xl mx-auto">
             Tiga alasan utama kenapa kami jadi pilihan terpercaya untuk akun digital.
           </p>
@@ -243,7 +243,7 @@ export default async function HomePage() {
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-ink">Apa Kata Mereka</h2>
             <p className="text-ink-subtle mt-3">
-              Cerita dari pengguna yang sudah merasakan manfaat JualAkun.
+              Cerita dari pengguna yang sudah merasakan manfaat Jualakun.id.
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -259,7 +259,7 @@ export default async function HomePage() {
               handle="@anisaw"
               avatarColor="#1567C8"
               rating={5}
-              text="Mahasiswa banget butuh ChatGPT Plus tapi mahal kalau langganan sendiri. Di JualAkun bisa dapat dengan harga setengahnya, akun aman, terima kasih!"
+              text="Mahasiswa banget butuh ChatGPT Plus tapi mahal kalau langganan sendiri. Di Jualakun.id bisa dapat dengan harga setengahnya, akun aman, terima kasih!"
             />
             <TestimonialCard
               name="Budi Santoso"
@@ -349,7 +349,7 @@ function CategorySection({ section, bgAlt }: { section: SectionData; bgAlt: bool
 
 const FAQS = [
   {
-    q: 'Bagaimana cara membeli akun di JualAkun?',
+    q: 'Bagaimana cara membeli akun di Jualakun.id?',
     a: 'Pilih produk di salah satu kategori → klik "Pesan Sekarang" → login/daftar → bayar via Duitku → akun otomatis terkirim ke dashboard kamu dalam < 5 menit.',
   },
   {
@@ -378,6 +378,6 @@ const FAQS = [
   },
   {
     q: 'Apakah ada program referral?',
-    a: 'Ya. Setiap teman yang daftar via link referral kamu dan transaksi pertama, kamu dapat kredit Rp 5.000 yang bisa langsung dipakai belanja di JualAkun.',
+    a: 'Ya. Setiap teman yang daftar via link referral kamu dan transaksi pertama, kamu dapat kredit Rp 5.000 yang bisa langsung dipakai belanja di Jualakun.id.',
   },
 ]

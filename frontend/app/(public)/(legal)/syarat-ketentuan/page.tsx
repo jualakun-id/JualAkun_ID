@@ -8,7 +8,7 @@ export default function SyaratKetentuanPage() {
 
       <h2 className="mt-8 font-heading text-h2 text-text">1. Penerimaan Syarat</h2>
       <p className="mt-2">
-        Dengan menggunakan layanan JualAkun (jualakun.id), Anda menyetujui untuk terikat oleh syarat dan
+        Dengan menggunakan layanan Jualakun.id, Anda menyetujui untuk terikat oleh syarat dan
         ketentuan ini.
       </p>
 
@@ -38,7 +38,7 @@ export default function SyaratKetentuanPage() {
 
       <h2 className="mt-6 font-heading text-h2 text-text">6. Perubahan Syarat</h2>
       <p className="mt-2">
-        JualAkun berhak mengubah syarat ini sewaktu-waktu. Perubahan akan diumumkan di halaman ini.
+        Jualakun.id berhak mengubah syarat ini sewaktu-waktu. Perubahan akan diumumkan di halaman ini.
       </p>
     </section>
   )

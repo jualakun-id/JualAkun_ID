@@ -12,11 +12,11 @@ export function Footer() {
               J
             </div>
             <span className="font-bold text-lg text-white">
-              Jual<span className="text-brand-400">Akun</span>
+              Jualakun<span className="text-brand-400">.id</span>
             </span>
           </div>
           <p className="mt-3 text-sm text-white/60 leading-relaxed">
-            JualAkun hadir untuk bantu kamu mendapatkan akses ke layanan favorit dengan cara yang aman, mudah, dan hemat.
+            Jualakun.id hadir untuk bantu kamu mendapatkan akses ke layanan favorit dengan cara yang aman, mudah, dan hemat.
           </p>
           <div className="mt-4 flex items-center gap-1.5 text-xs text-white/40">
             <span>Terdaftar dan aman</span>
@@ -25,7 +25,7 @@ export function Footer() {
 
         {/* Links */}
         <FooterColumn
-          title="JualAkun"
+          title="Jualakun.id"
           links={[
             { href: '/tentang', label: 'Tentang Kami' },
             { href: '/#faq', label: 'Cara Pesan' },
@@ -66,7 +66,7 @@ export function Footer() {
       </div>
 
       <div className="border-t border-white/10 py-4 text-center text-xs text-white/30">
-        © {new Date().getFullYear()} JualAkun. Hak cipta dilindungi.
+        © {new Date().getFullYear()} Jualakun.id. Hak cipta dilindungi.
       </div>
     </footer>
   )
