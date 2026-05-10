@@ -22,9 +22,13 @@ type Props = {
     guarantee_days: number
     is_active: boolean
   }>
+  /** Set true kalau ProductForm di-render di dalam Modal — drop card wrapper (border + padding + shadow). */
+  embedded?: boolean
+  /** Callback setelah submit success — pakai untuk close modal. Default: router.push ke detail. */
+  onSuccess?: (id: string) => void
 }
 
-export function ProductForm({ categories, initial }: Props) {
+export function ProductForm({ categories, initial, embedded, onSuccess }: Props) {
   const router = useRouter()
   const toast = useToast()
   const isEdit = !!initial?.id
@@ -43,6 +47,20 @@ export function ProductForm({ categories, initial }: Props) {
 
   function update<K extends keyof typeof form>(key: K, value: typeof form[K]) {
     setForm((f) => ({ ...f, [key]: value }))
+  }
+
+  // Auto-generate slug saat user ketik nama (hanya kalau create mode + slug belum di-edit manual)
+  function handleNameChange(value: string) {
+    update('name', value)
+    if (!isEdit) {
+      const autoSlug = value
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9-]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .replace(/-+/g, '-')
+      update('slug', autoSlug)
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -65,12 +83,21 @@ export function ProductForm({ categories, initial }: Props) {
       return
     }
     toast.success(isEdit ? 'Produk diperbarui ✓' : 'Produk berhasil dibuat ✓')
-    router.push(isEdit ? `/admin/produk/${initial!.id}` : `/admin/produk/${result.data.id}`)
-    router.refresh()
+    if (onSuccess) {
+      onSuccess(isEdit ? initial!.id! : result.data.id)
+      router.refresh()
+    } else {
+      router.push(isEdit ? `/admin/produk/${initial!.id}` : `/admin/produk/${result.data.id}`)
+      router.refresh()
+    }
   }
 
+  const formClass = embedded
+    ? 'space-y-5'
+    : 'space-y-5 rounded-2xl border-2 border-black bg-white p-6 shadow-[0_3px_0_rgba(0,0,0,0.9)]'
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-5 rounded-2xl border-2 border-black bg-white p-6 shadow-[0_3px_0_rgba(0,0,0,0.9)]">
+    <form onSubmit={handleSubmit} className={formClass}>
       <Field label="Kategori">
         <select
           value={form.category_id}
@@ -83,41 +110,77 @@ export function ProductForm({ categories, initial }: Props) {
           ))}
         </select>
       </Field>
-      <Field label="Nama produk">
-        <Input required value={form.name} onChange={(e) => update('name', e.target.value)} />
+      <Field label="Nama produk" hint="Akan dipakai sebagai display name di marketplace">
+        <Input
+          required
+          minLength={2}
+          maxLength={100}
+          value={form.name}
+          onChange={(e) => handleNameChange(e.target.value)}
+          placeholder="Contoh: Claude Pro Full Garansi"
+        />
       </Field>
       {!isEdit ? (
-        <Field label="Slug (auto-generate dari nama)">
+        <Field label="Slug (URL)" hint="Auto-generate dari nama. Bisa di-edit manual — hanya huruf kecil, angka, dan tanda −">
           <Input
             required
             pattern="[a-z0-9-]+"
+            minLength={2}
+            maxLength={100}
             value={form.slug}
             onChange={(e) => update('slug', e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'))}
             className="font-mono"
+            placeholder="claude-pro-full-garansi"
           />
         </Field>
       ) : null}
-      <Field label="Deskripsi">
+      <Field label="Deskripsi" hint="Opsional. Tampil di halaman detail produk">
         <textarea
           rows={4}
           value={form.description}
           onChange={(e) => update('description', e.target.value)}
+          placeholder="Deskripsi produk, fitur, syarat penggunaan..."
           className="w-full rounded-lg border-2 border-black/15 bg-white px-4 py-3 text-[15px] font-medium text-ink placeholder:text-ink-subtle placeholder:font-normal focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/25"
         />
       </Field>
       <div className="grid gap-4 sm:grid-cols-3">
-        <Field label="Harga (Rp)">
-          <Input type="number" min={0} required value={form.price} onChange={(e) => update('price', Number(e.target.value))} />
+        <Field label="Harga (Rp)" hint="Harga jual ke buyer">
+          <Input
+            type="number"
+            min={1000}
+            step={1000}
+            required
+            value={form.price}
+            onChange={(e) => update('price', Number(e.target.value))}
+            placeholder="150000"
+          />
         </Field>
-        <Field label="Durasi (hari)">
-          <Input type="number" min={1} required value={form.duration_days} onChange={(e) => update('duration_days', Number(e.target.value))} />
+        <Field label="Durasi (hari)" hint="Periode aktif akun">
+          <Input
+            type="number"
+            min={1}
+            required
+            value={form.duration_days}
+            onChange={(e) => update('duration_days', Number(e.target.value))}
+          />
         </Field>
-        <Field label="Garansi (hari)">
-          <Input type="number" min={0} required value={form.guarantee_days} onChange={(e) => update('guarantee_days', Number(e.target.value))} />
+        <Field label="Garansi (hari)" hint="0 = tanpa garansi">
+          <Input
+            type="number"
+            min={0}
+            required
+            value={form.guarantee_days}
+            onChange={(e) => update('guarantee_days', Number(e.target.value))}
+          />
         </Field>
       </div>
-      <Field label="Thumbnail URL">
-        <Input type="url" value={form.thumbnail_url} onChange={(e) => update('thumbnail_url', e.target.value)} placeholder="https://..." />
+      <Field label="Thumbnail URL" hint="URL gambar produk (Supabase Storage / CDN). Optional — tampil di card marketplace">
+        <Input
+          type="url"
+          value={form.thumbnail_url}
+          onChange={(e) => update('thumbnail_url', e.target.value)}
+          placeholder="https://..."
+        />
       </Field>
       <label className="flex items-start gap-3 rounded-lg border-2 border-black/15 bg-brand-50/40 p-3.5 cursor-pointer hover:border-brand-400 transition-colors">
         <input
@@ -140,11 +203,20 @@ export function ProductForm({ categories, initial }: Props) {
   )
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({
+  label,
+  hint,
+  children,
+}: {
+  label: string
+  hint?: string
+  children: React.ReactNode
+}) {
   return (
     <div>
       <label className="text-sm font-bold text-ink">{label}</label>
       <div className="mt-2">{children}</div>
+      {hint ? <p className="mt-1.5 text-xs text-ink-subtle font-medium leading-relaxed">{hint}</p> : null}
     </div>
   )
 }

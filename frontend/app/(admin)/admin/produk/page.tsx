@@ -4,8 +4,10 @@ import { FilterBar } from '@/components/admin/filter-bar'
 import { DataTable } from '@/components/admin/data-table'
 import { StockBadge } from '@/components/admin/stock-badge'
 import { Pagination } from '@/components/admin/pagination'
+import { AddProductButton } from './add-product-button'
 import { adminFetch } from '@/lib/admin-fetch'
 import { formatRupiah } from '@/lib/utils'
+import type { Category } from '@/types'
 
 type ProductRow = {
   id: string
@@ -35,7 +37,12 @@ export default async function AdminProdukPage({ searchParams }: Props) {
   const params = new URLSearchParams()
   if (sp.status) params.set('status', sp.status)
   params.set('page', String(page))
-  const data = await adminFetch<ListResponse>(`/admin/products?${params.toString()}`)
+
+  // Fetch list + categories in parallel — categories dipakai untuk dropdown form modal
+  const [data, categories] = await Promise.all([
+    adminFetch<ListResponse>(`/admin/products?${params.toString()}`),
+    adminFetch<Category[]>('/catalog/categories'),
+  ])
 
   const filterParams = new URLSearchParams()
   if (sp.status) filterParams.set('status', sp.status)
@@ -49,14 +56,7 @@ export default async function AdminProdukPage({ searchParams }: Props) {
       <AdminHeader
         title="Produk"
         subtitle={`${data?.pagination.total ?? 0} produk`}
-        rightSlot={
-          <Link
-            href="/admin/produk/baru"
-            className="inline-flex items-center gap-1.5 rounded-lg bg-brand-500 hover:bg-brand-400 text-ink font-extrabold px-5 py-2.5 text-sm border-2 border-black shadow-[0_3px_0_rgba(0,0,0,0.9)] hover:shadow-[0_5px_0_rgba(0,0,0,0.9)] hover:-translate-y-0.5 active:translate-y-1 active:shadow-[0_1px_0_rgba(0,0,0,0.9)] transition-all duration-150"
-          >
-            + Tambah Produk
-          </Link>
-        }
+        rightSlot={<AddProductButton categories={categories ?? []} />}
       />
 
       <FilterBar
