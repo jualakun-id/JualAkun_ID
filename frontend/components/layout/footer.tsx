@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Mail, Phone, Clock, ShieldCheck } from 'lucide-react'
+import { Mail, Phone, Clock, ShieldCheck, AlertCircle } from 'lucide-react'
 import { Logo } from '@/components/branding/logo'
 
 export function Footer() {
@@ -26,10 +26,8 @@ export function Footer() {
             title="Jualakun.id"
             links={[
               { href: '/tentang', label: 'Tentang Kami' },
-              { href: '/#cara-pesan', label: 'Cara Pesan' },
               { href: '/syarat-ketentuan', label: 'Syarat & Ketentuan' },
               { href: '/kebijakan-privasi', label: 'Kebijakan Privasi' },
-              { href: '/kontak', label: 'Laporan Kendala' },
             ]}
           />
 
@@ -56,6 +54,12 @@ export function Footer() {
               <li className="flex items-center gap-2.5 justify-center sm:justify-start">
                 <Phone size={14} className="text-brand-400 shrink-0" />
                 <span>WhatsApp Support</span>
+              </li>
+              <li className="flex items-center gap-2.5 justify-center sm:justify-start">
+                <AlertCircle size={14} className="text-brand-400 shrink-0" />
+                <Link href="/kontak" className="hover:text-brand-400 transition-colors">
+                  Laporan Kendala
+                </Link>
               </li>
               <li className="flex items-start gap-2.5 justify-center sm:justify-start">
                 <Clock size={14} className="text-brand-400 shrink-0 mt-0.5" />
