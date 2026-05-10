@@ -8,14 +8,26 @@
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
     scroll-behavior: smooth;
+    font-size: 16px;
   }
 
   body {
     @apply bg-bg text-text font-body;
+    font-size: 1rem;
+    line-height: 1.6;
+    font-weight: 400;
   }
 
   h1, h2, h3, h4, h5, h6 {
     @apply font-heading;
+    letter-spacing: -0.01em;
+  }
+
+  /* Body paragraphs di public-facing pages — pakai weight 450 (bridge 400-500)
+     supaya tidak terlalu tipis tapi juga bukan medium-bold. DM Sans handles
+     ini dengan weight 500 yang masih readable. */
+  p {
+    line-height: 1.65;
   }
 
   /* Focus ring konsisten — wajib untuk a11y keyboard nav */

@@ -16,8 +16,8 @@ export function TrustCard({
           <Icon className="w-7 h-7" strokeWidth={1.75} aria-hidden="true" />
         </div>
       </div>
-      <h3 className="font-bold text-ink text-base">{title}</h3>
-      <p className="mt-1.5 text-sm text-ink-subtle leading-relaxed">{desc}</p>
+      <h3 className="font-heading font-extrabold text-ink text-lg">{title}</h3>
+      <p className="mt-2 text-[15px] text-ink-muted leading-relaxed font-medium">{desc}</p>
     </div>
   )
 }

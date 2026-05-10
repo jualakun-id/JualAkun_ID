@@ -31,21 +31,21 @@ export function TestimonialCard({
           {initials}
         </div>
         <div className="min-w-0 text-left">
-          <div className="text-ink font-semibold text-sm truncate">{name}</div>
-          <div className="text-ink-subtle text-xs truncate">{handle}</div>
+          <div className="text-ink font-bold text-[15px] truncate">{name}</div>
+          <div className="text-ink-muted text-[13px] truncate font-medium">{handle}</div>
         </div>
       </div>
       <div className="flex gap-0.5 justify-center md:justify-start" aria-label={`${rating} dari 5 bintang`}>
         {Array.from({ length: 5 }).map((_, i) => (
           <Star
             key={i}
-            size={14}
+            size={16}
             className={i < rating ? 'fill-yellow-400 text-yellow-400' : 'fill-gray-200 text-gray-200'}
             aria-hidden="true"
           />
         ))}
       </div>
-      <p className="text-ink-muted text-sm leading-relaxed flex-1">{text}</p>
+      <p className="text-ink-muted text-[15px] leading-relaxed flex-1 font-medium">{text}</p>
     </div>
   )
 }

@@ -15,8 +15,8 @@ export function BenefitItem({
         <Icon className="w-6 h-6" strokeWidth={2} />
       </div>
       <div>
-        <div className="text-ink font-semibold text-base">{title}</div>
-        <div className="text-ink-subtle text-sm mt-0.5 leading-relaxed">{desc}</div>
+        <div className="text-ink font-bold text-[17px] font-heading">{title}</div>
+        <div className="text-ink-muted text-[15px] mt-1 leading-relaxed font-medium">{desc}</div>
       </div>
     </div>
   )

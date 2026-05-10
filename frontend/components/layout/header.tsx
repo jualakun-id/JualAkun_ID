@@ -44,7 +44,7 @@ export function Header() {
         </div>
 
         {/* Desktop Nav */}
-        <nav className="hidden md:flex items-center gap-1 text-sm font-medium" aria-label="Main">
+        <nav className="hidden md:flex items-center gap-1 text-[15px] font-semibold" aria-label="Main">
           {NAV_ITEMS.map((item) => {
             const active = isActive(item.href)
             return (
@@ -54,8 +54,8 @@ export function Header() {
                 aria-current={active ? 'page' : undefined}
                 className={`px-3 py-2 rounded-lg transition-colors ${
                   active
-                    ? 'text-brand-600 bg-brand-50'
-                    : 'text-ink-muted hover:text-ink hover:bg-gray-50'
+                    ? 'text-brand-700 bg-brand-50'
+                    : 'text-ink hover:text-brand-700 hover:bg-gray-50'
                 }`}
               >
                 {item.label}
@@ -68,13 +68,13 @@ export function Header() {
         <div className="hidden md:flex items-center gap-2">
           <Link
             href="/masuk"
-            className="text-sm font-semibold px-4 py-2 rounded-lg text-ink-muted hover:text-brand-600 hover:bg-brand-50 transition-all duration-150"
+            className="text-[15px] font-bold px-4 py-2 rounded-lg text-ink hover:text-brand-700 hover:bg-brand-50 transition-all duration-150"
           >
             Masuk
           </Link>
           <Link
             href="/daftar"
-            className="text-sm font-bold px-5 py-2 rounded-lg border-2 border-black bg-brand-500 text-ink hover:bg-brand-400 shadow-[0_3px_0_rgba(0,0,0,0.9)] hover:shadow-[0_5px_0_rgba(0,0,0,0.9)] hover:-translate-y-0.5 active:translate-y-1 active:shadow-[0_1px_0_rgba(0,0,0,0.9)] transition-all duration-150"
+            className="text-[15px] font-extrabold px-5 py-2 rounded-lg border-2 border-black bg-brand-500 text-ink hover:bg-brand-400 shadow-[0_3px_0_rgba(0,0,0,0.9)] hover:shadow-[0_5px_0_rgba(0,0,0,0.9)] hover:-translate-y-0.5 active:translate-y-1 active:shadow-[0_1px_0_rgba(0,0,0,0.9)] transition-all duration-150"
           >
             Daftar
           </Link>
@@ -94,7 +94,7 @@ export function Header() {
       {/* Mobile Menu — line-art card style */}
       {menuOpen && (
         <div className="md:hidden bg-white border-y-2 border-black px-4 py-5 animate-fade-in shadow-[0_6px_0_rgba(0,0,0,0.9)] relative">
-          <nav className="flex flex-col gap-1 text-sm font-medium" aria-label="Mobile">
+          <nav className="flex flex-col gap-1 text-base font-semibold" aria-label="Mobile">
             {NAV_ITEMS.map((item) => {
               const active = isActive(item.href)
               return (
@@ -103,8 +103,8 @@ export function Header() {
                   href={item.href}
                   onClick={() => setMenuOpen(false)}
                   aria-current={active ? 'page' : undefined}
-                  className={`px-3 py-2.5 rounded-lg ${
-                    active ? 'bg-brand-50 text-brand-600 font-semibold' : 'text-ink-muted hover:bg-gray-50'
+                  className={`px-3 py-3 rounded-lg ${
+                    active ? 'bg-brand-50 text-brand-700 font-bold' : 'text-ink hover:bg-gray-50'
                   }`}
                 >
                   {item.label}
@@ -115,14 +115,14 @@ export function Header() {
             <Link
               href="/masuk"
               onClick={() => setMenuOpen(false)}
-              className="px-3 py-2.5 rounded-lg text-ink-muted hover:bg-gray-50"
+              className="px-3 py-3 rounded-lg text-ink font-bold hover:bg-gray-50"
             >
               Masuk
             </Link>
             <Link
               href="/daftar"
               onClick={() => setMenuOpen(false)}
-              className="mt-2 px-5 py-2.5 rounded-lg border-2 border-black bg-brand-500 text-ink text-center font-bold shadow-[0_3px_0_rgba(0,0,0,0.9)] active:translate-y-1 active:shadow-[0_1px_0_rgba(0,0,0,0.9)]"
+              className="mt-2 px-5 py-3 rounded-lg border-2 border-black bg-brand-500 text-ink text-center font-extrabold shadow-[0_3px_0_rgba(0,0,0,0.9)] active:translate-y-1 active:shadow-[0_1px_0_rgba(0,0,0,0.9)]"
             >
               Daftar Sekarang
             </Link>

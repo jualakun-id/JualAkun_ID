@@ -71,7 +71,7 @@ export default async function HomePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10 lg:gap-16 items-center">
             {/* Text */}
             <div className="animate-fade-up text-center md:text-left">
-              <span className="inline-block bg-white/20 backdrop-blur-sm border border-white/30 text-white text-xs font-semibold px-3 py-1.5 rounded-full mb-5">
+              <span className="inline-block bg-white/25 backdrop-blur-sm border border-white/30 text-white text-sm font-bold px-3.5 py-1.5 rounded-full mb-5">
                 Anti Mainstream, Tetap Asli.
               </span>
               <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-white leading-[1.05] tracking-tight">
@@ -103,7 +103,7 @@ export default async function HomePage() {
               </div>
 
               {/* Trust indicators */}
-              <div className="mt-8 sm:mt-10 flex flex-wrap items-center justify-center md:justify-start gap-x-5 gap-y-2 text-white/85 text-xs">
+              <div className="mt-8 sm:mt-10 flex flex-wrap items-center justify-center md:justify-start gap-x-5 gap-y-2 text-white text-sm font-semibold">
                 <div className="flex items-center gap-1.5">
                   <CheckCircle className="w-4 h-4" aria-hidden="true" />
                   <span>100% Asli &amp; Resmi</span>
@@ -140,7 +140,7 @@ export default async function HomePage() {
           <h2 className="text-3xl md:text-4xl font-bold text-ink">
             Bukan Marketplace Biasa
           </h2>
-          <p className="text-ink-subtle mt-3 max-w-xl mx-auto">
+          <p className="text-ink-muted text-base md:text-lg font-medium mt-4 max-w-xl mx-auto">
             Kami fokus ke akun yang jarang dijual di tempat lain — semua resmi, mayoritas bergaransi.
           </p>
           <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-5">
@@ -163,7 +163,7 @@ export default async function HomePage() {
             <h2 className="text-3xl md:text-4xl font-bold text-ink">
               Kenapa Beda dari yang Lain?
             </h2>
-            <p className="text-ink-subtle mt-3">
+            <p className="text-ink-muted text-base md:text-lg font-medium mt-4">
               Ini yang bikin Jualakun.id worth di-cek sebelum kamu pesan di tempat lain.
             </p>
           </div>
@@ -209,7 +209,7 @@ export default async function HomePage() {
       <section id="cara-pesan" className="bg-white py-16 md:py-20 scroll-mt-24">
         <div className="container mx-auto px-4 max-w-6xl text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-ink">Cara Berlangganan</h2>
-          <p className="text-ink-subtle mt-3">
+          <p className="text-ink-muted text-base md:text-lg font-medium mt-4">
             5 langkah mudah untuk mendapatkan akun digital favorit kamu.
           </p>
           <div className="mt-12 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6 md:gap-4 max-w-3xl md:max-w-none mx-auto">
@@ -228,7 +228,7 @@ export default async function HomePage() {
       <section className="bg-brand-50 py-16">
         <div className="container mx-auto px-4 max-w-5xl text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-ink mb-4">Yang Bikin Kami Beda</h2>
-          <p className="text-ink-subtle mb-12 max-w-xl mx-auto">
+          <p className="text-ink-muted text-base md:text-lg font-medium mb-12 max-w-xl mx-auto">
             Bukan janji marketing — ini standar yang kami pegang untuk setiap pesanan.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
@@ -256,7 +256,7 @@ export default async function HomePage() {
         <div className="container mx-auto px-4 max-w-6xl">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-ink">Apa Kata Mereka</h2>
-            <p className="text-ink-subtle mt-3">
+            <p className="text-ink-muted text-base md:text-lg font-medium mt-4">
               Cerita dari pengguna yang sudah merasakan manfaat Jualakun.id.
             </p>
           </div>
@@ -291,7 +291,7 @@ export default async function HomePage() {
         <div className="container mx-auto px-4 max-w-3xl">
           <div className="text-center mb-10">
             <h2 className="text-3xl md:text-4xl font-bold text-ink">Pertanyaan Umum</h2>
-            <p className="text-ink-subtle mt-3">
+            <p className="text-ink-muted text-base md:text-lg font-medium mt-4">
               Jawaban untuk pertanyaan yang paling sering ditanyakan.
             </p>
           </div>
@@ -341,7 +341,7 @@ function CategorySection({ section, bgAlt }: { section: SectionData; bgAlt: bool
       <div className="container mx-auto px-4 max-w-7xl">
         <div className="text-center mb-10">
           <h2 className="text-3xl md:text-4xl font-bold text-ink">{section.label}</h2>
-          <p className="text-ink-subtle mt-3 max-w-xl mx-auto">{section.desc}</p>
+          <p className="text-ink-muted text-base md:text-lg font-medium mt-4 max-w-xl mx-auto">{section.desc}</p>
         </div>
 
         {products.length ? (
@@ -353,7 +353,7 @@ function CategorySection({ section, bgAlt }: { section: SectionData; bgAlt: bool
         ) : (
           <div className={`text-center py-12 rounded-2xl border border-dashed border-gray-200 ${bgAlt ? 'bg-white/50' : 'bg-brand-50/50'}`}>
             <Package className="w-10 h-10 mx-auto text-ink-subtle/40 mb-2" aria-hidden="true" />
-            <p className="text-ink-subtle text-sm">Belum ada produk di kategori {section.label}.</p>
+            <p className="text-ink-muted text-base font-medium">Belum ada produk di kategori {section.label}.</p>
           </div>
         )}
       </div>

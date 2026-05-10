@@ -31,7 +31,7 @@ export function LandingProductCard({
     >
       {/* Discount badge */}
       {hasDiscount && (
-        <span className="absolute top-5 left-5 bg-gradient-to-r from-purple-600 to-pink-500 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-sm z-10">
+        <span className="absolute top-5 left-5 bg-gradient-to-r from-purple-600 to-pink-500 text-white text-[13px] font-bold px-3 py-1 rounded-full shadow-sm z-10">
           Diskon {discountPct}%
         </span>
       )}
@@ -65,34 +65,34 @@ export function LandingProductCard({
       {/* Content + CTA — fills remaining space */}
       <div className="flex-1 flex flex-col px-1.5 min-h-0 relative">
         <div className="flex-1 flex flex-col items-center text-center">
-          <h3 className="font-bold text-ink text-sm leading-tight line-clamp-2">{product.name}</h3>
+          <h3 className="font-heading font-extrabold text-ink text-[15px] leading-tight line-clamp-2">{product.name}</h3>
           {product.category && (
-            <span className="mt-1.5 inline-block text-xs font-medium text-brand-700 bg-brand-50 px-2 py-0.5 rounded-full">
+            <span className="mt-1.5 inline-block text-[13px] font-semibold text-brand-700 bg-brand-50 px-2.5 py-0.5 rounded-full">
               {product.category.name}
             </span>
           )}
 
           <div className="mt-2 flex items-baseline justify-center gap-2">
-            <span className="text-ink font-bold text-base">
+            <span className="text-ink font-extrabold text-lg">
               Rp {product.price.toLocaleString('id-ID')}
             </span>
             {hasDiscount && (
-              <span className="text-ink-subtle text-[11px] line-through">
+              <span className="text-ink-muted text-[13px] line-through font-medium">
                 {product.original_price!.toLocaleString('id-ID')}
               </span>
             )}
           </div>
 
           {(product.duration_label || product.warranty_label) && (
-            <div className="mt-1.5 flex flex-wrap items-center justify-center gap-1.5 text-[11px] text-ink-subtle">
+            <div className="mt-1.5 flex flex-wrap items-center justify-center gap-1.5 text-[13px] text-ink-muted font-medium">
               {product.duration_label && (
-                <span className="inline-flex items-center gap-1 bg-brand-50 text-brand-700 px-1.5 py-0.5 rounded-full font-medium">
+                <span className="inline-flex items-center gap-1 bg-brand-50 text-brand-700 px-2 py-0.5 rounded-full font-semibold">
                   {product.duration_label}
                 </span>
               )}
               {product.warranty_label && (
                 <span className="inline-flex items-center gap-1">
-                  <Shield size={10} className="text-stat-green" aria-hidden="true" />
+                  <Shield size={12} className="text-stat-green" aria-hidden="true" />
                   <span>{product.warranty_label}</span>
                 </span>
               )}
@@ -105,14 +105,14 @@ export function LandingProductCard({
           {isOutOfStock ? (
             <div
               aria-disabled="true"
-              className="w-full bg-gray-100 text-gray-400 font-semibold py-2 rounded-lg text-center text-xs border-2 border-gray-300 cursor-not-allowed"
+              className="w-full bg-gray-100 text-gray-400 font-bold py-2.5 rounded-lg text-center text-sm border-2 border-gray-300 cursor-not-allowed"
             >
               Stok Habis
             </div>
           ) : (
             <Link
               href={`/produk/${product.slug}`}
-              className="block w-full bg-brand-500 hover:bg-brand-400 text-ink font-bold py-2 rounded-lg text-center text-xs border-2 border-black shadow-[0_3px_0_rgba(0,0,0,0.9)] hover:shadow-[0_4px_0_rgba(0,0,0,0.9)] hover:-translate-y-0.5 active:translate-y-1 active:shadow-[0_1px_0_rgba(0,0,0,0.9)] transition-all duration-150"
+              className="block w-full bg-brand-500 hover:bg-brand-400 text-ink font-extrabold py-2.5 rounded-lg text-center text-sm border-2 border-black shadow-[0_3px_0_rgba(0,0,0,0.9)] hover:shadow-[0_4px_0_rgba(0,0,0,0.9)] hover:-translate-y-0.5 active:translate-y-1 active:shadow-[0_1px_0_rgba(0,0,0,0.9)] transition-all duration-150"
             >
               Pesan Sekarang
             </Link>

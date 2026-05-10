@@ -25,7 +25,7 @@ export function FAQAccordion({ items }: { items: FAQ[] }) {
               aria-expanded={isOpen}
               className="w-full flex justify-between items-center px-5 py-4 gap-3"
             >
-              <span className="text-ink font-medium text-base flex-1 text-center md:text-left">{item.q}</span>
+              <span className="text-ink font-bold text-[17px] flex-1 text-center md:text-left">{item.q}</span>
               <ChevronDown
                 className={`w-5 h-5 text-ink-subtle shrink-0 transition-transform duration-200 ${
                   isOpen ? 'rotate-180 text-brand-500' : ''
@@ -39,7 +39,7 @@ export function FAQAccordion({ items }: { items: FAQ[] }) {
               }`}
             >
               <div className="overflow-hidden">
-                <p className="px-5 pb-5 text-ink-muted text-sm leading-relaxed text-center md:text-left">{item.a}</p>
+                <p className="px-5 pb-5 text-ink-muted text-[15px] leading-relaxed text-center md:text-left font-medium">{item.a}</p>
               </div>
             </div>
           </div>
