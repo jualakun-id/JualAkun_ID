@@ -65,11 +65,8 @@ export function AdminSidebar() {
     <>
       {/* Mobile top bar — only visible < md */}
       <div className="md:hidden sticky top-0 z-30 flex h-14 items-center justify-between bg-white border-b-2 border-black px-4">
-        <Link href="/admin" className="inline-flex items-center gap-2" aria-label="Admin Panel">
+        <Link href="/admin" aria-label="Jualakun.id Admin">
           <Logo size="sm" asLink={false} />
-          <span className="rounded-md bg-brand-500 text-ink text-[10px] font-extrabold px-1.5 py-0.5 border-2 border-black tracking-wider uppercase">
-            Admin
-          </span>
         </Link>
         <button
           type="button"
@@ -102,15 +99,8 @@ export function AdminSidebar() {
       >
         {/* Brand */}
         <div className="px-5 py-5 border-b-2 border-black/10 flex items-start justify-between gap-2">
-          <Link
-            href="/admin"
-            className="inline-flex items-start gap-2 group"
-            aria-label="Jualakun.id Admin Panel"
-          >
+          <Link href="/admin" aria-label="Jualakun.id Admin Panel">
             <Logo size="sm" showTagline asLink={false} />
-            <span className="mt-1 rounded-md bg-brand-500 text-ink text-[10px] font-extrabold px-1.5 py-0.5 border-2 border-black shadow-[0_2px_0_rgba(0,0,0,0.9)] tracking-wider uppercase shrink-0">
-              Admin
-            </span>
           </Link>
           {/* Close button — only mobile */}
           <button
