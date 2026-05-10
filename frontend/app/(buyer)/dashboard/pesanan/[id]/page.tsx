@@ -5,6 +5,7 @@ import { ArrowLeft, ExternalLink } from 'lucide-react'
 import { DashboardTabs } from '@/components/dashboard-tabs'
 import { OrderStatusBadge } from '@/components/order-status-badge'
 import { OrderActions } from './order-actions'
+import { ReviewSection } from './review-section'
 import { createServerClient } from '@/lib/supabase-server'
 import { serverFetch } from '@/lib/server-fetch'
 import { formatRupiah, formatDateTime } from '@/lib/utils'
@@ -37,6 +38,18 @@ export default async function DashboardPesananDetailPage({ params }: Props) {
   const { data: { session } } = await supabase.auth.getSession()
   const order = await serverFetch<OrderDetail>(`/orders/${id}`, { jwt: session?.access_token, cache: 'no-store' })
   if (!order) notFound()
+
+  // Fetch user's existing review (kalau ada) — RLS izinkan SELECT dgn is_visible=true
+  let existingReview: { rating: number; comment: string | null; created_at: string } | null = null
+  if (order.status === 'confirmed' && session?.user.id) {
+    const { data: reviewRow } = await supabase
+      .from('product_reviews')
+      .select('rating, comment, created_at')
+      .eq('order_id', order.id)
+      .eq('user_id', session.user.id)
+      .maybeSingle()
+    existingReview = reviewRow ?? null
+  }
 
   return (
     <section className="container mx-auto max-w-6xl px-4 py-8 md:py-10">
@@ -94,6 +107,11 @@ export default async function DashboardPesananDetailPage({ params }: Props) {
 
       {/* Order actions (credentials + claim) */}
       <OrderActions order={order} jwt={session?.access_token ?? null} />
+
+      {/* Review section — hanya muncul kalau status confirmed (= sudah dikonfirmasi) */}
+      {order.status === 'confirmed' ? (
+        <ReviewSection orderId={order.id} existingReview={existingReview} />
+      ) : null}
 
       {/* Order summary */}
       <div className="mt-6 rounded-2xl border-2 border-black bg-white p-5 sm:p-6 shadow-[0_3px_0_rgba(0,0,0,0.9)]">
