@@ -3,6 +3,7 @@ import { AdminHeader } from '@/components/admin/admin-header'
 import { FilterBar } from '@/components/admin/filter-bar'
 import { DataTable } from '@/components/admin/data-table'
 import { StockBadge } from '@/components/admin/stock-badge'
+import { Pagination } from '@/components/admin/pagination'
 import { adminFetch } from '@/lib/admin-fetch'
 import { formatRupiah } from '@/lib/utils'
 
@@ -24,13 +25,21 @@ type ListResponse = {
   pagination: { page: number; limit: number; total: number }
 }
 
-type Props = { searchParams: Promise<{ status?: string }> }
+type Props = { searchParams: Promise<{ status?: string; page?: string }> }
 
 export const metadata = { title: 'Admin — Produk' }
 
 export default async function AdminProdukPage({ searchParams }: Props) {
   const sp = await searchParams
-  const data = await adminFetch<ListResponse>(`/admin/products${sp.status ? `?status=${sp.status}` : ''}`)
+  const page = Math.max(1, parseInt(sp.page ?? '1', 10) || 1)
+  const params = new URLSearchParams()
+  if (sp.status) params.set('status', sp.status)
+  params.set('page', String(page))
+  const data = await adminFetch<ListResponse>(`/admin/products?${params.toString()}`)
+
+  const filterParams = new URLSearchParams()
+  if (sp.status) filterParams.set('status', sp.status)
+  const basePath = `/admin/produk${filterParams.toString() ? `?${filterParams.toString()}` : ''}`
 
   return (
     <div className="px-6 md:px-8 py-8">
@@ -93,6 +102,15 @@ export default async function AdminProdukPage({ searchParams }: Props) {
             },
           ]}
         />
+
+        {data?.pagination ? (
+          <Pagination
+            page={data.pagination.page}
+            limit={data.pagination.limit}
+            total={data.pagination.total}
+            basePath={basePath}
+          />
+        ) : null}
       </div>
     </div>
   )

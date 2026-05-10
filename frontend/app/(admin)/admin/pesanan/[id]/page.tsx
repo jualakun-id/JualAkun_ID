@@ -65,7 +65,9 @@ export default async function AdminPesananDetailPage({ params }: Props) {
           <h2 className="font-heading text-xl font-extrabold tracking-tight">Log Notifikasi</h2>
           <div className="mt-3 space-y-2">
             {order.notifications.length === 0 ? (
-              <p className="text-sm text-ink-muted">Belum ada notifikasi.</p>
+              <p className="text-sm text-ink-muted font-medium text-center py-6">
+                Belum ada notifikasi terkirim untuk pesanan ini.
+              </p>
             ) : null}
             {order.notifications.map((n) => (
               <div key={n.id} className="flex items-center justify-between rounded-md border border-black/10 bg-brand-50/40 px-3 py-2 text-xs">

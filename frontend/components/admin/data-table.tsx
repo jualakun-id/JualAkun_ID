@@ -43,8 +43,23 @@ export function DataTable<T extends Record<string, unknown>>({
         <tbody>
           {rows.length === 0 ? (
             <tr>
-              <td colSpan={columns.length} className="px-4 py-14 text-center text-ink-muted font-medium">
-                {emptyMessage}
+              <td colSpan={columns.length} className="px-4 py-14 text-center">
+                <div className="mx-auto inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-50 text-brand-600 border-2 border-brand-200 mb-3">
+                  <svg
+                    width="22"
+                    height="22"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M3 6h18M3 12h18M3 18h18" />
+                  </svg>
+                </div>
+                <p className="text-ink-muted font-medium">{emptyMessage}</p>
               </td>
             </tr>
           ) : (

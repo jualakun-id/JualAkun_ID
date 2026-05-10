@@ -57,7 +57,11 @@ export default async function AdminAnalyticsPage() {
               <span className="font-heading font-bold text-brand-700">{formatRupiah(p.price)}</span>
             </div>
           ))}
-          {!top?.length ? <p className="text-sm text-ink-muted">Belum ada data.</p> : null}
+          {!top?.length ? (
+            <p className="text-sm text-ink-muted font-medium text-center py-6">
+              Belum ada data terjual untuk dianalisis.
+            </p>
+          ) : null}
         </div>
       </div>
     </div>

@@ -3,6 +3,7 @@ import { AdminHeader } from '@/components/admin/admin-header'
 import { FilterBar } from '@/components/admin/filter-bar'
 import { DataTable } from '@/components/admin/data-table'
 import { StatusBadge } from '@/components/admin/status-badge'
+import { Pagination } from '@/components/admin/pagination'
 import { adminFetch } from '@/lib/admin-fetch'
 import { formatRupiah, formatDateTime } from '@/lib/utils'
 
@@ -21,16 +22,24 @@ type ListResponse = {
   pagination: { page: number; limit: number; total: number }
 }
 
-type Props = { searchParams: Promise<{ status?: string; search?: string }> }
+type Props = { searchParams: Promise<{ status?: string; search?: string; page?: string }> }
 
 export const metadata = { title: 'Admin — Pesanan' }
 
 export default async function AdminPesananPage({ searchParams }: Props) {
   const sp = await searchParams
+  const page = Math.max(1, parseInt(sp.page ?? '1', 10) || 1)
   const params = new URLSearchParams()
   if (sp.status) params.set('status', sp.status)
   if (sp.search) params.set('search', sp.search)
+  params.set('page', String(page))
   const data = await adminFetch<ListResponse>(`/admin/orders?${params.toString()}`)
+
+  // Build basePath untuk pagination (preserve other filters)
+  const filterParams = new URLSearchParams()
+  if (sp.status) filterParams.set('status', sp.status)
+  if (sp.search) filterParams.set('search', sp.search)
+  const basePath = `/admin/pesanan${filterParams.toString() ? `?${filterParams.toString()}` : ''}`
 
   return (
     <div className="px-6 md:px-8 py-8">
@@ -79,6 +88,15 @@ export default async function AdminPesananPage({ searchParams }: Props) {
             { key: 'created_at', header: 'Waktu', render: (r) => formatDateTime((r as unknown as OrderRow).created_at) },
           ]}
         />
+
+        {data?.pagination ? (
+          <Pagination
+            page={data.pagination.page}
+            limit={data.pagination.limit}
+            total={data.pagination.total}
+            basePath={basePath}
+          />
+        ) : null}
       </div>
     </div>
   )
