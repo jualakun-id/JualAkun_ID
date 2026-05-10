@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createServerClient } from '@/lib/supabase-server'
-import { Header } from '@/components/layout/header'
+import { BuyerHeader } from '@/components/layout/buyer-header'
 import { Footer } from '@/components/layout/footer'
 
 export default async function BuyerLayout({ children }: { children: React.ReactNode }) {
@@ -13,7 +13,7 @@ export default async function BuyerLayout({ children }: { children: React.ReactN
 
   return (
     <div className="flex min-h-screen flex-col bg-white text-ink antialiased">
-      <Header />
+      <BuyerHeader />
       <main className="flex-1 bg-brand-50/30">{children}</main>
       <Footer />
     </div>
