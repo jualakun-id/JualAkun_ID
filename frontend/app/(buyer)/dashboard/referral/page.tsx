@@ -21,7 +21,7 @@ export default async function DashboardReferralPage() {
   const data = await serverFetch<ReferralData>('/referral', { jwt: session?.access_token, cache: 'no-store' })
 
   return (
-    <section className="container mx-auto max-w-5xl px-4 py-8 md:py-10">
+    <section className="container mx-auto max-w-6xl px-4 py-8 md:py-10">
       <DashboardTabs active="/dashboard/referral" />
       <h1 className="mt-8 font-heading text-3xl md:text-4xl font-extrabold text-ink tracking-tight">
         Program Referral

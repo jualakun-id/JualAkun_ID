@@ -39,8 +39,10 @@ export default async function DashboardPesananDetailPage({ params }: Props) {
   if (!order) notFound()
 
   return (
-    <section className="container mx-auto max-w-3xl px-4 py-8 md:py-10">
+    <section className="container mx-auto max-w-6xl px-4 py-8 md:py-10">
       <DashboardTabs active="/dashboard/pesanan" />
+
+      <div className="max-w-3xl">
 
       <Link
         href="/dashboard/pesanan"
@@ -138,6 +140,7 @@ export default async function DashboardPesananDetailPage({ params }: Props) {
           Akun akan ditampilkan di sini setelah pembayaran dikonfirmasi.
         </p>
       ) : null}
+      </div>
     </section>
   )
 }
