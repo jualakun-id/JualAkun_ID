@@ -1,7 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
+import { useState } from 'react'
 import {
   LayoutDashboard,
   Package,
@@ -12,7 +13,9 @@ import {
   BarChart3,
   Bell,
   Boxes,
+  LogOut,
 } from 'lucide-react'
+import { createBrowserClient } from '@/lib/supabase'
 
 const NAV = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
@@ -28,6 +31,16 @@ const NAV = [
 
 export function AdminSidebar() {
   const pathname = usePathname()
+  const router = useRouter()
+  const [loggingOut, setLoggingOut] = useState(false)
+
+  async function handleLogout() {
+    setLoggingOut(true)
+    const supabase = createBrowserClient()
+    await supabase.auth.signOut()
+    router.push('/masuk')
+    router.refresh()
+  }
 
   return (
     <aside className="sticky top-0 flex h-screen w-64 flex-col bg-white border-r-2 border-black">
@@ -67,10 +80,19 @@ export function AdminSidebar() {
       </nav>
 
       {/* Footer */}
-      <div className="border-t-2 border-black/10 px-5 py-3">
+      <div className="border-t-2 border-black/10 px-3 py-3 space-y-2">
+        <button
+          type="button"
+          onClick={handleLogout}
+          disabled={loggingOut}
+          className="w-full inline-flex items-center justify-center gap-1.5 bg-white hover:bg-danger/10 hover:text-danger text-ink font-extrabold px-3 py-2.5 rounded-lg border-2 border-black shadow-[0_3px_0_rgba(0,0,0,0.9)] hover:shadow-[0_4px_0_rgba(0,0,0,0.9)] hover:-translate-y-0.5 active:translate-y-1 active:shadow-[0_1px_0_rgba(0,0,0,0.9)] transition-all duration-150 text-sm disabled:opacity-60 disabled:pointer-events-none"
+        >
+          <LogOut size={16} strokeWidth={2.5} />
+          {loggingOut ? 'Keluar...' : 'Logout'}
+        </button>
         <Link
           href="/"
-          className="text-xs font-medium text-ink-muted hover:text-brand-700 transition-colors"
+          className="block text-center text-xs font-medium text-ink-muted hover:text-brand-700 transition-colors py-1"
         >
           ← Lihat website publik
         </Link>
