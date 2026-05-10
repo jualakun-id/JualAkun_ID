@@ -16,6 +16,7 @@ import { LandingProductCard } from '@/components/landing/landing-product-card'
 import { TestimonialCard } from '@/components/landing/testimonial-card'
 import { FAQAccordion } from '@/components/landing/faq-accordion'
 import { BrandLogo } from '@/components/landing/brand-logo'
+import { Reveal } from '@/components/reveal'
 
 type CatalogResponse = {
   products: (Product & { category?: { name: string; slug: string } })[]
@@ -137,13 +138,15 @@ export default async function HomePage() {
       {/* ── STATS ──────────────────────────────────────────── */}
       <section className="bg-white py-16 md:py-20">
         <div className="container mx-auto px-4 max-w-6xl text-center">
-          <h2 className="font-heading text-3xl md:text-4xl font-extrabold text-ink tracking-tight">
-            Bukan Marketplace Biasa
-          </h2>
-          <p className="text-ink-muted text-base md:text-lg font-medium mt-4 max-w-xl mx-auto">
-            Kami fokus ke akun yang jarang dijual di tempat lain — semua resmi, mayoritas bergaransi.
-          </p>
-          <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-5">
+          <Reveal>
+            <h2 className="font-heading text-3xl md:text-4xl font-extrabold text-ink tracking-tight">
+              Bukan Marketplace Biasa
+            </h2>
+            <p className="text-ink-muted text-base md:text-lg font-medium mt-4 max-w-xl mx-auto">
+              Kami fokus ke akun yang jarang dijual di tempat lain — semua resmi, mayoritas bergaransi.
+            </p>
+          </Reveal>
+          <Reveal delay={1} className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-5">
             <StatCard variant="blue"   value="10+"  label="Akun Eksklusif"
               imageUrl="https://clfewheqatyaefohmdpn.supabase.co/storage/v1/object/public/product-thumbnails/stat-blue.webp" />
             <StatCard variant="red"    value="100%" label="Asli &amp; Resmi"
@@ -152,21 +155,21 @@ export default async function HomePage() {
               imageUrl="https://clfewheqatyaefohmdpn.supabase.co/storage/v1/object/public/product-thumbnails/stat-green.webp" />
             <StatCard variant="yellow" value="24/7" label="Support Cepat"
               imageUrl="https://clfewheqatyaefohmdpn.supabase.co/storage/v1/object/public/product-thumbnails/stat-yellow.webp" />
-          </div>
+          </Reveal>
         </div>
       </section>
 
       {/* ── BENEFITS ───────────────────────────────────────── */}
       <section className="bg-white py-12 md:py-16 border-t border-gray-100">
         <div className="container mx-auto px-4 max-w-6xl">
-          <div className="text-center mb-12">
+          <Reveal className="text-center mb-12">
             <h2 className="font-heading text-3xl md:text-4xl font-extrabold text-ink tracking-tight">
               Kenapa Beda dari yang Lain?
             </h2>
             <p className="text-ink-muted text-base md:text-lg font-medium mt-4">
               Ini yang bikin Jualakun.id worth di-cek sebelum kamu pesan di tempat lain.
             </p>
-          </div>
+          </Reveal>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-10 lg:gap-16 items-center">
             <div className="space-y-6 order-2 md:order-1">
               <BenefitItem icon={Award}         title="Akun yang Sulit Dicari" desc="Kami stock layanan yang jarang ada di marketplace lain." />
@@ -254,12 +257,12 @@ export default async function HomePage() {
       {/* ── TESTIMONIALS ───────────────────────────────────── */}
       <section className="bg-white py-16 md:py-20">
         <div className="container mx-auto px-4 max-w-6xl">
-          <div className="text-center mb-12">
+          <Reveal className="text-center mb-12">
             <h2 className="font-heading text-3xl md:text-4xl font-extrabold text-ink tracking-tight">Apa Kata Mereka</h2>
             <p className="text-ink-muted text-base md:text-lg font-medium mt-4">
               Cerita dari pengguna yang sudah merasakan manfaat Jualakun.id.
             </p>
-          </div>
+          </Reveal>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             <TestimonialCard
               name="Rizki Pratama"
@@ -289,13 +292,15 @@ export default async function HomePage() {
       {/* ── FAQ ────────────────────────────────────────────── */}
       <section id="faq" className="bg-brand-50 py-16 md:py-20 scroll-mt-24">
         <div className="container mx-auto px-4 max-w-3xl">
-          <div className="text-center mb-10">
+          <Reveal className="text-center mb-10">
             <h2 className="font-heading text-3xl md:text-4xl font-extrabold text-ink tracking-tight">Pertanyaan Umum</h2>
             <p className="text-ink-muted text-base md:text-lg font-medium mt-4">
               Jawaban untuk pertanyaan yang paling sering ditanyakan.
             </p>
-          </div>
-          <FAQAccordion items={FAQS} />
+          </Reveal>
+          <Reveal delay={1}>
+            <FAQAccordion items={FAQS} />
+          </Reveal>
         </div>
       </section>
 

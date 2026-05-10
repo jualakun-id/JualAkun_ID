@@ -12,12 +12,9 @@ export default async function BuyerLayout({ children }: { children: React.ReactN
   }
 
   return (
-    <div
-      className="flex min-h-screen flex-col bg-brand-50 text-ink antialiased"
-      style={{ fontFamily: 'var(--font-poppins), -apple-system, BlinkMacSystemFont, sans-serif' }}
-    >
+    <div className="flex min-h-screen flex-col bg-white text-ink antialiased">
       <Header />
-      <main className="flex-1">{children}</main>
+      <main className="flex-1 bg-brand-50/30">{children}</main>
       <Footer />
     </div>
   )

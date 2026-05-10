@@ -1,6 +1,7 @@
-﻿'use client'
+'use client'
 
 import { useState } from 'react'
+import { CheckCircle2 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { api } from '@/lib/api'
@@ -31,34 +32,38 @@ export function ProfileForm({ email, fullName, phoneWa, referralCode }: Props) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5 rounded-xl border border-gray-200 bg-white p-6">
-      <Field label="Email"><Input value={email} disabled /></Field>
+    <form onSubmit={handleSubmit} className="space-y-5">
+      <Field label="Email" hint="Tidak bisa diubah lewat form ini">
+        <Input value={email} disabled />
+      </Field>
       <Field label="Nama lengkap">
         <Input required value={name} onChange={(e) => setName(e.target.value)} />
       </Field>
-      <Field label="No. WhatsApp">
+      <Field label="No. WhatsApp" hint="Untuk notifikasi pembayaran & delivery">
         <Input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="0812xxxxxxxx" />
       </Field>
-      <Field label="Kode referral kamu">
-        <Input value={referralCode} disabled className="font-mono" />
+      <Field label="Kode referral kamu" hint="Bagikan ke teman — kamu & dia sama-sama dapat kredit">
+        <Input value={referralCode} disabled className="font-mono uppercase tracking-wider" />
       </Field>
       {saved ? (
-        <div className="rounded-md border border-success/30 bg-success/10 px-3 py-2 text-sm text-success">
+        <div className="flex items-center gap-2.5 rounded-lg border-2 border-success/40 bg-success/10 px-3.5 py-3 text-sm font-bold text-success">
+          <CheckCircle2 size={16} />
           Profil tersimpan.
         </div>
       ) : null}
-      <Button type="submit" disabled={loading}>
+      <Button type="submit" disabled={loading} size="lg">
         {loading ? 'Menyimpan...' : 'Simpan Perubahan'}
       </Button>
     </form>
   )
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="text-sm font-medium text-ink-muted">{label}</label>
-      <div className="mt-1.5">{children}</div>
+      <label className="text-sm font-bold text-ink">{label}</label>
+      <div className="mt-2">{children}</div>
+      {hint ? <p className="mt-1.5 text-xs text-ink-subtle font-medium">{hint}</p> : null}
     </div>
   )
 }

@@ -10,20 +10,20 @@ const TABS = [
 
 export function DashboardTabs({ active }: { active: string }) {
   return (
-    <nav className="flex gap-1 overflow-x-auto rounded-xl border border-border bg-surface p-1">
+    <nav className="flex gap-1 overflow-x-auto rounded-xl border-2 border-black bg-white p-1.5 shadow-[0_3px_0_rgba(0,0,0,0.9)]">
       {TABS.map(({ href, label, icon: Icon }) => {
         const isActive = active === href
         return (
           <Link
             key={href}
             href={href}
-            className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+            className={`flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-bold transition-colors whitespace-nowrap ${
               isActive
-                ? 'bg-primary/15 text-primary'
-                : 'text-text-muted hover:bg-surface-2 hover:text-text'
+                ? 'bg-brand-500 text-ink'
+                : 'text-ink-muted hover:bg-brand-50 hover:text-brand-700'
             }`}
           >
-            <Icon size={16} strokeWidth={1.5} />
+            <Icon size={16} strokeWidth={2.25} />
             {label}
           </Link>
         )
