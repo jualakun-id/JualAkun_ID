@@ -19,7 +19,7 @@ export function RetryButton({ id }: { id: string }) {
     <button
       onClick={handleClick}
       disabled={loading}
-      className="rounded-md border border-primary/30 bg-primary/10 px-2 py-1 text-xs text-brand-700 hover:bg-primary/20 disabled:opacity-50"
+      className="rounded-md border-2 border-brand-200 bg-brand-50 px-2.5 py-1 text-xs font-bold text-brand-700 hover:bg-brand-100 disabled:opacity-50 transition-colors"
     >
       {loading ? '...' : 'Retry'}
     </button>

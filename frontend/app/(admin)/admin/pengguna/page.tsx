@@ -28,7 +28,7 @@ export default async function AdminPenggunaPage({ searchParams }: Props) {
   const data = await adminFetch<ListResponse>(`/admin/users${sp.search ? `?search=${encodeURIComponent(sp.search)}` : ''}`)
 
   return (
-    <div className="px-6 md:px-6 md:px-8 py-8">
+    <div className="px-6 md:px-8 py-8">
       <AdminHeader title="Pengguna" subtitle={`${data?.pagination.total ?? 0} buyer terdaftar`} />
       <FilterBar searchQuery={{ name: 'search', placeholder: 'Cari nama/WA...', defaultValue: sp.search }} />
       <div className="mt-4">

@@ -32,7 +32,7 @@ export default async function AdminNotifikasiPage({ searchParams }: Props) {
   const data = await adminFetch<ListResponse>(`/admin/notifications?${params.toString()}`)
 
   return (
-    <div className="px-6 md:px-6 md:px-8 py-8">
+    <div className="px-6 md:px-8 py-8">
       <AdminHeader title="Log Notifikasi" subtitle={`${data?.pagination.total ?? 0} notif`} />
       <FilterBar
         activeValue={sp.status ?? 'all'}

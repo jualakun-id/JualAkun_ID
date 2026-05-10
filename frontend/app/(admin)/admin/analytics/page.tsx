@@ -33,7 +33,7 @@ export default async function AdminAnalyticsPage() {
         <h2 className="font-heading text-xl font-extrabold tracking-tight">Revenue Harian</h2>
         <div className="mt-4 flex h-48 items-end gap-1">
           {(revenue ?? []).map((r) => (
-            <div key={r.date} className="group relative flex-1 rounded-t bg-primary/30 hover:bg-brand-500" title={`${r.date}: ${formatRupiah(r.revenue)}`}
+            <div key={r.date} className="group relative flex-1 rounded-t bg-brand-200 hover:bg-brand-500 transition-colors duration-150" title={`${r.date}: ${formatRupiah(r.revenue)}`}
               style={{ height: `${(r.revenue / maxRev) * 100}%` }}
             />
           ))}

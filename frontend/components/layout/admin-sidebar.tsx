@@ -15,6 +15,7 @@ import {
   Boxes,
   LogOut,
 } from 'lucide-react'
+import { Logo } from '@/components/branding/logo'
 import { createBrowserClient } from '@/lib/supabase'
 
 const NAV = [
@@ -44,14 +45,15 @@ export function AdminSidebar() {
 
   return (
     <aside className="sticky top-0 flex h-screen w-64 flex-col bg-white border-r-2 border-black">
-      {/* Brand */}
+      {/* Brand — pakai Logo component yang sama dengan public/buyer */}
       <div className="px-5 py-5 border-b-2 border-black/10">
-        <Link href="/admin" className="inline-flex items-center gap-2 group">
-          <div className="font-heading text-xl tracking-tight">
-            <span className="font-extrabold text-ink">Jual</span>
-            <span className="font-extrabold text-brand-600">Akun</span>
-          </div>
-          <span className="rounded-md bg-brand-500 text-ink text-[10px] font-extrabold px-2 py-0.5 border-2 border-black shadow-[0_2px_0_rgba(0,0,0,0.9)] tracking-wider uppercase">
+        <Link
+          href="/admin"
+          className="inline-flex items-start gap-2 group"
+          aria-label="Jualakun.id Admin Panel"
+        >
+          <Logo size="sm" showTagline asLink={false} />
+          <span className="mt-1 rounded-md bg-brand-500 text-ink text-[10px] font-extrabold px-1.5 py-0.5 border-2 border-black shadow-[0_2px_0_rgba(0,0,0,0.9)] tracking-wider uppercase shrink-0">
             Admin
           </span>
         </Link>
