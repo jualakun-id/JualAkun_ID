@@ -23,7 +23,9 @@ export class DashboardService {
 
 function normalizePhone(input: string): string {
   const digits = input.replace(/\D/g, '')
-  if (digits.startsWith('62')) return digits
+  // E.164 normalized (62 = ID, 60 = MY)
+  if (digits.startsWith('62') || digits.startsWith('60')) return digits
+  // Fallback Indonesia local format
   if (digits.startsWith('0')) return `62${digits.slice(1)}`
   return digits
 }

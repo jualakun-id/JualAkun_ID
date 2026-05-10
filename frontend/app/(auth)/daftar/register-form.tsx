@@ -5,12 +5,17 @@ import { useRouter } from 'next/navigation'
 import { AlertCircle, CheckCircle2, Eye, EyeOff } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import {
+  PhoneInput,
+  buildPhoneE164,
+  isValidLocal,
+  getCountry,
+  type CountryCode,
+} from '@/components/ui/phone-input'
 import { api } from '@/lib/api'
 
 type Props = { referralCode: string | null }
 
-// Match backend regex: ^(\+?62|0|8)\d{8,13}$
-const PHONE_REGEX = /^(\+?62|0|8)\d{8,13}$/
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 type FieldState = 'idle' | 'valid' | 'invalid'
@@ -39,7 +44,8 @@ export function RegisterForm({ referralCode }: Props) {
   const router = useRouter()
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
-  const [phoneWa, setPhoneWa] = useState('')
+  const [phoneCode, setPhoneCode] = useState<CountryCode>('62')
+  const [phoneLocal, setPhoneLocal] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [referralCodeState, setReferralCodeState] = useState(referralCode ?? '')
@@ -61,7 +67,7 @@ export function RegisterForm({ referralCode }: Props) {
   // Per-field validation
   const nameValid = fullName.trim().length >= 2
   const emailValid = EMAIL_REGEX.test(email.trim())
-  const phoneValid = phoneWa === '' || PHONE_REGEX.test(phoneWa.trim())
+  const phoneValid = isValidLocal(phoneCode, phoneLocal)
   const passwordValid = password.length >= 8
   const confirmValid = confirmPassword === password && confirmPassword.length > 0
   const pwScore = useMemo(() => passwordScore(password), [password])
@@ -92,7 +98,7 @@ export function RegisterForm({ referralCode }: Props) {
         email: email.trim().toLowerCase(),
         password,
         full_name: fullName.trim(),
-        phone_wa: phoneWa.trim() || undefined,
+        phone_wa: buildPhoneE164(phoneCode, phoneLocal),
         referral_code: referralCodeState.trim() || undefined,
       },
       { auth: false },
@@ -162,23 +168,25 @@ export function RegisterForm({ referralCode }: Props) {
 
       <Field
         label="No. WhatsApp"
-        optional
-        state={fieldState(phoneValid, touched.phoneWa && phoneWa !== '')}
+        state={fieldState(phoneValid, touched.phoneWa)}
         error={
           touched.phoneWa && !phoneValid
-            ? 'Format: 08xxxxxxxxxx atau +62xxxxxxxxxx (10-15 digit)'
+            ? `Nomor ${getCountry(phoneCode).label} tidak valid (mulai dari ${
+                phoneCode === '62' ? '8 (mis. 812xxxxxxxx)' : '1 (mis. 12xxxxxxx)'
+              })`
             : undefined
         }
+        hint="Nomor wajib aktif WhatsApp — semua info pesanan & klaim dikirim ke sini."
       >
-        <Input
-          type="tel"
-          inputMode="numeric"
-          autoComplete="tel"
-          placeholder="0812xxxxxxxx"
-          value={phoneWa}
-          onChange={(e) => setPhoneWa(e.target.value.replace(/\s+/g, ''))}
+        <PhoneInput
+          code={phoneCode}
+          local={phoneLocal}
+          onCodeChange={setPhoneCode}
+          onLocalChange={setPhoneLocal}
           onBlur={() => setTouched((t) => ({ ...t, phoneWa: true }))}
           error={touched.phoneWa && !phoneValid}
+          required
+          ariaLabel="Nomor WhatsApp"
         />
       </Field>
 
@@ -303,12 +311,14 @@ function Field({
   optional,
   state,
   error,
+  hint,
   children,
 }: {
   label: string
   optional?: boolean
   state: FieldState
   error?: string
+  hint?: string
   children: React.ReactNode
 }) {
   return (
@@ -326,6 +336,8 @@ function Field({
           <AlertCircle size={12} strokeWidth={2.5} />
           {error}
         </p>
+      ) : hint ? (
+        <p className="mt-1.5 text-xs text-ink-subtle font-medium leading-relaxed">{hint}</p>
       ) : null}
     </div>
   )

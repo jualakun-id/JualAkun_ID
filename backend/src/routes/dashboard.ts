@@ -14,9 +14,10 @@ dashboardRoute.get('/', async (c) => {
   return c.json({ data })
 })
 
+// Sama dgn registerSchema di routes/auth.ts — E.164 normalized (62/60)
 const profileSchema = z.object({
   full_name: z.string().trim().min(2).max(100).optional(),
-  phone_wa: z.string().regex(/^(\+?62|0|8)\d{8,13}$/).optional(),
+  phone_wa: z.string().regex(/^(62|60)\d{8,13}$/, 'Format nomor WA tidak valid').optional(),
 })
 
 dashboardRoute.patch('/profile', zValidator('json', profileSchema), async (c) => {

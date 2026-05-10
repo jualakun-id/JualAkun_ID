@@ -9,11 +9,15 @@ export const authRoute = new Hono<AppEnv>()
 
 authRoute.get('/health', (c) => c.json({ data: { ok: true } }))
 
+// Phone WA E.164 tanpa "+": 62xxx (Indonesia) atau 60xxx (Malaysia)
+// Total digit 10-15 (mengikuti standar E.164). Frontend kirim format normalized.
+const PHONE_WA_REGEX = /^(62|60)\d{8,13}$/
+
 const registerSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8, 'Password minimal 8 karakter'),
   full_name: z.string().trim().min(2).max(100),
-  phone_wa: z.string().regex(/^(\+?62|0|8)\d{8,13}$/).optional(),
+  phone_wa: z.string().regex(PHONE_WA_REGEX, 'Format nomor WA tidak valid (gunakan 62/60 + nomor)'),
   referral_code: z.string().trim().min(4).max(10).optional(),
 })
 
