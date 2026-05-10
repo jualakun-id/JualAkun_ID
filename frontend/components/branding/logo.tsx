@@ -49,7 +49,7 @@ export function Logo({
 }: LogoProps) {
   const s = SIZES[size]
   const wordmarkColor = inverted ? 'text-white' : 'text-ink'
-  // Unified brand color: ".id" + tagline + button = brand-500 (matches logo image #06B6D4)
+  // Unified brand color: ".id" + tagline + button = brand-500 (exact logo color #1296A8)
   const accentColor   = inverted ? 'text-brand-400' : 'text-brand-500'
   const taglineColor  = inverted ? 'text-brand-400' : 'text-brand-500'
 

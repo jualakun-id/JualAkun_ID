@@ -25,7 +25,7 @@ export function LandingProductCard({
       style={{
         backgroundColor: '#FAF7F2',
         backgroundImage:
-          'radial-gradient(circle at 1.5px 1.5px, rgba(6,182,212,0.12) 1.5px, transparent 0)',
+          'radial-gradient(circle at 1.5px 1.5px, rgba(18,150,168,0.12) 1.5px, transparent 0)',
         backgroundSize: '14px 14px',
       }}
     >

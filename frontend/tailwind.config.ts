@@ -36,17 +36,17 @@ const config: Config = {
         danger: '#EF4444',
         info: '#38BDF8',
 
-        // Light system — vibrant cyan-teal matching logo doodle color
+        // Light system — teal scale calibrated to actual logo color #1296A8
         brand: {
-          50:  '#ECFEFF',  // very light cyan tint (section bg)
-          100: '#CFFAFE',
-          200: '#A5F3FC',
-          300: '#67E8F9',
-          400: '#22D3EE',  // bright accent (footer/dark bg)
-          500: '#06B6D4',  // LOGO color — vibrant cyan-teal (decorative, badges, accents)
-          600: '#0891B2',  // primary CTA bg with white text (kontras 4.6:1 — AA pass)
-          700: '#0E7490',  // CTA hover, darker accent
-          800: '#155E75',
+          50:  '#E8F7FA',  // very light teal tint (section bg)
+          100: '#C9EEF3',
+          200: '#99DDE7',
+          300: '#5AC4D2',
+          400: '#1FAFC2',  // bright accent (footer/dark bg)
+          500: '#1296A8',  // EXACT LOGO color (sampled — RGB 18,150,168)
+          600: '#0E7A8A',  // hover state
+          700: '#0B6271',  // darker accent
+          800: '#0A5260',
           900: '#1A4480',  // navy heading accent (hero highlight)
         },
         ink: {
