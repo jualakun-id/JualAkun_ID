@@ -36,31 +36,41 @@ export default async function AdminDashboardPage() {
   }
 
   return (
-    <div className="px-8 py-8">
+    <div className="px-6 md:px-8 py-8">
       <AdminHeader title="Dashboard" subtitle="Kesehatan platform & action items hari ini" />
 
-      <div className="grid gap-6 lg:grid-cols-[300px_1fr]">
+      <div className="grid gap-5 lg:grid-cols-[300px_1fr]">
         <HealthScore score={score} />
         <ActionItems items={items} />
       </div>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-        <KpiCard icon={<DollarSign size={18} strokeWidth={1.5} />} label="GMV Hari Ini" value={formatRupiah(kpis?.revenue.today ?? 0)} />
-        <KpiCard icon={<ShoppingBag size={18} strokeWidth={1.5} />} label="Pesanan Hari Ini" value={kpis?.orders.today_total ?? 0} />
-        <KpiCard icon={<Users size={18} strokeWidth={1.5} />} label="User Baru" value={kpis?.users.new_this_week ?? 0} subLabel="7 hari terakhir" />
-        <KpiCard icon={<Truck size={18} strokeWidth={1.5} />} label="Menunggu Bayar" value={kpis?.orders.pending_payment ?? 0} />
-        <KpiCard icon={<LifeBuoy size={18} strokeWidth={1.5} />} label="Tiket Open" value={kpis?.tickets.open ?? 0} />
-        <KpiCard icon={<Gift size={18} strokeWidth={1.5} />} label="Total User" value={kpis?.users.total ?? 0} />
+        <KpiCard icon={<DollarSign size={20} strokeWidth={2.25} />} label="GMV Hari Ini" value={formatRupiah(kpis?.revenue.today ?? 0)} />
+        <KpiCard icon={<ShoppingBag size={20} strokeWidth={2.25} />} label="Pesanan Hari Ini" value={kpis?.orders.today_total ?? 0} />
+        <KpiCard icon={<Users size={20} strokeWidth={2.25} />} label="User Baru" value={kpis?.users.new_this_week ?? 0} subLabel="7 hari terakhir" />
+        <KpiCard icon={<Truck size={20} strokeWidth={2.25} />} label="Menunggu Bayar" value={kpis?.orders.pending_payment ?? 0} />
+        <KpiCard icon={<LifeBuoy size={20} strokeWidth={2.25} />} label="Tiket Open" value={kpis?.tickets.open ?? 0} />
+        <KpiCard icon={<Gift size={20} strokeWidth={2.25} />} label="Total User" value={kpis?.users.total ?? 0} />
       </div>
 
       <div className="mt-8 grid gap-4 lg:grid-cols-2">
-        <Link href="/admin/pesanan" className="rounded-xl border border-border bg-surface p-5 hover:border-primary/50">
-          <div className="font-heading text-h3">Lihat Semua Pesanan →</div>
-          <p className="mt-1 text-sm text-text-muted">Filter, search, manual deliver, refund</p>
+        <Link
+          href="/admin/pesanan"
+          className="group rounded-2xl border-2 border-black bg-white p-5 shadow-[0_3px_0_rgba(0,0,0,0.9)] hover:shadow-[0_5px_0_rgba(0,0,0,0.9)] hover:-translate-y-0.5 transition-all duration-150"
+        >
+          <div className="font-heading text-xl font-extrabold text-ink tracking-tight group-hover:text-brand-700 transition-colors">
+            Lihat Semua Pesanan →
+          </div>
+          <p className="mt-1.5 text-sm text-ink-muted font-medium">Filter, search, manual deliver, refund</p>
         </Link>
-        <Link href="/admin/stok-monitor" className="rounded-xl border border-border bg-surface p-5 hover:border-primary/50">
-          <div className="font-heading text-h3">Stok Monitor →</div>
-          <p className="mt-1 text-sm text-text-muted">Quick upload stok, alert kritis</p>
+        <Link
+          href="/admin/stok-monitor"
+          className="group rounded-2xl border-2 border-black bg-white p-5 shadow-[0_3px_0_rgba(0,0,0,0.9)] hover:shadow-[0_5px_0_rgba(0,0,0,0.9)] hover:-translate-y-0.5 transition-all duration-150"
+        >
+          <div className="font-heading text-xl font-extrabold text-ink tracking-tight group-hover:text-brand-700 transition-colors">
+            Stok Monitor →
+          </div>
+          <p className="mt-1.5 text-sm text-ink-muted font-medium">Quick upload stok, alert kritis</p>
         </Link>
       </div>
     </div>

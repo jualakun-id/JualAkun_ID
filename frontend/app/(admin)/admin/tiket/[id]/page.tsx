@@ -29,7 +29,7 @@ export default async function AdminTiketDetailPage({ params }: Props) {
   const isResolved = ticket.status.startsWith('resolved') || ticket.status === 'rejected' || ticket.status === 'closed'
 
   return (
-    <div className="px-8 py-8">
+    <div className="px-6 md:px-8 py-8">
       <AdminHeader
         title={`Tiket ${ticket.id.slice(0, 8)}`}
         subtitle={`${ticket.order.order_number} · ${ticket.order.product?.name ?? '—'}`}
@@ -37,8 +37,8 @@ export default async function AdminTiketDetailPage({ params }: Props) {
       />
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-xl border border-border bg-surface p-6">
-          <h2 className="font-heading text-h3">Info Tiket</h2>
+        <div className="rounded-2xl border-2 border-black bg-white p-6 shadow-[0_3px_0_rgba(0,0,0,0.9)]">
+          <h2 className="font-heading text-xl font-extrabold tracking-tight">Info Tiket</h2>
           <dl className="mt-4 space-y-3 text-sm">
             <Row label="Buyer" value={ticket.buyer_email ?? '—'} />
             <Row label="Alasan" value={ticket.reason} />
@@ -47,8 +47,8 @@ export default async function AdminTiketDetailPage({ params }: Props) {
           </dl>
           {ticket.description ? (
             <div className="mt-4">
-              <div className="text-sm font-medium text-text-muted">Deskripsi</div>
-              <p className="mt-1 whitespace-pre-line rounded-md border border-border-subtle bg-surface-2 p-3 text-sm">
+              <div className="text-sm font-medium text-ink-muted">Deskripsi</div>
+              <p className="mt-1 whitespace-pre-line rounded-md border border-black/10 bg-brand-50/40 p-3 text-sm">
                 {ticket.description}
               </p>
             </div>
@@ -58,17 +58,17 @@ export default async function AdminTiketDetailPage({ params }: Props) {
               href={ticket.screenshot_url}
               target="_blank"
               rel="noopener"
-              className="mt-3 inline-block text-sm text-primary hover:text-primary-light"
+              className="mt-3 inline-block text-sm text-brand-700 hover:text-brand-700"
             >
               Lihat screenshot →
             </a>
           ) : null}
         </div>
 
-        <div className="rounded-xl border border-border bg-surface p-6">
-          <h2 className="font-heading text-h3">Resolusi</h2>
+        <div className="rounded-2xl border-2 border-black bg-white p-6 shadow-[0_3px_0_rgba(0,0,0,0.9)]">
+          <h2 className="font-heading text-xl font-extrabold tracking-tight">Resolusi</h2>
           {isResolved ? (
-            <p className="mt-3 text-sm text-text-muted">
+            <p className="mt-3 text-sm text-ink-muted">
               Sudah diresolve: {ticket.resolution ?? '—'}
             </p>
           ) : (
@@ -83,8 +83,8 @@ export default async function AdminTiketDetailPage({ params }: Props) {
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-start gap-3">
-      <dt className="w-20 shrink-0 text-text-muted">{label}</dt>
-      <dd className="text-text">{value}</dd>
+      <dt className="w-20 shrink-0 text-ink-muted">{label}</dt>
+      <dd className="text-ink">{value}</dd>
     </div>
   )
 }

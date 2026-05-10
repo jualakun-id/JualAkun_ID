@@ -28,7 +28,7 @@ export default async function AdminStokMonitorPage({ searchParams }: Props) {
   const critical = (data ?? []).filter((r) => r.stock_count > 0 && r.stock_count <= 5).length
 
   return (
-    <div className="px-8 py-8">
+    <div className="px-6 md:px-8 py-8">
       <AdminHeader title="Stok Monitor" subtitle={`${out} habis · ${critical} kritis`} />
       <FilterBar
         activeValue={filter}
@@ -49,9 +49,9 @@ export default async function AdminStokMonitorPage({ searchParams }: Props) {
                 const row = r as unknown as StockRow
                 const cat = Array.isArray(row.categories) ? row.categories[0] : row.categories
                 return (
-                  <Link href={`/admin/produk/${row.id}`} className="hover:text-primary">
+                  <Link href={`/admin/produk/${row.id}`} className="hover:text-brand-700">
                     <div className="font-medium">{row.name}</div>
-                    <div className="text-xs text-text-subtle">{cat?.name}</div>
+                    <div className="text-xs text-ink-subtle">{cat?.name}</div>
                   </Link>
                 )
               },
@@ -64,7 +64,7 @@ export default async function AdminStokMonitorPage({ searchParams }: Props) {
               render: (r) => (
                 <Link
                   href={`/admin/produk/${(r as unknown as StockRow).id}`}
-                  className="rounded-md border border-primary/30 bg-primary/10 px-2 py-1 text-xs text-primary-light hover:bg-primary/20"
+                  className="rounded-md border border-primary/30 bg-primary/10 px-2 py-1 text-xs text-brand-700 hover:bg-primary/20"
                 >
                   + Stok
                 </Link>

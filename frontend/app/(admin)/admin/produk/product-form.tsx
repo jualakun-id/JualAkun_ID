@@ -69,13 +69,13 @@ export function ProductForm({ categories, initial }: Props) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5 rounded-xl border border-border bg-surface p-6">
+    <form onSubmit={handleSubmit} className="space-y-5 rounded-2xl border-2 border-black bg-white p-6 shadow-[0_3px_0_rgba(0,0,0,0.9)]">
       <Field label="Kategori">
         <select
           value={form.category_id}
           onChange={(e) => update('category_id', e.target.value)}
           required
-          className="w-full rounded-lg border border-border bg-surface-2 px-4 py-2.5 text-sm text-text focus:border-primary focus:outline-none"
+          className="w-full rounded-lg border-2 border-black/15 bg-white px-4 py-3 text-[15px] font-medium text-ink focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/25"
         >
           {categories.map((c) => (
             <option key={c.id} value={c.id}>{c.name}</option>
@@ -101,7 +101,7 @@ export function ProductForm({ categories, initial }: Props) {
           rows={4}
           value={form.description}
           onChange={(e) => update('description', e.target.value)}
-          className="w-full rounded-lg border border-border bg-surface-2 px-4 py-2.5 text-sm text-text placeholder:text-text-subtle focus:border-primary focus:outline-none"
+          className="w-full rounded-lg border-2 border-black/15 bg-white px-4 py-3 text-[15px] font-medium text-ink placeholder:text-ink-subtle placeholder:font-normal focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/25"
         />
       </Field>
       <div className="grid gap-4 sm:grid-cols-3">
@@ -118,19 +118,24 @@ export function ProductForm({ categories, initial }: Props) {
       <Field label="Thumbnail URL">
         <Input type="url" value={form.thumbnail_url} onChange={(e) => update('thumbnail_url', e.target.value)} placeholder="https://..." />
       </Field>
-      <label className="flex items-center gap-2 text-sm text-text-muted">
+      <label className="flex items-start gap-3 rounded-lg border-2 border-black/15 bg-brand-50/40 p-3.5 cursor-pointer hover:border-brand-400 transition-colors">
         <input
           type="checkbox"
           checked={form.is_active}
           onChange={(e) => update('is_active', e.target.checked)}
-          className="rounded border-border"
+          className="mt-0.5 h-4 w-4 accent-brand-500 cursor-pointer"
         />
-        Aktif (tampil di publik)
+        <span className="flex-1">
+          <span className="text-sm font-bold text-ink block">Aktif (tampil di publik)</span>
+          <span className="text-xs text-ink-muted font-medium block mt-0.5">
+            Uncheck untuk simpan sebagai draft — tidak muncul di marketplace
+          </span>
+        </span>
       </label>
       {error ? (
-        <div className="rounded-md border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger">{error}</div>
+        <div className="rounded-lg border-2 border-danger/40 bg-danger/10 px-3.5 py-3 text-sm font-medium text-danger">{error}</div>
       ) : null}
-      <Button type="submit" disabled={loading}>
+      <Button type="submit" disabled={loading} size="lg">
         {loading ? 'Menyimpan...' : isEdit ? 'Simpan Perubahan' : 'Buat Produk'}
       </Button>
     </form>
@@ -140,8 +145,8 @@ export function ProductForm({ categories, initial }: Props) {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="text-sm font-medium text-text-muted">{label}</label>
-      <div className="mt-1.5">{children}</div>
+      <label className="text-sm font-bold text-ink">{label}</label>
+      <div className="mt-2">{children}</div>
     </div>
   )
 }

@@ -33,7 +33,7 @@ export default async function AdminPesananDetailPage({ params }: Props) {
   if (!order) notFound()
 
   return (
-    <div className="px-8 py-8">
+    <div className="px-6 md:px-8 py-8">
       <AdminHeader
         title={`Pesanan ${order.order_number}`}
         subtitle={order.product?.name ?? ''}
@@ -41,8 +41,8 @@ export default async function AdminPesananDetailPage({ params }: Props) {
       />
 
       <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">
-        <div className="rounded-xl border border-border bg-surface p-6">
-          <h2 className="font-heading text-h3">Info Pesanan</h2>
+        <div className="rounded-2xl border-2 border-black bg-white p-6 shadow-[0_3px_0_rgba(0,0,0,0.9)]">
+          <h2 className="font-heading text-xl font-extrabold tracking-tight">Info Pesanan</h2>
           <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
             <Row label="Buyer" value={order.buyer.email ?? '—'} />
             <Row label="Produk" value={order.product?.name ?? '—'} />
@@ -61,17 +61,17 @@ export default async function AdminPesananDetailPage({ params }: Props) {
           <OrderActions orderId={id} status={order.status} />
         </div>
 
-        <div className="rounded-xl border border-border bg-surface p-6">
-          <h2 className="font-heading text-h3">Log Notifikasi</h2>
+        <div className="rounded-2xl border-2 border-black bg-white p-6 shadow-[0_3px_0_rgba(0,0,0,0.9)]">
+          <h2 className="font-heading text-xl font-extrabold tracking-tight">Log Notifikasi</h2>
           <div className="mt-3 space-y-2">
             {order.notifications.length === 0 ? (
-              <p className="text-sm text-text-muted">Belum ada notifikasi.</p>
+              <p className="text-sm text-ink-muted">Belum ada notifikasi.</p>
             ) : null}
             {order.notifications.map((n) => (
-              <div key={n.id} className="flex items-center justify-between rounded-md border border-border-subtle bg-surface-2 px-3 py-2 text-xs">
+              <div key={n.id} className="flex items-center justify-between rounded-md border border-black/10 bg-brand-50/40 px-3 py-2 text-xs">
                 <div>
-                  <div className="font-mono uppercase text-text-muted">{n.channel} · {n.template}</div>
-                  <div className="text-text-subtle">{formatDateTime(n.created_at)}</div>
+                  <div className="font-mono uppercase text-ink-muted">{n.channel} · {n.template}</div>
+                  <div className="text-ink-subtle">{formatDateTime(n.created_at)}</div>
                 </div>
                 <StatusBadge variant="notification" status={n.status} />
               </div>
@@ -80,7 +80,7 @@ export default async function AdminPesananDetailPage({ params }: Props) {
         </div>
       </div>
 
-      <Link href="/admin/pesanan" className="mt-6 inline-block text-sm text-text-muted hover:text-text">
+      <Link href="/admin/pesanan" className="mt-6 inline-block text-sm text-ink-muted hover:text-ink">
         ← Kembali ke daftar pesanan
       </Link>
     </div>
@@ -90,8 +90,8 @@ export default async function AdminPesananDetailPage({ params }: Props) {
 function Row({ label, value, bold }: { label: string; value: string; bold?: boolean }) {
   return (
     <div className="contents">
-      <dt className="text-text-muted">{label}</dt>
-      <dd className={bold ? 'font-heading font-bold text-primary' : 'text-text'}>{value}</dd>
+      <dt className="text-ink-muted">{label}</dt>
+      <dd className={bold ? 'font-heading font-bold text-brand-700' : 'text-ink'}>{value}</dd>
     </div>
   )
 }

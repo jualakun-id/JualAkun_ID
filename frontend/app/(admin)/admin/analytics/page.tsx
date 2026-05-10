@@ -20,7 +20,7 @@ export default async function AdminAnalyticsPage() {
   const maxRev = Math.max(...(revenue ?? []).map((r) => r.revenue), 1)
 
   return (
-    <div className="px-8 py-8">
+    <div className="px-6 md:px-8 py-8">
       <AdminHeader title="Analytics" subtitle="30 hari terakhir" />
 
       <div className="grid gap-4 md:grid-cols-3">
@@ -29,35 +29,35 @@ export default async function AdminAnalyticsPage() {
         <Stat label="Avg Order Value" value={formatRupiah(aov)} />
       </div>
 
-      <div className="mt-6 rounded-xl border border-border bg-surface p-6">
-        <h2 className="font-heading text-h3">Revenue Harian</h2>
+      <div className="mt-6 rounded-2xl border-2 border-black bg-white p-6 shadow-[0_3px_0_rgba(0,0,0,0.9)]">
+        <h2 className="font-heading text-xl font-extrabold tracking-tight">Revenue Harian</h2>
         <div className="mt-4 flex h-48 items-end gap-1">
           {(revenue ?? []).map((r) => (
-            <div key={r.date} className="group relative flex-1 rounded-t bg-primary/30 hover:bg-primary" title={`${r.date}: ${formatRupiah(r.revenue)}`}
+            <div key={r.date} className="group relative flex-1 rounded-t bg-primary/30 hover:bg-brand-500" title={`${r.date}: ${formatRupiah(r.revenue)}`}
               style={{ height: `${(r.revenue / maxRev) * 100}%` }}
             />
           ))}
         </div>
-        <div className="mt-2 flex justify-between text-xs text-text-subtle">
+        <div className="mt-2 flex justify-between text-xs text-ink-subtle">
           <span>{revenue?.[0] ? formatDate(revenue[0].date) : '—'}</span>
           <span>{revenue?.[revenue.length - 1] ? formatDate(revenue[revenue.length - 1].date) : '—'}</span>
         </div>
       </div>
 
-      <div className="mt-6 rounded-xl border border-border bg-surface p-6">
-        <h2 className="font-heading text-h3">Top 10 Produk</h2>
+      <div className="mt-6 rounded-2xl border-2 border-black bg-white p-6 shadow-[0_3px_0_rgba(0,0,0,0.9)]">
+        <h2 className="font-heading text-xl font-extrabold tracking-tight">Top 10 Produk</h2>
         <div className="mt-4 space-y-2">
           {(top ?? []).map((p, i) => (
-            <div key={p.id} className="flex items-center gap-3 rounded-lg border border-border-subtle bg-surface-2 p-3">
-              <span className="font-mono text-text-subtle">#{i + 1}</span>
+            <div key={p.id} className="flex items-center gap-3 rounded-lg border border-black/10 bg-brand-50/40 p-3">
+              <span className="font-mono text-ink-subtle">#{i + 1}</span>
               <div className="flex-1">
-                <div className="font-medium text-text">{p.name}</div>
-                <div className="text-xs text-text-subtle">{p.sold_count.toLocaleString('id-ID')} terjual</div>
+                <div className="font-medium text-ink">{p.name}</div>
+                <div className="text-xs text-ink-subtle">{p.sold_count.toLocaleString('id-ID')} terjual</div>
               </div>
-              <span className="font-heading font-bold text-primary">{formatRupiah(p.price)}</span>
+              <span className="font-heading font-bold text-brand-700">{formatRupiah(p.price)}</span>
             </div>
           ))}
-          {!top?.length ? <p className="text-sm text-text-muted">Belum ada data.</p> : null}
+          {!top?.length ? <p className="text-sm text-ink-muted">Belum ada data.</p> : null}
         </div>
       </div>
     </div>
@@ -66,9 +66,9 @@ export default async function AdminAnalyticsPage() {
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl border border-border bg-surface p-5">
-      <div className="text-sm text-text-muted">{label}</div>
-      <div className="mt-1 font-heading text-h2 text-text">{value}</div>
+    <div className="rounded-2xl border-2 border-black bg-white p-5 shadow-[0_3px_0_rgba(0,0,0,0.9)]">
+      <div className="text-sm text-ink-muted">{label}</div>
+      <div className="mt-1 font-heading text-2xl md:text-3xl font-extrabold tracking-tight text-ink">{value}</div>
     </div>
   )
 }

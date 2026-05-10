@@ -12,7 +12,7 @@ type Props = {
 
 export function FilterBar({ pills, activeValue, searchQuery, rightSlot }: Props) {
   return (
-    <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-surface p-3">
+    <div className="flex flex-wrap items-center gap-3 rounded-2xl border-2 border-black bg-white p-3 shadow-[0_3px_0_rgba(0,0,0,0.9)]">
       {pills && pills.length > 0 ? (
         <div className="flex flex-wrap gap-1.5">
           {pills.map((p) => (
@@ -20,10 +20,10 @@ export function FilterBar({ pills, activeValue, searchQuery, rightSlot }: Props)
               key={p.value}
               href={p.href}
               className={cn(
-                'rounded-md border px-3 py-1.5 text-xs font-medium',
+                'rounded-md border-2 px-3 py-1.5 text-xs font-bold transition-colors',
                 activeValue === p.value
-                  ? 'border-primary bg-primary/15 text-primary'
-                  : 'border-border bg-surface-2 text-text-muted hover:text-text',
+                  ? 'border-black bg-brand-500 text-ink shadow-[0_2px_0_rgba(0,0,0,0.9)]'
+                  : 'border-black/15 bg-white text-ink-muted hover:border-brand-400 hover:text-brand-700',
               )}
             >
               {p.label}
@@ -39,7 +39,7 @@ export function FilterBar({ pills, activeValue, searchQuery, rightSlot }: Props)
             name={searchQuery.name}
             placeholder={searchQuery.placeholder}
             defaultValue={searchQuery.defaultValue}
-            className="w-full rounded-md border border-border bg-surface-2 px-3 py-1.5 text-sm text-text placeholder:text-text-subtle focus:border-primary focus:outline-none"
+            className="w-full rounded-lg border-2 border-black/15 bg-white px-3.5 py-2 text-sm font-medium text-ink placeholder:text-ink-subtle placeholder:font-normal focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/25"
           />
         </form>
       ) : null}

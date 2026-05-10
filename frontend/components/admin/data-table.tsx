@@ -22,15 +22,15 @@ export function DataTable<T extends Record<string, unknown>>({
   rowClassName,
 }: Props<T>) {
   return (
-    <div className="overflow-x-auto rounded-xl border border-border bg-surface">
+    <div className="overflow-x-auto rounded-2xl border-2 border-black bg-white shadow-[0_3px_0_rgba(0,0,0,0.9)]">
       <table className="w-full text-sm">
-        <thead className="border-b border-border-subtle text-xs uppercase tracking-wide text-text-subtle">
+        <thead className="bg-brand-50 text-ink border-b-2 border-black/10">
           <tr>
             {columns.map((col) => (
               <th
                 key={col.key}
                 className={cn(
-                  'px-4 py-3 font-medium',
+                  'px-4 py-3 text-xs uppercase tracking-wider font-extrabold whitespace-nowrap',
                   col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left',
                   col.className,
                 )}
@@ -43,7 +43,7 @@ export function DataTable<T extends Record<string, unknown>>({
         <tbody>
           {rows.length === 0 ? (
             <tr>
-              <td colSpan={columns.length} className="px-4 py-12 text-center text-text-muted">
+              <td colSpan={columns.length} className="px-4 py-14 text-center text-ink-muted font-medium">
                 {emptyMessage}
               </td>
             </tr>
@@ -52,17 +52,19 @@ export function DataTable<T extends Record<string, unknown>>({
               <tr
                 key={idx}
                 className={cn(
-                  'border-b border-border-subtle last:border-b-0 hover:bg-surface-2/50',
+                  'border-b border-black/5 last:border-b-0 hover:bg-brand-50/50 transition-colors',
                   rowClassName?.(row),
                 )}
               >
                 {columns.map((col) => {
-                  const value = col.render ? col.render(row) : String((row as Record<string, unknown>)[col.key] ?? '')
+                  const value = col.render
+                    ? col.render(row)
+                    : String((row as Record<string, unknown>)[col.key] ?? '')
                   return (
                     <td
                       key={col.key}
                       className={cn(
-                        'px-4 py-3 text-text',
+                        'px-4 py-3.5 text-ink font-medium',
                         col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left',
                       )}
                     >

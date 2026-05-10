@@ -8,7 +8,7 @@ export const metadata = { title: 'Admin — Tambah Produk' }
 export default async function AdminProdukBaruPage() {
   const categories = await adminFetch<(Category & { product_count: number })[]>('/catalog/categories')
   return (
-    <div className="px-8 py-8">
+    <div className="px-6 md:px-8 py-8">
       <AdminHeader title="Tambah Produk" subtitle="Buat produk baru. Status default = draft (tidak tampil di publik)." />
       <div className="max-w-2xl">
         <ProductForm categories={categories ?? []} />

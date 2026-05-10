@@ -40,8 +40,8 @@ export function CouponForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 rounded-xl border border-border bg-surface p-6">
-      <h3 className="font-heading text-h3">Buat Kupon</h3>
+    <form onSubmit={handleSubmit} className="space-y-4 rounded-2xl border-2 border-black bg-white p-6 shadow-[0_3px_0_rgba(0,0,0,0.9)]">
+      <h3 className="font-heading text-xl font-extrabold tracking-tight">Buat Kupon</h3>
       <Field label="Kode">
         <Input required value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} className="font-mono" />
       </Field>
@@ -77,7 +77,7 @@ export function CouponForm() {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="text-sm font-medium text-text-muted">{label}</label>
+      <label className="text-sm font-medium text-ink-muted">{label}</label>
       <div className="mt-1.5">{children}</div>
     </div>
   )

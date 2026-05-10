@@ -33,7 +33,7 @@ export default async function AdminPesananPage({ searchParams }: Props) {
   const data = await adminFetch<ListResponse>(`/admin/orders?${params.toString()}`)
 
   return (
-    <div className="px-8 py-8">
+    <div className="px-6 md:px-8 py-8">
       <AdminHeader title="Pesanan" subtitle={`${data?.pagination.total ?? 0} total`} />
 
       <FilterBar
@@ -66,9 +66,9 @@ export default async function AdminPesananPage({ searchParams }: Props) {
                 const row = r as unknown as OrderRow
                 const product = Array.isArray(row.products) ? row.products[0] : row.products
                 return (
-                  <Link href={`/admin/pesanan/${row.id}`} className="hover:text-primary">
+                  <Link href={`/admin/pesanan/${row.id}`} className="hover:text-brand-700">
                     <div className="font-mono text-xs">{row.order_number}</div>
-                    <div className="mt-0.5 text-xs text-text-subtle">{product?.name}</div>
+                    <div className="mt-0.5 text-xs text-ink-subtle">{product?.name}</div>
                   </Link>
                 )
               },

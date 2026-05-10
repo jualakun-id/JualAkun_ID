@@ -6,12 +6,16 @@ type Props = {
 
 export function AdminHeader({ title, subtitle, rightSlot }: Props) {
   return (
-    <header className="mb-6 flex flex-wrap items-end justify-between gap-3">
+    <header className="mb-7 flex flex-wrap items-end justify-between gap-3">
       <div>
-        <h1 className="font-heading text-h1">{title}</h1>
-        {subtitle ? <p className="mt-1 text-sm text-text-muted">{subtitle}</p> : null}
+        <h1 className="font-heading text-3xl md:text-4xl font-extrabold text-ink tracking-tight">
+          {title}
+        </h1>
+        {subtitle ? (
+          <p className="mt-2 text-[15px] text-ink-muted font-medium">{subtitle}</p>
+        ) : null}
       </div>
-      {rightSlot ? <div className="flex items-center gap-2">{rightSlot}</div> : null}
+      {rightSlot ? <div className="flex flex-wrap items-center gap-2">{rightSlot}</div> : null}
     </header>
   )
 }

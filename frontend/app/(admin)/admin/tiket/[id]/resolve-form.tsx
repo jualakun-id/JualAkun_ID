@@ -38,7 +38,7 @@ export function ResolveForm({ ticketId, availableStockIds }: Props) {
   return (
     <form onSubmit={handleSubmit} className="mt-3 space-y-4">
       <fieldset>
-        <legend className="text-sm font-medium text-text-muted">Pilih Resolusi</legend>
+        <legend className="text-sm font-medium text-ink-muted">Pilih Resolusi</legend>
         <div className="mt-2 space-y-1.5">
           {[
             { v: 'replaced', l: `Kirim akun pengganti (${availableStockIds.length} stok tersedia)` },
@@ -61,11 +61,11 @@ export function ResolveForm({ ticketId, availableStockIds }: Props) {
 
       {resolutionType === 'replaced' && availableStockIds.length > 0 ? (
         <div>
-          <label className="text-sm font-medium text-text-muted">Pilih akun pengganti (FIFO)</label>
+          <label className="text-sm font-medium text-ink-muted">Pilih akun pengganti (FIFO)</label>
           <select
             value={stockId}
             onChange={(e) => setStockId(e.target.value)}
-            className="mt-1.5 w-full rounded-lg border border-border bg-surface-2 px-4 py-2.5 text-sm text-text"
+            className="mt-1.5 w-full rounded-lg border border-black/15 bg-brand-50/40 px-4 py-2.5 text-sm text-ink"
           >
             {availableStockIds.map((id, i) => (
               <option key={id} value={id}>#{i + 1} {id.slice(0, 8)}</option>
@@ -75,14 +75,14 @@ export function ResolveForm({ ticketId, availableStockIds }: Props) {
       ) : null}
 
       <div>
-        <label className="text-sm font-medium text-text-muted">Catatan admin</label>
+        <label className="text-sm font-medium text-ink-muted">Catatan admin</label>
         <textarea
           required
           rows={3}
           value={note}
           onChange={(e) => setNote(e.target.value)}
           placeholder="Detail resolusi yang akan dikirim ke buyer..."
-          className="mt-1.5 w-full rounded-lg border border-border bg-surface-2 px-4 py-2.5 text-sm"
+          className="mt-1.5 w-full rounded-lg border border-black/15 bg-brand-50/40 px-4 py-2.5 text-sm"
         />
       </div>
 

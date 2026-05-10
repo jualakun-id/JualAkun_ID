@@ -21,7 +21,7 @@ export default async function AdminKuponPage() {
   const data = await adminFetch<Coupon[]>('/admin/coupons')
 
   return (
-    <div className="px-8 py-8">
+    <div className="px-6 md:px-8 py-8">
       <AdminHeader title="Kupon" subtitle={`${data?.length ?? 0} kupon`} />
 
       <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
@@ -44,7 +44,7 @@ export default async function AdminKuponPage() {
               header: 'Status',
               render: (r) => {
                 const a = (r as unknown as Coupon).is_active
-                return <span className={`rounded-md px-2 py-0.5 text-xs ${a ? 'bg-success/15 text-success' : 'bg-zinc-800 text-zinc-400'}`}>{a ? 'Aktif' : 'Nonaktif'}</span>
+                return <span className={`rounded-md px-2 py-0.5 text-xs ${a ? 'bg-success/15 text-success' : 'bg-gray-100 text-ink-muted border border-gray-300'}`}>{a ? 'Aktif' : 'Nonaktif'}</span>
               },
               align: 'center',
             },

@@ -28,7 +28,7 @@ export default async function AdminTiketPage({ searchParams }: Props) {
   const data = await adminFetch<ListResponse>(`/admin/tickets${sp.status ? `?status=${sp.status}` : ''}`)
 
   return (
-    <div className="px-8 py-8">
+    <div className="px-6 md:px-8 py-8">
       <AdminHeader title="Tiket Garansi" subtitle={`${data?.pagination.total ?? 0} tiket`} />
       <FilterBar
         activeValue={sp.status ?? 'all'}
@@ -51,9 +51,9 @@ export default async function AdminTiketPage({ searchParams }: Props) {
                 const order = Array.isArray(row.orders) ? row.orders[0] : row.orders
                 const product = Array.isArray(order?.products) ? order.products[0] : order?.products
                 return (
-                  <Link href={`/admin/tiket/${row.id}`} className="hover:text-primary">
+                  <Link href={`/admin/tiket/${row.id}`} className="hover:text-brand-700">
                     <div className="font-mono text-xs">{row.id.slice(0, 8)}</div>
-                    <div className="mt-0.5 text-xs text-text-subtle">{order?.order_number} · {product?.name}</div>
+                    <div className="mt-0.5 text-xs text-ink-subtle">{order?.order_number} · {product?.name}</div>
                   </Link>
                 )
               },

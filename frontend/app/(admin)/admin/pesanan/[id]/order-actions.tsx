@@ -43,7 +43,11 @@ export function OrderActions({ orderId, status }: Props) {
           onConfirm={refund}
         />
       ) : null}
-      {error ? <div className="w-full rounded-md border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger">{error}</div> : null}
+      {error ? (
+        <div className="w-full rounded-lg border-2 border-danger/40 bg-danger/10 px-3.5 py-3 text-sm font-medium text-danger">
+          {error}
+        </div>
+      ) : null}
     </div>
   )
 }

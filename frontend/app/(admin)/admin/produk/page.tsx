@@ -33,12 +33,15 @@ export default async function AdminProdukPage({ searchParams }: Props) {
   const data = await adminFetch<ListResponse>(`/admin/products${sp.status ? `?status=${sp.status}` : ''}`)
 
   return (
-    <div className="px-8 py-8">
+    <div className="px-6 md:px-8 py-8">
       <AdminHeader
         title="Produk"
         subtitle={`${data?.pagination.total ?? 0} produk`}
         rightSlot={
-          <Link href="/admin/produk/baru" className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-hover">
+          <Link
+            href="/admin/produk/baru"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-brand-500 hover:bg-brand-400 text-ink font-extrabold px-5 py-2.5 text-sm border-2 border-black shadow-[0_3px_0_rgba(0,0,0,0.9)] hover:shadow-[0_5px_0_rgba(0,0,0,0.9)] hover:-translate-y-0.5 active:translate-y-1 active:shadow-[0_1px_0_rgba(0,0,0,0.9)] transition-all duration-150"
+          >
             + Tambah Produk
           </Link>
         }
@@ -65,9 +68,9 @@ export default async function AdminProdukPage({ searchParams }: Props) {
                 const row = r as unknown as ProductRow
                 const cat = Array.isArray(row.categories) ? row.categories[0] : row.categories
                 return (
-                  <Link href={`/admin/produk/${row.id}`} className="hover:text-primary">
+                  <Link href={`/admin/produk/${row.id}`} className="hover:text-brand-700">
                     <div className="font-medium">{row.name}</div>
-                    <div className="text-xs text-text-subtle">{cat?.name ?? '—'} · {row.duration_days} hari</div>
+                    <div className="text-xs text-ink-subtle">{cat?.name ?? '—'} · {row.duration_days} hari</div>
                   </Link>
                 )
               },
@@ -81,7 +84,7 @@ export default async function AdminProdukPage({ searchParams }: Props) {
               render: (r) => {
                 const active = (r as unknown as ProductRow).is_active
                 return (
-                  <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${active ? 'bg-success/15 text-success' : 'bg-zinc-800 text-zinc-400'}`}>
+                  <span className={`inline-flex items-center rounded-md border px-2.5 py-1 text-xs font-bold whitespace-nowrap ${active ? 'bg-success/15 text-success border-success/40' : 'bg-gray-100 text-ink-muted border-gray-300'}`}>
                     {active ? 'Aktif' : 'Draft'}
                   </span>
                 )

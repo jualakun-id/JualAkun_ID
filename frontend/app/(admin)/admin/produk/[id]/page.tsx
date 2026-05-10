@@ -31,7 +31,7 @@ export default async function AdminProdukDetailPage({ params }: Props) {
   if (!product) notFound()
 
   return (
-    <div className="px-8 py-8">
+    <div className="px-6 md:px-8 py-8">
       <AdminHeader title={product.name} subtitle={`Stok: ${product.stock_count} · Terjual: ${product.sold_count}`} />
       <div className="grid gap-6 lg:grid-cols-2">
         <ProductForm
