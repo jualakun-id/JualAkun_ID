@@ -27,17 +27,42 @@ export function LoginForm() {
     setError(null)
     setLoading(true)
     const supabase = createBrowserClient()
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    setLoading(false)
-    if (error) {
+    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
+    if (signInError) {
+      setLoading(false)
       setError(
-        error.message.toLowerCase().includes('confirm')
+        signInError.message.toLowerCase().includes('confirm')
           ? 'Email belum diverifikasi. Cek inbox kamu.'
           : 'Email atau password salah.',
       )
       return
     }
-    router.push(next as `/${string}`)
+
+    // Role-based routing: admin selalu ke /admin, user ke /dashboard (atau ?next).
+    // Override `next` kalau path-nya tidak match dengan role user.
+    const userId = signInData.user?.id
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', userId!)
+      .maybeSingle()
+    setLoading(false)
+
+    const isAdmin = profile?.role === 'admin'
+    let target = next
+
+    if (isAdmin) {
+      // Admin tidak boleh masuk ke area buyer
+      if (!next.startsWith('/admin')) target = '/admin'
+    } else {
+      // User tidak boleh masuk ke /admin
+      if (next.startsWith('/admin')) target = '/dashboard'
+    }
+
+    router.push(target as `/${string}`)
     router.refresh()
   }
 
