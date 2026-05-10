@@ -25,6 +25,8 @@ type ProductDetail = {
 
 type Props = { params: Promise<{ slug: string }> }
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://jualakun.id'
+
 export const revalidate = 120
 
 export async function generateMetadata({ params }: Props) {
@@ -49,8 +51,84 @@ export default async function ProductDetailPage({ params }: Props) {
 
   const isOutOfStock = product.stock_count === 0
 
+  const productSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.name,
+    description: product.description ?? `${product.name} — akun premium asli dengan garansi ${product.guarantee_days} hari, kirim instan ke dashboard Jualakun.id`,
+    image: product.thumbnail_url ? [product.thumbnail_url] : [`${SITE_URL}/api/og`],
+    sku: product.slug,
+    brand: { '@type': 'Brand', name: 'Jualakun.id' },
+    category: product.category?.name,
+    offers: {
+      '@type': 'Offer',
+      url: `${SITE_URL}/produk/${product.slug}`,
+      priceCurrency: 'IDR',
+      price: product.price,
+      availability: isOutOfStock
+        ? 'https://schema.org/OutOfStock'
+        : 'https://schema.org/InStock',
+      seller: { '@type': 'Organization', name: 'Jualakun.id' },
+    },
+    ...(product.rating_count > 0 && {
+      aggregateRating: {
+        '@type': 'AggregateRating',
+        ratingValue: product.rating_avg.toFixed(1),
+        reviewCount: product.rating_count,
+        bestRating: 5,
+        worstRating: 1,
+      },
+    }),
+    ...(product.reviews.length > 0 && {
+      review: product.reviews.slice(0, 5).map((r) => ({
+        '@type': 'Review',
+        reviewRating: {
+          '@type': 'Rating',
+          ratingValue: r.rating,
+          bestRating: 5,
+          worstRating: 1,
+        },
+        author: { '@type': 'Person', name: 'Pembeli Jualakun.id' },
+        datePublished: r.created_at,
+        ...(r.comment && { reviewBody: r.comment }),
+      })),
+    }),
+  }
+
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Beranda', item: SITE_URL },
+      ...(product.category
+        ? [{
+            '@type': 'ListItem',
+            position: 2,
+            name: product.category.name,
+            item: `${SITE_URL}/#${product.category.slug}`,
+          }]
+        : []),
+      {
+        '@type': 'ListItem',
+        position: product.category ? 3 : 2,
+        name: product.name,
+        item: `${SITE_URL}/produk/${product.slug}`,
+      },
+    ],
+  }
+
   return (
     <section className="container mx-auto px-4 py-10">
+      <script
+        type="application/ld+json"
+        // eslint-disable-next-line react/no-danger
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        // eslint-disable-next-line react/no-danger
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
       <nav className="text-sm text-ink-muted">
         <Link href="/" className="hover:text-brand-600">Home</Link>
         {product.category ? (
