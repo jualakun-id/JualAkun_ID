@@ -1,5 +1,7 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { notFound } from 'next/navigation'
+import { ArrowLeft, ExternalLink } from 'lucide-react'
 import { DashboardTabs } from '@/components/dashboard-tabs'
 import { OrderStatusBadge } from '@/components/order-status-badge'
 import { OrderActions } from './order-actions'
@@ -37,31 +39,85 @@ export default async function DashboardPesananDetailPage({ params }: Props) {
   if (!order) notFound()
 
   return (
-    <section className="container mx-auto max-w-3xl px-4 py-8">
+    <section className="container mx-auto max-w-3xl px-4 py-8 md:py-10">
       <DashboardTabs active="/dashboard/pesanan" />
 
-      <div className="mt-8 flex items-center justify-between">
-        <div>
-          <div className="font-mono text-sm text-ink-subtle">{order.order_number}</div>
-          <h1 className="mt-1 font-heading text-h1">{order.product.name}</h1>
+      <Link
+        href="/dashboard/pesanan"
+        className="mt-7 inline-flex items-center gap-1.5 text-sm font-bold text-ink-muted hover:text-brand-700"
+      >
+        <ArrowLeft size={14} strokeWidth={2.5} />
+        Kembali ke daftar pesanan
+      </Link>
+
+      {/* Header */}
+      <div className="mt-4 flex items-start justify-between gap-4">
+        <div className="min-w-0 flex-1">
+          <div className="font-mono text-sm text-ink-muted font-medium">{order.order_number}</div>
+          <h1 className="mt-1 font-heading text-3xl md:text-4xl font-extrabold text-ink tracking-tight leading-tight">
+            {order.product.name}
+          </h1>
         </div>
-        <OrderStatusBadge status={order.status} />
+        <div className="shrink-0">
+          <OrderStatusBadge status={order.status} />
+        </div>
       </div>
 
+      {/* Product preview */}
+      <div className="mt-6 rounded-2xl border-2 border-black bg-white p-5 shadow-[0_3px_0_rgba(0,0,0,0.9)] flex items-center gap-4">
+        <div className="relative h-16 w-16 sm:h-20 sm:w-20 shrink-0 overflow-hidden rounded-lg border-2 border-black/15 bg-brand-50">
+          {order.product.thumbnail_url ? (
+            <Image
+              src={order.product.thumbnail_url}
+              alt={order.product.name}
+              fill
+              sizes="80px"
+              className="object-cover"
+            />
+          ) : null}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="text-sm font-bold text-ink truncate">{order.product.name}</div>
+          <div className="mt-1 flex flex-wrap gap-2 text-xs text-ink-muted font-medium">
+            <span>Durasi {order.product.duration_days} hari</span>
+            <span>·</span>
+            <span>
+              {order.product.guarantee_days > 0
+                ? `Garansi ${order.product.guarantee_days} hari`
+                : 'Tanpa garansi'}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Order actions (credentials + claim) */}
       <OrderActions order={order} jwt={session?.access_token ?? null} />
 
-      <div className="mt-6 rounded-xl border border-gray-200 bg-white p-6">
-        <h2 className="font-heading text-h3">Ringkasan Pesanan</h2>
-        <dl className="mt-4 space-y-2 text-sm">
+      {/* Order summary */}
+      <div className="mt-6 rounded-2xl border-2 border-black bg-white p-5 sm:p-6 shadow-[0_3px_0_rgba(0,0,0,0.9)]">
+        <h2 className="font-heading text-xl md:text-2xl font-extrabold text-ink tracking-tight">
+          Ringkasan Pesanan
+        </h2>
+        <dl className="mt-5 space-y-3 text-[15px]">
           <Row label="Harga produk" value={formatRupiah(order.amount_idr)} />
-          {order.discount_idr > 0 ? <Row label={`Diskon ${order.coupon_code ?? ''}`} value={`-${formatRupiah(order.discount_idr)}`} /> : null}
-          {order.credit_used_idr > 0 ? <Row label="Kredit dipakai" value={`-${formatRupiah(order.credit_used_idr)}`} /> : null}
-          <hr className="border-gray-100" />
+          {order.discount_idr > 0 ? (
+            <Row
+              label={`Diskon ${order.coupon_code ?? ''}`.trim()}
+              value={`-${formatRupiah(order.discount_idr)}`}
+              positive
+            />
+          ) : null}
+          {order.credit_used_idr > 0 ? (
+            <Row label="Kredit dipakai" value={`-${formatRupiah(order.credit_used_idr)}`} positive />
+          ) : null}
+          <hr className="border-black/10 border-dashed" />
           <Row label="Total dibayar" value={formatRupiah(order.total_idr)} bold />
           <Row label="Metode pembayaran" value={order.payment_method ?? '—'} />
           <Row label="Dibuat" value={formatDateTime(order.created_at)} />
           {order.delivered_at ? <Row label="Terkirim" value={formatDateTime(order.delivered_at)} /> : null}
-          {order.guarantee_expires_at ? <Row label="Garansi sampai" value={formatDateTime(order.guarantee_expires_at)} /> : null}
+          {order.guarantee_expires_at ? (
+            <Row label="Garansi sampai" value={formatDateTime(order.guarantee_expires_at)} />
+          ) : null}
         </dl>
 
         {order.status === 'pending_payment' && order.payment_url ? (
@@ -69,33 +125,48 @@ export default async function DashboardPesananDetailPage({ params }: Props) {
             href={order.payment_url}
             target="_blank"
             rel="noopener"
-            className="mt-6 inline-flex items-center justify-center rounded-lg bg-brand-500 px-6 py-2.5 font-semibold text-white hover:bg-brand-600"
+            className="mt-6 inline-flex items-center justify-center gap-1.5 bg-brand-500 hover:bg-brand-400 text-ink font-extrabold px-6 py-3 rounded-lg border-2 border-black shadow-[0_3px_0_rgba(0,0,0,0.9)] hover:shadow-[0_5px_0_rgba(0,0,0,0.9)] hover:-translate-y-0.5 active:translate-y-1 active:shadow-[0_1px_0_rgba(0,0,0,0.9)] transition-all duration-150 text-sm"
           >
             Lanjutkan Pembayaran
+            <ExternalLink size={14} strokeWidth={2.5} />
           </a>
         ) : null}
       </div>
 
-      {['delivered', 'confirmed'].includes(order.status) ? null : (
-        <p className="mt-4 text-center text-sm text-ink-subtle">
+      {!['delivered', 'confirmed'].includes(order.status) ? (
+        <p className="mt-5 text-center text-sm text-ink-muted font-medium">
           Akun akan ditampilkan di sini setelah pembayaran dikonfirmasi.
         </p>
-      )}
-
-      <div className="mt-6 text-center">
-        <Link href="/dashboard/pesanan" className="text-sm text-ink-muted hover:text-brand-600">
-          ← Kembali ke daftar pesanan
-        </Link>
-      </div>
+      ) : null}
     </section>
   )
 }
 
-function Row({ label, value, bold }: { label: string; value: string; bold?: boolean }) {
+function Row({
+  label,
+  value,
+  bold,
+  positive,
+}: {
+  label: string
+  value: string
+  bold?: boolean
+  positive?: boolean
+}) {
   return (
-    <div className="flex items-center justify-between">
-      <dt className="text-ink-muted">{label}</dt>
-      <dd className={bold ? 'font-heading font-bold text-brand-500' : 'text-ink'}>{value}</dd>
+    <div className="flex items-center justify-between gap-3">
+      <dt className="text-ink-muted font-medium">{label}</dt>
+      <dd
+        className={
+          bold
+            ? 'font-heading font-extrabold text-ink text-lg'
+            : positive
+              ? 'text-success font-bold'
+              : 'text-ink font-bold'
+        }
+      >
+        {value}
+      </dd>
     </div>
   )
 }

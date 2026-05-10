@@ -1,9 +1,10 @@
-﻿'use client'
+'use client'
 
 import Image from 'next/image'
 import Script from 'next/script'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { AlertCircle, Lock, ShieldCheck, Tag, Wallet } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { api } from '@/lib/api'
@@ -91,93 +92,146 @@ export function CheckoutClient({ product }: { product: Product }) {
         closeEvent: () => router.push(`/dashboard/pesanan/${result.data.order_id}`),
       })
     } else {
-      // POP SDK belum siap (script gagal load) — fallback ke halaman hosted Duitku.
+      // POP SDK belum siap — fallback ke halaman hosted Duitku
       window.location.href = result.data.payment_url
     }
   }
 
   return (
-    <div className="grid gap-6 md:grid-cols-[1fr_360px]">
+    <div className="grid gap-5 md:grid-cols-[1fr_360px]">
       <Script src={POP_SRC} strategy="afterInteractive" />
 
-      <div className="rounded-xl border border-gray-200 bg-white p-5">
-        <h2 className="font-heading text-h3">Detail Pesanan</h2>
-        <div className="mt-4 flex gap-4">
-          <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-gray-50">
+      {/* Detail card */}
+      <div className="rounded-2xl border-2 border-black bg-white p-5 sm:p-6 shadow-[0_4px_0_rgba(0,0,0,0.9)]">
+        <h2 className="font-heading text-xl md:text-2xl font-extrabold text-ink tracking-tight">
+          Detail Pesanan
+        </h2>
+        <div className="mt-5 flex gap-4">
+          <div className="relative h-24 w-24 sm:h-28 sm:w-28 shrink-0 overflow-hidden rounded-xl border-2 border-black/15 bg-brand-50">
             {product.thumbnail_url ? (
-              <Image src={product.thumbnail_url} alt={product.name} fill sizes="80px" className="object-cover" />
+              <Image src={product.thumbnail_url} alt={product.name} fill sizes="112px" className="object-cover" />
             ) : null}
           </div>
-          <div>
-            <div className="font-heading text-h4">{product.name}</div>
-            <div className="mt-1 text-sm text-ink-muted">
-              Durasi {product.duration_days} hari Â· Garansi {product.guarantee_days} hari
+          <div className="flex-1 min-w-0">
+            <div className="font-heading text-lg font-extrabold text-ink leading-tight">{product.name}</div>
+            <div className="mt-2 flex flex-wrap gap-2 text-xs font-bold">
+              <span className="inline-flex items-center gap-1 bg-brand-50 text-brand-700 px-2.5 py-1 rounded-full">
+                {product.duration_days} hari
+              </span>
+              {product.guarantee_days > 0 ? (
+                <span className="inline-flex items-center gap-1 bg-success/10 text-success px-2.5 py-1 rounded-full">
+                  <ShieldCheck size={11} strokeWidth={2.5} />
+                  Garansi {product.guarantee_days}d
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 bg-warning/15 text-warning px-2.5 py-1 rounded-full">
+                  Tanpa garansi
+                </span>
+              )}
             </div>
-            <div className="mt-2 font-heading font-bold text-brand-500">{formatRupiah(product.price)}</div>
+            <div className="mt-3 font-heading font-extrabold text-ink text-xl">
+              {formatRupiah(product.price)}
+            </div>
           </div>
         </div>
 
-        <div className="mt-6 space-y-4">
+        <div className="mt-7 space-y-5">
           <div>
-            <label className="text-sm font-medium text-ink-muted">Kode kupon (opsional)</label>
+            <label className="text-sm font-bold text-ink flex items-center gap-1.5">
+              <Tag size={14} className="text-brand-600" strokeWidth={2.5} />
+              Kode kupon <span className="text-ink-subtle font-medium">(opsional)</span>
+            </label>
             <Input
               value={coupon}
               onChange={(e) => setCoupon(e.target.value.toUpperCase())}
               placeholder="HEMAT10"
-              className="mt-1.5 font-mono"
+              className="mt-2 font-mono uppercase"
             />
           </div>
           <div>
-            <label className="text-sm font-medium text-ink-muted">No. WhatsApp (untuk notifikasi)</label>
+            <label className="text-sm font-bold text-ink">No. WhatsApp untuk notifikasi</label>
             <Input
               type="tel"
               value={phoneWa}
               onChange={(e) => setPhoneWa(e.target.value)}
               placeholder="0812xxxxxxxx"
-              className="mt-1.5"
+              className="mt-2"
             />
+            <p className="mt-1.5 text-xs text-ink-subtle font-medium">
+              Notifikasi pembayaran & delivery dikirim ke nomor ini
+            </p>
           </div>
-          <label className="flex items-center gap-2 text-sm text-ink-muted">
+          <label className="flex items-start gap-3 rounded-lg border-2 border-black/15 bg-brand-50/40 p-3.5 cursor-pointer hover:border-brand-400 transition-colors">
             <input
               type="checkbox"
               checked={useCredits}
               onChange={(e) => setUseCredits(e.target.checked)}
-              className="rounded border-gray-200"
+              className="mt-0.5 h-4 w-4 accent-brand-500 cursor-pointer"
             />
-            Pakai kredit referral saya
+            <span className="flex-1">
+              <span className="flex items-center gap-1.5 text-sm font-bold text-ink">
+                <Wallet size={14} className="text-brand-600" strokeWidth={2.5} />
+                Pakai kredit referral saya
+              </span>
+              <span className="text-xs text-ink-muted font-medium block mt-0.5">
+                Saldo otomatis dipotong sesuai available balance
+              </span>
+            </span>
           </label>
         </div>
       </div>
 
-      <div className="rounded-xl border border-gray-200 bg-white p-5">
-        <h2 className="font-heading text-h3">Ringkasan</h2>
-        <div className="mt-4 space-y-2 text-sm">
+      {/* Summary card */}
+      <div className="rounded-2xl border-2 border-black bg-white p-5 sm:p-6 shadow-[0_4px_0_rgba(0,0,0,0.9)] h-fit md:sticky md:top-24">
+        <h2 className="font-heading text-xl font-extrabold text-ink tracking-tight">Ringkasan</h2>
+        <div className="mt-4 space-y-2.5 text-[15px]">
           <Row label="Harga produk" value={formatRupiah(product.price)} />
-          <Row label="Diskon" value="—" muted />
-          <hr className="border-gray-100" />
+          <Row label="Diskon" value="Hitung saat bayar" muted />
+          <hr className="border-black/10 border-dashed" />
           <Row label="Total" value={formatRupiah(product.price)} bold />
         </div>
         {error ? (
-          <div className="mt-4 rounded-md border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger">
-            {error}
+          <div className="mt-4 flex items-start gap-2.5 rounded-lg border-2 border-danger/40 bg-danger/10 px-3.5 py-3 text-sm font-medium text-danger">
+            <AlertCircle size={16} className="shrink-0 mt-0.5" />
+            <span>{error}</span>
           </div>
         ) : null}
-        <Button onClick={handleCheckout} disabled={loading || product.stock_count === 0} className="mt-6 w-full">
-          {loading ? 'Memproses...' : 'Bayar Sekarang'}
+        <Button
+          onClick={handleCheckout}
+          disabled={loading || product.stock_count === 0}
+          size="lg"
+          className="mt-6 w-full"
+        >
+          {loading ? 'Memproses...' : 'Bayar Sekarang →'}
         </Button>
-        <p className="mt-3 text-center text-xs text-ink-subtle">
-          Diskon kupon & kredit otomatis dihitung saat klik bayar.
+        <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-ink-muted font-medium">
+          <Lock size={11} strokeWidth={2.5} />
+          Pembayaran aman via Duitku
         </p>
       </div>
     </div>
   )
 }
 
-function Row({ label, value, muted, bold }: { label: string; value: string; muted?: boolean; bold?: boolean }) {
+function Row({
+  label,
+  value,
+  muted,
+  bold,
+}: {
+  label: string
+  value: string
+  muted?: boolean
+  bold?: boolean
+}) {
   return (
-    <div className="flex items-center justify-between">
-      <span className={muted ? 'text-ink-subtle' : 'text-ink-muted'}>{label}</span>
-      <span className={bold ? 'font-heading font-bold text-brand-500' : 'text-ink'}>{value}</span>
+    <div className="flex items-center justify-between gap-3">
+      <span className={muted ? 'text-ink-subtle font-medium' : 'text-ink-muted font-medium'}>
+        {label}
+      </span>
+      <span className={bold ? 'font-heading font-extrabold text-ink text-lg' : 'text-ink font-bold'}>
+        {value}
+      </span>
     </div>
   )
 }
