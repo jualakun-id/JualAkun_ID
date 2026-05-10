@@ -24,8 +24,6 @@ type CatalogResponse = {
 
 export const revalidate = 300
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://jualakun.id'
-
 const CATEGORY_SECTIONS = [
   {
     slug: 'ai',
@@ -60,21 +58,6 @@ export default async function HomePage() {
     })),
   }
 
-  const itemListSchemas = sectionsData
-    .filter((s) => s.data?.products?.length)
-    .map((section) => ({
-      '@context': 'https://schema.org',
-      '@type': 'ItemList',
-      name: section.label,
-      description: section.desc,
-      itemListElement: section.data!.products.slice(0, 8).map((p, i) => ({
-        '@type': 'ListItem',
-        position: i + 1,
-        url: `${SITE_URL}/produk/${p.slug}`,
-        name: p.name,
-      })),
-    }))
-
   return (
     <div>
       <script
@@ -82,14 +65,6 @@ export default async function HomePage() {
         // eslint-disable-next-line react/no-danger
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
       />
-      {itemListSchemas.map((schema, i) => (
-        <script
-          key={`itemlist-${i}`}
-          type="application/ld+json"
-          // eslint-disable-next-line react/no-danger
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
-        />
-      ))}
       {/* ── HERO ───────────────────────────────────────────── */}
       <section className="relative bg-sky-hero overflow-hidden">
         <div className="container mx-auto px-4 pt-12 pb-20 sm:pt-16 sm:pb-24 md:pt-24 md:pb-32 max-w-7xl">

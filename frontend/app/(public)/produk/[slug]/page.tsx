@@ -51,6 +51,10 @@ export default async function ProductDetailPage({ params }: Props) {
 
   const isOutOfStock = product.stock_count === 0
 
+  const priceValidUntil = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .split('T')[0]
+
   const productSchema = {
     '@context': 'https://schema.org',
     '@type': 'Product',
@@ -58,6 +62,7 @@ export default async function ProductDetailPage({ params }: Props) {
     description: product.description ?? `${product.name} — akun premium asli dengan garansi ${product.guarantee_days} hari, kirim instan ke dashboard Jualakun.id`,
     image: product.thumbnail_url ? [product.thumbnail_url] : [`${SITE_URL}/api/og`],
     sku: product.slug,
+    mpn: product.slug,
     brand: { '@type': 'Brand', name: 'Jualakun.id' },
     category: product.category?.name,
     offers: {
@@ -65,10 +70,51 @@ export default async function ProductDetailPage({ params }: Props) {
       url: `${SITE_URL}/produk/${product.slug}`,
       priceCurrency: 'IDR',
       price: product.price,
+      priceValidUntil,
+      itemCondition: 'https://schema.org/NewCondition',
       availability: isOutOfStock
         ? 'https://schema.org/OutOfStock'
         : 'https://schema.org/InStock',
       seller: { '@type': 'Organization', name: 'Jualakun.id' },
+      shippingDetails: {
+        '@type': 'OfferShippingDetails',
+        shippingRate: {
+          '@type': 'MonetaryAmount',
+          value: 0,
+          currency: 'IDR',
+        },
+        shippingDestination: {
+          '@type': 'DefinedRegion',
+          addressCountry: 'ID',
+        },
+        deliveryTime: {
+          '@type': 'ShippingDeliveryTime',
+          handlingTime: {
+            '@type': 'QuantitativeValue',
+            minValue: 0,
+            maxValue: 0,
+            unitCode: 'MIN',
+          },
+          transitTime: {
+            '@type': 'QuantitativeValue',
+            minValue: 0,
+            maxValue: 5,
+            unitCode: 'MIN',
+          },
+        },
+      },
+      hasMerchantReturnPolicy: {
+        '@type': 'MerchantReturnPolicy',
+        applicableCountry: 'ID',
+        returnPolicyCategory: product.guarantee_days > 0
+          ? 'https://schema.org/MerchantReturnFiniteReturnWindow'
+          : 'https://schema.org/MerchantReturnNotPermitted',
+        ...(product.guarantee_days > 0 && {
+          merchantReturnDays: product.guarantee_days,
+          returnMethod: 'https://schema.org/ReturnByMail',
+          returnFees: 'https://schema.org/FreeReturn',
+        }),
+      },
     },
     ...(product.rating_count > 0 && {
       aggregateRating: {
