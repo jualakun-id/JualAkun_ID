@@ -1,7 +1,8 @@
-﻿'use client'
+'use client'
 
 import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { AlertCircle } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { createBrowserClient } from '@/lib/supabase'
@@ -25,7 +26,7 @@ export function LoginForm() {
     if (error) {
       setError(
         error.message.toLowerCase().includes('confirm')
-          ? 'Email belum diverifikasi. Cek inbox Anda.'
+          ? 'Email belum diverifikasi. Cek inbox kamu.'
           : 'Email atau password salah.',
       )
       return
@@ -35,35 +36,38 @@ export function LoginForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-5">
       <div>
-        <label className="text-sm font-medium text-ink-muted">Email</label>
+        <label className="text-sm font-bold text-ink">Email</label>
         <Input
           type="email"
           required
           autoComplete="email"
+          placeholder="kamu@email.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="mt-1.5"
+          className="mt-2"
         />
       </div>
       <div>
-        <label className="text-sm font-medium text-ink-muted">Password</label>
+        <label className="text-sm font-bold text-ink">Password</label>
         <Input
           type="password"
           required
           autoComplete="current-password"
+          placeholder="Min. 8 karakter"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="mt-1.5"
+          className="mt-2"
         />
       </div>
       {error ? (
-        <div className="rounded-md border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger">
-          {error}
+        <div className="flex items-start gap-2.5 rounded-lg border-2 border-danger/40 bg-danger/10 px-3.5 py-3 text-sm font-medium text-danger">
+          <AlertCircle size={16} className="shrink-0 mt-0.5" />
+          <span>{error}</span>
         </div>
       ) : null}
-      <Button type="submit" disabled={loading} className="w-full">
+      <Button type="submit" disabled={loading} size="lg" className="w-full">
         {loading ? 'Memproses...' : 'Masuk'}
       </Button>
     </form>

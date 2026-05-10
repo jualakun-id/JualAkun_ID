@@ -1,6 +1,7 @@
-﻿'use client'
+'use client'
 
 import { useState } from 'react'
+import { CheckCircle2 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { createBrowserClient } from '@/lib/supabase'
@@ -23,25 +24,31 @@ export function ForgotForm() {
 
   if (done) {
     return (
-      <div className="rounded-md border border-success/30 bg-success/10 px-4 py-4 text-sm text-success">
-        Jika email terdaftar, kami sudah kirim link reset. Cek inbox Anda.
+      <div className="flex items-start gap-2.5 rounded-lg border-2 border-success/40 bg-success/10 px-4 py-4 text-sm font-medium text-success">
+        <CheckCircle2 size={18} className="shrink-0 mt-0.5" />
+        <div>
+          <p className="font-bold">Cek email kamu</p>
+          <p className="mt-1">Kalau email terdaftar, kami sudah kirim link reset password. Cek inbox & folder spam.</p>
+        </div>
       </div>
     )
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-5">
       <div>
-        <label className="text-sm font-medium text-ink-muted">Email</label>
+        <label className="text-sm font-bold text-ink">Email</label>
         <Input
           type="email"
           required
+          autoComplete="email"
+          placeholder="kamu@email.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="mt-1.5"
+          className="mt-2"
         />
       </div>
-      <Button type="submit" disabled={loading} className="w-full">
+      <Button type="submit" disabled={loading} size="lg" className="w-full">
         {loading ? 'Memproses...' : 'Kirim Link Reset'}
       </Button>
     </form>

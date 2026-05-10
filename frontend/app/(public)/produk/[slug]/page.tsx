@@ -164,7 +164,7 @@ export default async function ProductDetailPage({ params }: Props) {
   }
 
   return (
-    <section className="container mx-auto px-4 py-10">
+    <section className="container mx-auto max-w-6xl px-4 py-10 md:py-12">
       <script
         type="application/ld+json"
         // eslint-disable-next-line react/no-danger
@@ -175,22 +175,29 @@ export default async function ProductDetailPage({ params }: Props) {
         // eslint-disable-next-line react/no-danger
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
-      <nav className="text-sm text-ink-muted">
-        <Link href="/" className="hover:text-brand-600">Home</Link>
+      <nav className="text-[15px] text-ink-muted font-medium">
+        <Link href="/" className="hover:text-brand-700">Beranda</Link>
         {product.category ? (
           <>
             {' / '}
-            <Link href={`/${product.category.slug}`} className="hover:text-brand-600">
+            <Link href={`/#${product.category.slug}`} className="hover:text-brand-700">
               {product.category.name}
             </Link>
           </>
         ) : null}
         {' / '}
-        <span className="text-ink">{product.name}</span>
+        <span className="text-ink font-semibold">{product.name}</span>
       </nav>
 
-      <div className="mt-6 grid gap-10 md:grid-cols-2">
-        <div className="relative aspect-square overflow-hidden rounded-xl border border-gray-200 bg-gray-50">
+      <div className="mt-6 grid gap-8 lg:gap-12 md:grid-cols-2">
+        <div
+          className="relative aspect-square overflow-hidden rounded-2xl border-2 border-black bg-white shadow-[0_4px_0_rgba(0,0,0,0.9)]"
+          style={{
+            backgroundImage:
+              'radial-gradient(circle at 1.5px 1.5px, rgba(18,150,168,0.10) 1.5px, transparent 0)',
+            backgroundSize: '14px 14px',
+          }}
+        >
           {product.thumbnail_url ? (
             <Image
               src={product.thumbnail_url}
@@ -201,64 +208,113 @@ export default async function ProductDetailPage({ params }: Props) {
               priority
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center text-ink-subtle">No image</div>
+            <div className="flex h-full w-full items-center justify-center text-ink-subtle font-medium">Tidak ada gambar</div>
           )}
         </div>
 
         <div>
           <div className="flex flex-wrap gap-2">
-            <Badge variant="instan">⚡ Instan</Badge>
-            <Badge variant="garansi">🛡️ Garansi {product.guarantee_days} hari</Badge>
+            <Badge variant="instan">⚡ Kirim Instan</Badge>
+            {product.guarantee_days > 0 ? (
+              <Badge variant="garansi">🛡️ Garansi {product.guarantee_days} hari</Badge>
+            ) : (
+              <Badge variant="habis">Tanpa garansi</Badge>
+            )}
             {isOutOfStock ? <Badge variant="habis">Stok Habis</Badge> : null}
           </div>
 
-          <h1 className="mt-3 font-heading text-h1">{product.name}</h1>
+          <h1 className="mt-4 font-heading text-3xl md:text-4xl font-extrabold text-ink tracking-tight leading-tight">
+            {product.name}
+          </h1>
 
-          <div className="mt-3 flex items-center gap-3 text-sm text-ink-muted">
+          <div className="mt-3 flex items-center gap-3 text-[15px] text-ink-muted font-medium">
             {product.rating_count > 0 ? (
-              <span className="flex items-center gap-1 text-warning">
-                <Star size={14} strokeWidth={1.5} fill="currentColor" />
-                {product.rating_avg.toFixed(1)} ({product.rating_count} ulasan)
+              <span className="flex items-center gap-1 text-warning font-bold">
+                <Star size={16} fill="currentColor" />
+                {product.rating_avg.toFixed(1)}
+                <span className="text-ink-muted font-medium">({product.rating_count} ulasan)</span>
               </span>
             ) : null}
-            <span>· {product.sold_count.toLocaleString('id-ID')} terjual</span>
+            {product.rating_count > 0 && product.sold_count > 0 ? <span>·</span> : null}
+            {product.sold_count > 0 ? (
+              <span>{product.sold_count.toLocaleString('id-ID')} terjual</span>
+            ) : null}
           </div>
 
-          <div className="mt-6 rounded-xl border border-gray-200 bg-white p-5">
-            <div className="font-heading text-3xl font-bold text-brand-500">
+          <div className="mt-6 rounded-2xl border-2 border-black bg-white p-5 sm:p-6 shadow-[0_4px_0_rgba(0,0,0,0.9)]">
+            <div className="font-heading text-3xl sm:text-4xl font-extrabold text-ink tracking-tight">
               {formatRupiah(product.price)}
             </div>
-            <div className="mt-3 flex flex-col gap-2 text-sm text-ink-muted">
-              <span className="flex items-center gap-2"><Clock size={16} strokeWidth={1.5} /> Durasi {product.duration_days} hari</span>
-              <span className="flex items-center gap-2"><Shield size={16} strokeWidth={1.5} /> Garansi {product.guarantee_days} hari</span>
-              <span className="flex items-center gap-2"><Zap size={16} strokeWidth={1.5} /> Pengiriman otomatis</span>
-              <span className="text-ink-subtle">Stok: {product.stock_count} unit</span>
-            </div>
+            <ul className="mt-4 flex flex-col gap-2.5 text-[15px] text-ink-muted font-medium">
+              <li className="flex items-center gap-2.5">
+                <Clock size={18} strokeWidth={2.25} className="text-brand-600 shrink-0" />
+                <span>Durasi <strong className="text-ink">{product.duration_days} hari</strong></span>
+              </li>
+              <li className="flex items-center gap-2.5">
+                <Shield size={18} strokeWidth={2.25} className="text-brand-600 shrink-0" />
+                <span>
+                  {product.guarantee_days > 0 ? (
+                    <>Garansi <strong className="text-ink">{product.guarantee_days} hari</strong></>
+                  ) : (
+                    <span className="text-ink-muted">Tanpa garansi (akun langka)</span>
+                  )}
+                </span>
+              </li>
+              <li className="flex items-center gap-2.5">
+                <Zap size={18} strokeWidth={2.25} className="text-brand-600 shrink-0" />
+                <span>Kirim otomatis ke dashboard <strong className="text-ink">&lt; 5 menit</strong></span>
+              </li>
+              <li className="flex items-center gap-2.5">
+                <span className={`inline-block w-2.5 h-2.5 rounded-full ${product.stock_count > 0 ? 'bg-success' : 'bg-danger'}`} aria-hidden="true" />
+                <span>
+                  {product.stock_count > 0
+                    ? <>Stok tersedia <strong className="text-ink">{product.stock_count} unit</strong></>
+                    : <span className="text-danger font-semibold">Stok habis</span>}
+                </span>
+              </li>
+            </ul>
             <BuyButton productId={product.id} disabled={isOutOfStock} />
           </div>
 
           {product.description ? (
-            <div className="mt-6">
-              <h3 className="font-heading text-h3">Deskripsi</h3>
-              <div className="mt-2 whitespace-pre-line text-ink-muted">{product.description}</div>
+            <div className="mt-7">
+              <h2 className="font-heading text-xl md:text-2xl font-extrabold text-ink tracking-tight">Deskripsi</h2>
+              <div className="mt-3 whitespace-pre-line text-[15px] text-ink-muted leading-relaxed font-medium">
+                {product.description}
+              </div>
             </div>
           ) : null}
         </div>
       </div>
 
       {product.reviews.length > 0 ? (
-        <div className="mt-12">
-          <h3 className="font-heading text-h2">Ulasan Pembeli</h3>
-          <div className="mt-4 space-y-4">
+        <div className="mt-14">
+          <h2 className="font-heading text-2xl md:text-3xl font-extrabold text-ink tracking-tight">Ulasan Pembeli</h2>
+          <p className="mt-2 text-[15px] text-ink-muted font-medium">
+            {product.rating_count} pembeli sudah kasih review untuk produk ini.
+          </p>
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {product.reviews.map((r) => (
-              <div key={r.id} className="rounded-lg border border-gray-200 bg-white p-4">
-                <div className="flex items-center gap-2 text-warning">
-                  {Array.from({ length: r.rating }).map((_, i) => (
-                    <Star key={i} size={14} strokeWidth={1.5} fill="currentColor" />
-                  ))}
-                  <span className="ml-2 text-xs text-ink-subtle">{formatDate(r.created_at)}</span>
+              <div
+                key={r.id}
+                className="rounded-2xl border-2 border-black bg-white p-5 shadow-[0_3px_0_rgba(0,0,0,0.9)]"
+              >
+                <div className="flex items-center gap-2">
+                  <div className="flex gap-0.5 text-warning">
+                    {Array.from({ length: r.rating }).map((_, i) => (
+                      <Star key={i} size={16} fill="currentColor" />
+                    ))}
+                    {Array.from({ length: 5 - r.rating }).map((_, i) => (
+                      <Star key={`empty-${i}`} size={16} className="text-gray-200" fill="currentColor" />
+                    ))}
+                  </div>
+                  <span className="ml-auto text-xs text-ink-subtle font-medium">{formatDate(r.created_at)}</span>
                 </div>
-                {r.comment ? <p className="mt-2 text-sm text-ink">{r.comment}</p> : null}
+                {r.comment ? (
+                  <p className="mt-3 text-[15px] text-ink leading-relaxed font-medium">{r.comment}</p>
+                ) : (
+                  <p className="mt-3 text-[15px] text-ink-subtle italic">Tidak ada komentar</p>
+                )}
               </div>
             ))}
           </div>
@@ -273,13 +329,13 @@ function BuyButton({ productId, disabled }: { productId: string; disabled: boole
     <Link
       href={`/checkout?product=${productId}`}
       aria-disabled={disabled}
-      className={`mt-5 inline-flex w-full items-center justify-center rounded-lg px-6 py-3 font-semibold transition-colors ${
+      className={`mt-5 inline-flex w-full items-center justify-center rounded-lg px-6 py-3.5 text-base font-extrabold border-2 border-black transition-all duration-150 ${
         disabled
-          ? 'pointer-events-none bg-gray-50 text-ink-subtle'
-          : 'bg-brand-500 text-white hover:bg-brand-600'
+          ? 'pointer-events-none bg-gray-100 text-gray-400 border-gray-300 cursor-not-allowed'
+          : 'bg-brand-500 text-ink hover:bg-brand-400 shadow-[0_4px_0_rgba(0,0,0,0.9)] hover:shadow-[0_6px_0_rgba(0,0,0,0.9)] hover:-translate-y-0.5 active:translate-y-1 active:shadow-[0_2px_0_rgba(0,0,0,0.9)]'
       }`}
     >
-      {disabled ? 'Stok Habis' : 'Beli Sekarang'}
+      {disabled ? 'Stok Habis' : 'Beli Sekarang →'}
     </Link>
   )
 }

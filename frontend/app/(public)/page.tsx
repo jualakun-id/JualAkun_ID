@@ -84,7 +84,7 @@ export default async function HomePage() {
               <div className="mt-7 sm:mt-8 flex flex-wrap items-center justify-center md:justify-start gap-3 sm:gap-4">
                 <Link
                   href="/#ai"
-                  className="group bg-white text-brand-700 hover:text-brand-800 font-semibold px-7 sm:px-8 py-3.5 rounded-lg border-2 border-black shadow-[0_4px_0_rgba(0,0,0,0.9)] hover:shadow-[0_6px_0_rgba(0,0,0,0.9)] hover:-translate-y-0.5 active:translate-y-1 active:shadow-[0_2px_0_rgba(0,0,0,0.9)] transition-all duration-150 text-base inline-flex items-center gap-2"
+                  className="group bg-white text-brand-700 hover:text-brand-800 font-extrabold px-7 sm:px-8 py-3.5 rounded-lg border-2 border-black shadow-[0_4px_0_rgba(0,0,0,0.9)] hover:shadow-[0_6px_0_rgba(0,0,0,0.9)] hover:-translate-y-0.5 active:translate-y-1 active:shadow-[0_2px_0_rgba(0,0,0,0.9)] transition-all duration-150 text-base inline-flex items-center gap-2"
                 >
                   Lihat Layanan
                   <svg className="w-4 h-4 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" aria-hidden="true">
@@ -137,7 +137,7 @@ export default async function HomePage() {
       {/* ── STATS ──────────────────────────────────────────── */}
       <section className="bg-white py-16 md:py-20">
         <div className="container mx-auto px-4 max-w-6xl text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-ink">
+          <h2 className="font-heading text-3xl md:text-4xl font-extrabold text-ink tracking-tight">
             Bukan Marketplace Biasa
           </h2>
           <p className="text-ink-muted text-base md:text-lg font-medium mt-4 max-w-xl mx-auto">
@@ -160,7 +160,7 @@ export default async function HomePage() {
       <section className="bg-white py-12 md:py-16 border-t border-gray-100">
         <div className="container mx-auto px-4 max-w-6xl">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-ink">
+            <h2 className="font-heading text-3xl md:text-4xl font-extrabold text-ink tracking-tight">
               Kenapa Beda dari yang Lain?
             </h2>
             <p className="text-ink-muted text-base md:text-lg font-medium mt-4">
@@ -208,7 +208,7 @@ export default async function HomePage() {
       {/* ── HOW IT WORKS ───────────────────────────────────── */}
       <section id="cara-pesan" className="bg-white py-16 md:py-20 scroll-mt-24">
         <div className="container mx-auto px-4 max-w-6xl text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-ink">Cara Berlangganan</h2>
+          <h2 className="font-heading text-3xl md:text-4xl font-extrabold text-ink tracking-tight">Cara Berlangganan</h2>
           <p className="text-ink-muted text-base md:text-lg font-medium mt-4">
             5 langkah mudah untuk mendapatkan akun digital favorit kamu.
           </p>
@@ -227,7 +227,7 @@ export default async function HomePage() {
       {/* ── TRUST ──────────────────────────────────────────── */}
       <section className="bg-brand-50 py-16">
         <div className="container mx-auto px-4 max-w-5xl text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-ink mb-4">Yang Bikin Kami Beda</h2>
+          <h2 className="font-heading text-3xl md:text-4xl font-extrabold text-ink tracking-tight mb-4">Yang Bikin Kami Beda</h2>
           <p className="text-ink-muted text-base md:text-lg font-medium mb-12 max-w-xl mx-auto">
             Bukan janji marketing — ini standar yang kami pegang untuk setiap pesanan.
           </p>
@@ -255,7 +255,7 @@ export default async function HomePage() {
       <section className="bg-white py-16 md:py-20">
         <div className="container mx-auto px-4 max-w-6xl">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-ink">Apa Kata Mereka</h2>
+            <h2 className="font-heading text-3xl md:text-4xl font-extrabold text-ink tracking-tight">Apa Kata Mereka</h2>
             <p className="text-ink-muted text-base md:text-lg font-medium mt-4">
               Cerita dari pengguna yang sudah merasakan manfaat Jualakun.id.
             </p>
@@ -263,24 +263,24 @@ export default async function HomePage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             <TestimonialCard
               name="Rizki Pratama"
-              handle="@rizkipratama"
+              handle="@rizkipratama · developer"
               avatarColor="#1296A8"
               rating={5}
-              text="Beli Netflix di sini udah 3 bulan, lancar terus. Harganya jauh lebih murah dari resmi, garansi ada, support fast respon. Recommended!"
+              text="Pakai Cursor Pro buat coding harian. Beli di sini langganan 1 bulan, jauh lebih murah dari $20 bayar pakai dolar. Akun langsung masuk dashboard, nggak nunggu admin. Solid."
             />
             <TestimonialCard
               name="Anisa Wulandari"
-              handle="@anisaw"
+              handle="@anisaw · mahasiswa"
               avatarColor="#1567C8"
               rating={5}
-              text="Mahasiswa banget butuh ChatGPT Plus tapi mahal kalau langganan sendiri. Di Jualakun.id bisa dapat dengan harga setengahnya, akun aman, terima kasih!"
+              text="Skripsi butuh Claude Pro buat baca paper panjang. Tempat lain susah dicari, di Jualakun.id ada. 30 hari pakai, belum pernah error. Garansinya juga real, pernah klaim 1× — diganti 12 jam."
             />
             <TestimonialCard
               name="Budi Santoso"
-              handle="@budisan"
+              handle="@budisan · content creator"
               avatarColor="#0F8F4F"
               rating={5}
-              text="Spotify Premium dapet langsung 5 menit setelah bayar. Cs-nya juga ramah pas saya tanya cara login. Pasti repeat order."
+              text="Adobe CC + Firefly buat editing reel & feed. Harganya masuk akal banget untuk tools selengkap ini. Bayar pakai QRIS, akun jadi 5 menit. Pasti repeat order pas habis garansi."
             />
           </div>
         </div>
@@ -290,7 +290,7 @@ export default async function HomePage() {
       <section id="faq" className="bg-brand-50 py-16 md:py-20 scroll-mt-24">
         <div className="container mx-auto px-4 max-w-3xl">
           <div className="text-center mb-10">
-            <h2 className="text-3xl md:text-4xl font-bold text-ink">Pertanyaan Umum</h2>
+            <h2 className="font-heading text-3xl md:text-4xl font-extrabold text-ink tracking-tight">Pertanyaan Umum</h2>
             <p className="text-ink-muted text-base md:text-lg font-medium mt-4">
               Jawaban untuk pertanyaan yang paling sering ditanyakan.
             </p>
@@ -304,16 +304,16 @@ export default async function HomePage() {
         <div className="container mx-auto px-4 max-w-5xl">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
             <div>
-              <h3 className="text-2xl md:text-3xl font-bold text-white">
+              <h3 className="font-heading text-2xl md:text-3xl font-extrabold text-white tracking-tight">
                 Cari yang nggak ada di tempat lain?
               </h3>
-              <p className="text-white/85 mt-1 text-base">
+              <p className="text-white mt-2 text-base md:text-lg font-medium">
                 Daftar gratis dan langsung akses koleksi akun langka kami.
               </p>
             </div>
             <Link
               href="/daftar"
-              className="bg-white text-brand-700 hover:text-brand-800 font-semibold px-8 py-3.5 rounded-lg border-2 border-black shadow-[0_4px_0_rgba(0,0,0,0.9)] hover:shadow-[0_6px_0_rgba(0,0,0,0.9)] hover:-translate-y-0.5 active:translate-y-1 active:shadow-[0_2px_0_rgba(0,0,0,0.9)] transition-all duration-150 shrink-0 inline-flex items-center gap-2"
+              className="bg-white text-brand-700 hover:text-brand-800 font-extrabold px-8 py-3.5 rounded-lg border-2 border-black shadow-[0_4px_0_rgba(0,0,0,0.9)] hover:shadow-[0_6px_0_rgba(0,0,0,0.9)] hover:-translate-y-0.5 active:translate-y-1 active:shadow-[0_2px_0_rgba(0,0,0,0.9)] transition-all duration-150 shrink-0 inline-flex items-center gap-2"
             >
               Daftar Sekarang →
             </Link>
@@ -340,7 +340,7 @@ function CategorySection({ section, bgAlt }: { section: SectionData; bgAlt: bool
     >
       <div className="container mx-auto px-4 max-w-7xl">
         <div className="text-center mb-10">
-          <h2 className="text-3xl md:text-4xl font-bold text-ink">{section.label}</h2>
+          <h2 className="font-heading text-3xl md:text-4xl font-extrabold text-ink tracking-tight">{section.label}</h2>
           <p className="text-ink-muted text-base md:text-lg font-medium mt-4 max-w-xl mx-auto">{section.desc}</p>
         </div>
 
