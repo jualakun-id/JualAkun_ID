@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Bricolage_Grotesque, DM_Sans, JetBrains_Mono } from 'next/font/google'
 import './globals.css'
 import { StructuredData } from '@/components/seo/structured-data'
+import { ToastProvider } from '@/components/toast'
 
 const heading = Bricolage_Grotesque({
   subsets: ['latin'],
@@ -99,7 +100,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <StructuredData />
       </head>
-      <body className="min-h-screen bg-bg text-text antialiased">{children}</body>
+      <body className="min-h-screen bg-bg text-text antialiased">
+        <ToastProvider>{children}</ToastProvider>
+      </body>
     </html>
   )
 }

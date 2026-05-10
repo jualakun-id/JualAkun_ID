@@ -4,6 +4,7 @@ import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { useToast } from '@/components/toast'
 import { api } from '@/lib/api'
 import { createBrowserClient } from '@/lib/supabase'
 
@@ -13,28 +14,28 @@ type Props = { productId: string; initialStock: number }
 
 export function StockManager({ productId, initialStock }: Props) {
   const router = useRouter()
+  const toast = useToast()
   const fileRef = useRef<HTMLInputElement>(null)
   const [credentials, setCredentials] = useState('')
   const [note, setNote] = useState('')
   const [stockCount, setStockCount] = useState(initialStock)
   const [bulkResult, setBulkResult] = useState<{ added: number; rejected: number; errors: string[] } | null>(null)
-  const [singleStatus, setSingleStatus] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
+  const [singleLoading, setSingleLoading] = useState(false)
+  const [bulkLoading, setBulkLoading] = useState(false)
 
   async function handleSingle(e: React.FormEvent) {
     e.preventDefault()
-    setSingleStatus(null)
-    setLoading(true)
+    setSingleLoading(true)
     const result = await api.post<{ added: number; total_stock: number }>(
       `/admin/products/${productId}/stock`,
       { accounts: [{ credentials, note: note || undefined }] },
     )
-    setLoading(false)
+    setSingleLoading(false)
     if (!result.ok) {
-      setSingleStatus(`❌ ${result.message}`)
+      toast.error(result.message ?? 'Gagal menambah stok')
       return
     }
-    setSingleStatus(`✅ Berhasil ditambah. Stok sekarang: ${result.data.total_stock}`)
+    toast.success(`Stok berhasil ditambah ✓ (total: ${result.data.total_stock})`)
     setStockCount(result.data.total_stock)
     setCredentials('')
     setNote('')
@@ -45,7 +46,7 @@ export function StockManager({ productId, initialStock }: Props) {
     e.preventDefault()
     const file = fileRef.current?.files?.[0]
     if (!file) return
-    setLoading(true)
+    setBulkLoading(true)
     setBulkResult(null)
 
     // FormData needs raw fetch — pull JWT manually for Authorization header.
@@ -60,13 +61,20 @@ export function StockManager({ productId, initialStock }: Props) {
       headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       body: fd,
     })
-    setLoading(false)
+    setBulkLoading(false)
     if (!res.ok) {
-      setBulkResult({ added: 0, rejected: 0, errors: [`HTTP ${res.status}`] })
+      const msg = `Upload gagal (HTTP ${res.status})`
+      setBulkResult({ added: 0, rejected: 0, errors: [msg] })
+      toast.error(msg)
       return
     }
     const json = (await res.json()) as { data: { added: number; rejected: number; errors: string[] } }
     setBulkResult(json.data)
+    if (json.data.added > 0) {
+      toast.success(`${json.data.added} stok berhasil di-upload ✓`)
+    } else if (json.data.rejected > 0) {
+      toast.error(`Semua ${json.data.rejected} baris ditolak — cek format CSV`)
+    }
     if (fileRef.current) fileRef.current.value = ''
     router.refresh()
   }
@@ -82,10 +90,9 @@ export function StockManager({ productId, initialStock }: Props) {
         <h3 className="font-heading text-lg font-extrabold">Tambah Single</h3>
         <Input required placeholder="email:password" value={credentials} onChange={(e) => setCredentials(e.target.value)} className="font-mono" />
         <Input placeholder="Note (opsional)" value={note} onChange={(e) => setNote(e.target.value)} />
-        <Button type="submit" disabled={loading}>
-          {loading ? 'Memproses...' : 'Tambah'}
+        <Button type="submit" loading={singleLoading}>
+          {singleLoading ? 'Memproses...' : 'Tambah'}
         </Button>
-        {singleStatus ? <p className="text-sm text-ink-muted">{singleStatus}</p> : null}
       </form>
 
       <form onSubmit={handleBulk} className="space-y-3 rounded-lg border border-black/10 bg-brand-50/40 p-4">
@@ -98,18 +105,23 @@ export function StockManager({ productId, initialStock }: Props) {
           required
           className="block w-full text-sm font-medium text-ink-muted file:mr-3 file:rounded-lg file:border-2 file:border-black file:bg-brand-500 file:px-3 file:py-1.5 file:text-xs file:font-extrabold file:text-ink file:cursor-pointer hover:file:bg-brand-400 file:transition-colors"
         />
-        <Button type="submit" disabled={loading}>
-          {loading ? 'Memproses...' : 'Upload'}
+        <Button type="submit" loading={bulkLoading}>
+          {bulkLoading ? 'Memproses...' : 'Upload'}
         </Button>
-        {bulkResult ? (
-          <div className="rounded-md border border-black/15 bg-white px-3 py-2 text-sm">
-            <div className="text-success">Ditambah: {bulkResult.added}</div>
-            {bulkResult.rejected > 0 ? <div className="mt-1 text-danger">Rejected: {bulkResult.rejected}</div> : null}
-            {bulkResult.errors.length > 0 ? (
-              <ul className="mt-2 list-disc pl-5 text-xs text-ink-muted">
-                {bulkResult.errors.map((e, i) => <li key={i}>{e}</li>)}
-              </ul>
-            ) : null}
+        {bulkResult && bulkResult.errors.length > 0 ? (
+          <div className="rounded-lg border-2 border-warning/40 bg-warning/10 px-3.5 py-3 text-xs">
+            <div className="font-bold text-ink mb-1.5">
+              Hasil: <span className="text-success">+{bulkResult.added} ditambah</span>
+              {bulkResult.rejected > 0 ? (
+                <>, <span className="text-danger">{bulkResult.rejected} ditolak</span></>
+              ) : null}
+            </div>
+            <ul className="list-disc pl-5 text-warning font-medium space-y-0.5">
+              {bulkResult.errors.slice(0, 5).map((e, i) => <li key={i}>{e}</li>)}
+              {bulkResult.errors.length > 5 ? (
+                <li className="list-none italic">+{bulkResult.errors.length - 5} error lain</li>
+              ) : null}
+            </ul>
           </div>
         ) : null}
       </form>

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { AlertCircle, CheckCircle2 } from 'lucide-react'
+import { AlertCircle } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import {
@@ -12,6 +12,7 @@ import {
   getCountry,
   type CountryCode,
 } from '@/components/ui/phone-input'
+import { useToast } from '@/components/toast'
 import { api } from '@/lib/api'
 
 type Props = {
@@ -22,13 +23,12 @@ type Props = {
 }
 
 export function ProfileForm({ email, fullName, phoneWa, referralCode }: Props) {
+  const toast = useToast()
   const parsed = parsePhoneE164(phoneWa)
   const [name, setName] = useState(fullName)
   const [phoneCode, setPhoneCode] = useState<CountryCode>(parsed.code)
   const [phoneLocal, setPhoneLocal] = useState(parsed.local)
   const [touchedPhone, setTouchedPhone] = useState(false)
-  const [saved, setSaved] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
   const phoneValid = isValidLocal(phoneCode, phoneLocal)
@@ -36,22 +36,17 @@ export function ProfileForm({ email, fullName, phoneWa, referralCode }: Props) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setTouchedPhone(true)
-    if (!phoneValid) {
-      setError(null)
-      return
-    }
+    if (!phoneValid) return
     setLoading(true)
-    setSaved(false)
-    setError(null)
     const result = await api.patch('/dashboard/profile', {
       full_name: name,
       phone_wa: buildPhoneE164(phoneCode, phoneLocal),
     })
     setLoading(false)
     if (result.ok) {
-      setSaved(true)
+      toast.success('Profil tersimpan ✓')
     } else {
-      setError(result.message ?? 'Gagal menyimpan')
+      toast.error(result.message ?? 'Gagal menyimpan profil')
     }
   }
 
@@ -88,19 +83,7 @@ export function ProfileForm({ email, fullName, phoneWa, referralCode }: Props) {
       <Field label="Kode referral kamu" hint="Bagikan ke teman — kamu & dia sama-sama dapat kredit">
         <Input value={referralCode} disabled className="font-mono uppercase tracking-wider" />
       </Field>
-      {saved ? (
-        <div className="flex items-center gap-2.5 rounded-lg border-2 border-success/40 bg-success/10 px-3.5 py-3 text-sm font-bold text-success">
-          <CheckCircle2 size={16} />
-          Profil tersimpan.
-        </div>
-      ) : null}
-      {error ? (
-        <div className="flex items-start gap-2.5 rounded-lg border-2 border-danger/40 bg-danger/10 px-3.5 py-3 text-sm font-medium text-danger">
-          <AlertCircle size={16} className="shrink-0 mt-0.5" />
-          <span>{error}</span>
-        </div>
-      ) : null}
-      <Button type="submit" disabled={loading} size="lg">
+      <Button type="submit" loading={loading} size="lg">
         {loading ? 'Menyimpan...' : 'Simpan Perubahan'}
       </Button>
     </form>

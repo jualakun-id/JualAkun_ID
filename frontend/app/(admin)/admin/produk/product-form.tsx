@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { useToast } from '@/components/toast'
 import { api } from '@/lib/api'
 import type { Category } from '@/types'
 
@@ -25,6 +26,7 @@ type Props = {
 
 export function ProductForm({ categories, initial }: Props) {
   const router = useRouter()
+  const toast = useToast()
   const isEdit = !!initial?.id
   const [form, setForm] = useState({
     category_id: initial?.category_id ?? categories[0]?.id ?? '',
@@ -37,7 +39,6 @@ export function ProductForm({ categories, initial }: Props) {
     guarantee_days: initial?.guarantee_days ?? 30,
     is_active: initial?.is_active ?? false,
   })
-  const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
   function update<K extends keyof typeof form>(key: K, value: typeof form[K]) {
@@ -46,7 +47,6 @@ export function ProductForm({ categories, initial }: Props) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    setError(null)
     setLoading(true)
     const body = {
       ...form,
@@ -61,9 +61,10 @@ export function ProductForm({ categories, initial }: Props) {
       : await api.post<{ id: string }>('/admin/products', body)
     setLoading(false)
     if (!result.ok) {
-      setError(result.message ?? 'Gagal menyimpan')
+      toast.error(result.message ?? 'Gagal menyimpan produk')
       return
     }
+    toast.success(isEdit ? 'Produk diperbarui ✓' : 'Produk berhasil dibuat ✓')
     router.push(isEdit ? `/admin/produk/${initial!.id}` : `/admin/produk/${result.data.id}`)
     router.refresh()
   }
@@ -132,10 +133,7 @@ export function ProductForm({ categories, initial }: Props) {
           </span>
         </span>
       </label>
-      {error ? (
-        <div className="rounded-lg border-2 border-danger/40 bg-danger/10 px-3.5 py-3 text-sm font-medium text-danger">{error}</div>
-      ) : null}
-      <Button type="submit" disabled={loading} size="lg">
+      <Button type="submit" loading={loading} size="lg">
         {loading ? 'Menyimpan...' : isEdit ? 'Simpan Perubahan' : 'Buat Produk'}
       </Button>
     </form>

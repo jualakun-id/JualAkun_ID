@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { Search } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 type Pill = { label: string; value: string; href: string }
@@ -33,13 +34,19 @@ export function FilterBar({ pills, activeValue, searchQuery, rightSlot }: Props)
       ) : null}
 
       {searchQuery ? (
-        <form className="flex-1 min-w-[200px]">
+        <form className="flex-1 min-w-[200px] relative">
+          <Search
+            size={16}
+            strokeWidth={2.25}
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-subtle"
+            aria-hidden="true"
+          />
           <input
             type="search"
             name={searchQuery.name}
             placeholder={searchQuery.placeholder}
             defaultValue={searchQuery.defaultValue}
-            className="w-full rounded-lg border-2 border-black/15 bg-white px-3.5 py-2 text-sm font-medium text-ink placeholder:text-ink-subtle placeholder:font-normal focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/25"
+            className="w-full rounded-lg border-2 border-black/15 bg-white pl-10 pr-3.5 py-2 text-sm font-medium text-ink placeholder:text-ink-subtle placeholder:font-normal focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/25"
           />
         </form>
       ) : null}
