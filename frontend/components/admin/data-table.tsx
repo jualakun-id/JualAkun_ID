@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils'
 type Column<T> = {
   key: string
   header: string
-  render?: (row: T) => React.ReactNode
+  render?: (row: T, index: number) => React.ReactNode
   className?: string
   align?: 'left' | 'right' | 'center'
 }
@@ -73,7 +73,7 @@ export function DataTable<T extends Record<string, unknown>>({
               >
                 {columns.map((col) => {
                   const value = col.render
-                    ? col.render(row)
+                    ? col.render(row, idx)
                     : String((row as Record<string, unknown>)[col.key] ?? '')
                   return (
                     <td

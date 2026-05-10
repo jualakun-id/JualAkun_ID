@@ -41,6 +41,9 @@ export default async function AdminProdukPage({ searchParams }: Props) {
   if (sp.status) filterParams.set('status', sp.status)
   const basePath = `/admin/produk${filterParams.toString() ? `?${filterParams.toString()}` : ''}`
 
+  // Offset untuk numbering global (cross-page): (page - 1) * limit
+  const rowOffset = ((data?.pagination.page ?? 1) - 1) * (data?.pagination.limit ?? 0)
+
   return (
     <div className="px-6 md:px-8 py-8">
       <AdminHeader
@@ -71,6 +74,17 @@ export default async function AdminProdukPage({ searchParams }: Props) {
           rows={(data?.products ?? []) as unknown as Record<string, unknown>[]}
           columns={[
             {
+              key: 'no',
+              header: 'No',
+              render: (_r, idx) => (
+                <span className="font-mono text-xs font-bold text-ink-subtle tabular-nums">
+                  {rowOffset + idx + 1}
+                </span>
+              ),
+              align: 'center',
+              className: 'w-12',
+            },
+            {
               key: 'name',
               header: 'Produk',
               render: (r) => {
@@ -78,9 +92,21 @@ export default async function AdminProdukPage({ searchParams }: Props) {
                 const cat = Array.isArray(row.categories) ? row.categories[0] : row.categories
                 return (
                   <Link href={`/admin/produk/${row.id}`} className="hover:text-brand-700">
-                    <div className="font-medium">{row.name}</div>
-                    <div className="text-xs text-ink-subtle">{cat?.name ?? '—'} · {row.duration_days} hari</div>
+                    <div className="font-bold text-ink">{row.name}</div>
+                    <div className="text-xs text-ink-subtle font-medium">{cat?.name ?? '—'} · {row.duration_days} hari</div>
                   </Link>
+                )
+              },
+            },
+            {
+              key: 'sku',
+              header: 'SKU',
+              render: (r) => {
+                const row = r as unknown as ProductRow
+                return (
+                  <span className="inline-flex items-center rounded-md border border-black/10 bg-brand-50/40 px-2 py-1 font-mono text-xs font-bold text-ink-muted">
+                    {row.slug}
+                  </span>
                 )
               },
             },
