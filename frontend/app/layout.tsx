@@ -93,10 +93,9 @@ export const metadata: Metadata = {
       'max-video-preview': -1,
     },
   },
-  // verification untuk Google Search Console — uncomment + isi kode setelah verify domain
-  // verification: {
-  //   google: 'paste-google-verification-code-here',
-  // },
+  verification: {
+    google: 'vD7M_7UO3-5Oiv7ogL2Fs8pBfVL3WUhTypA8XU5SL4k',
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
