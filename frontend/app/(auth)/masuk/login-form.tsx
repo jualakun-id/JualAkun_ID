@@ -10,7 +10,13 @@ import { createBrowserClient } from '@/lib/supabase'
 export function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const next = searchParams.get('next') ?? '/dashboard'
+  // Validasi next: harus same-origin path (mulai dengan tunggal "/" + bukan "//"
+  // atau "/\") supaya tidak bisa di-exploit untuk open redirect ke external URL
+  const rawNext = searchParams.get('next')
+  const next =
+    rawNext && rawNext.startsWith('/') && !rawNext.startsWith('//') && !rawNext.startsWith('/\\')
+      ? rawNext
+      : '/dashboard'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)

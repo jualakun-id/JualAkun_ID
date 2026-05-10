@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+import { headers } from 'next/headers'
 import { createServerClient } from '@/lib/supabase-server'
 import { BuyerHeader } from '@/components/layout/buyer-header'
 import { Footer } from '@/components/layout/footer'
@@ -8,7 +9,15 @@ export default async function BuyerLayout({ children }: { children: React.ReactN
   const { data } = await supabase.auth.getUser()
 
   if (!data.user) {
-    redirect('/masuk')
+    // Preserve user intent: redirect balik ke halaman ini setelah login berhasil.
+    // x-pathname & x-search di-set oleh middleware (Server Component tidak bisa
+    // akses request URL langsung).
+    const headerList = await headers()
+    const pathname = headerList.get('x-pathname') ?? ''
+    const search = headerList.get('x-search') ?? ''
+    const next = pathname ? `${pathname}${search}` : ''
+    const loginUrl = next ? `/masuk?next=${encodeURIComponent(next)}` : '/masuk'
+    redirect(loginUrl)
   }
 
   return (
