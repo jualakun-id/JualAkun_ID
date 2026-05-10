@@ -20,9 +20,12 @@ export default function MasukPage() {
         <Link href="/lupa-password" className="text-brand-600 hover:text-brand-700 underline underline-offset-2">
           Lupa password?
         </Link>
-        <Link href="/daftar" className="text-ink-muted hover:text-ink">
-          Belum punya akun? <span className="text-brand-600 font-bold">Daftar</span>
-        </Link>
+        <span className="text-ink-muted">
+          Belum punya akun?{' '}
+          <Link href="/daftar" className="text-brand-600 hover:text-brand-700 font-bold underline underline-offset-2">
+            Daftar
+          </Link>
+        </span>
       </div>
     </>
   )

@@ -14,9 +14,12 @@ export default function LupaPasswordPage() {
         <ForgotForm />
       </div>
       <div className="mt-6 text-center text-sm font-medium">
-        <Link href="/masuk" className="text-ink-muted hover:text-ink">
-          Inget password? <span className="text-brand-600 font-bold">Kembali masuk</span>
-        </Link>
+        <span className="text-ink-muted">
+          Inget password?{' '}
+          <Link href="/masuk" className="text-brand-600 hover:text-brand-700 font-bold underline underline-offset-2">
+            Kembali masuk
+          </Link>
+        </span>
       </div>
     </>
   )

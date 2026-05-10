@@ -24,9 +24,12 @@ export default async function DaftarPage({ searchParams }: Props) {
         <RegisterForm referralCode={ref ?? null} />
       </div>
       <div className="mt-6 text-center text-sm font-medium">
-        <Link href="/masuk" className="text-ink-muted hover:text-ink">
-          Sudah punya akun? <span className="text-brand-600 font-bold">Masuk</span>
-        </Link>
+        <span className="text-ink-muted">
+          Sudah punya akun?{' '}
+          <Link href="/masuk" className="text-brand-600 hover:text-brand-700 font-bold underline underline-offset-2">
+            Masuk
+          </Link>
+        </span>
       </div>
     </>
   )
