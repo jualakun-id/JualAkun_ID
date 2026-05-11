@@ -3,10 +3,11 @@ import { ApiError } from '@/types/errors'
 
 const CANBOSO_BASE = 'https://canboso.com/api/telegram-buyer'
 
-// Kurs USD → IDR untuk konversi modal supplier ke rupiah. Hardcode 16500
-// sebagai estimasi konservatif (mid-2026). Admin tetap bisa adjust manual
-// di FulfillForm sebelum kirim. Update const ini kalau rate berubah > 5%.
-const USD_IDR_RATE = 16500
+// Kurs USD → IDR untuk konversi modal supplier ke rupiah. Pakai 18000
+// (top-up Binance USDT 2026-05) sebagai konservatif buffer — modal yang
+// di-record sedikit overestimate, lebih aman untuk margin calculation.
+// Admin tetap bisa adjust manual di FulfillForm sebelum kirim.
+const USD_IDR_RATE = 18000
 
 type SupplierStats = { total: number; sold: number; available: number }
 
