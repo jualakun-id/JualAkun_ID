@@ -51,9 +51,25 @@ export class SupplierCanbosoService {
 
   /** List semua produk supplier — return minimal subset untuk admin UI. */
   static async listProducts() {
-    const res = await fetch(`${CANBOSO_BASE}/products`, {
-      headers: { 'X-API-Key': this.getKey() },
-    })
+    // Timeout 10s — Canboso server di VN kadang lambat, tapi jangan biarkan
+    // Workers hang sampai 30s (Cloudflare CPU limit). Kalau timeout, throw
+    // error yang bisa di-retry user.
+    const ctrl = new AbortController()
+    const timeoutId = setTimeout(() => ctrl.abort(), 10_000)
+    let res: Response
+    try {
+      res = await fetch(`${CANBOSO_BASE}/products`, {
+        headers: { 'X-API-Key': this.getKey() },
+        signal: ctrl.signal,
+      })
+    } catch (err) {
+      const msg = err instanceof Error && err.name === 'AbortError'
+        ? 'Supplier lambat balas (>10s) — coba lagi sebentar'
+        : `Supplier unreachable: ${err instanceof Error ? err.message : String(err)}`
+      throw new ApiError('INTERNAL_ERROR', msg, 502)
+    } finally {
+      clearTimeout(timeoutId)
+    }
     if (!res.ok) {
       const body = await res.text().catch(() => '')
       throw new ApiError('INTERNAL_ERROR', `Supplier GET /products gagal (${res.status}): ${body.slice(0, 200)}`, 502)
@@ -91,36 +107,32 @@ export class SupplierCanbosoService {
       .not('supplier_product_id', 'is', null)
     if (error) throw new ApiError('INTERNAL_ERROR', error.message, 500)
 
-    const updates: { id: string; available: number }[] = []
-    const orphans: string[] = [] // supplier_product_id yang udah gak ada di supplier
+    const orphans: string[] = []
     const now = new Date().toISOString()
 
-    for (const p of jualakunProducts ?? []) {
+    // Parallel update — jauh lebih cepat dari sequential await loop.
+    const updatePromises = (jualakunProducts ?? []).map(async (p) => {
       const supId = p.supplier_product_id as string
       const available = supplierMap.get(supId)
       if (available === undefined) {
         orphans.push(supId)
-        continue
+        return { updated: false }
       }
-      // Skip update kalau nilai-nya sama (hemat write)
-      if (p.display_stock !== available) {
-        const { error: updErr } = await supabase
-          .from('products')
-          .update({ display_stock: available, supplier_synced_at: now })
-          .eq('id', p.id)
-        if (updErr) {
-          console.warn('[supplier.syncStock] update fail', p.id, updErr.message)
-          continue
-        }
-      } else {
-        // Tetap update timestamp supaya admin tahu sudah di-sync
-        await supabase.from('products').update({ supplier_synced_at: now }).eq('id', p.id)
+      const fields: Record<string, unknown> = { supplier_synced_at: now }
+      if (p.display_stock !== available) fields.display_stock = available
+      const { error: updErr } = await supabase.from('products').update(fields).eq('id', p.id)
+      if (updErr) {
+        console.warn('[supplier.syncStock] update fail', p.id, updErr.message)
+        return { updated: false }
       }
-      updates.push({ id: p.id, available })
-    }
+      return { updated: p.display_stock !== available }
+    })
+    const results = await Promise.all(updatePromises)
+    const updated = results.filter((r) => r.updated).length
+
     return {
       total_mapped: (jualakunProducts ?? []).length,
-      updated: updates.length,
+      updated,
       orphans,
       synced_at: now,
     }

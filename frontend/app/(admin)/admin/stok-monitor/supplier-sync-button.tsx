@@ -43,18 +43,24 @@ export function SupplierSyncButton() {
   }
 
   return (
-    <button
-      type="button"
-      onClick={handleSync}
-      disabled={loading}
-      className="inline-flex items-center gap-1.5 rounded-lg border-2 border-black bg-brand-500 px-3.5 py-2 text-sm font-extrabold text-ink shadow-[0_2px_0_rgba(0,0,0,0.9)] hover:-translate-y-0.5 hover:shadow-[0_3px_0_rgba(0,0,0,0.9)] transition-all disabled:opacity-50 disabled:pointer-events-none"
-    >
-      {loading ? (
-        <Loader2 size={14} strokeWidth={2.5} className="animate-spin" />
-      ) : (
-        <RefreshCw size={14} strokeWidth={2.5} />
-      )}
-      {loading ? 'Sync...' : 'Sync Stok dari Supplier'}
-    </button>
+    <div className="flex flex-col items-end gap-1">
+      <button
+        type="button"
+        onClick={handleSync}
+        disabled={loading}
+        title="Auto-sync jalan setiap 10 menit. Klik untuk force refresh sekarang."
+        className="inline-flex items-center gap-1.5 rounded-lg border-2 border-black bg-brand-500 px-3.5 py-2 text-sm font-extrabold text-ink shadow-[0_2px_0_rgba(0,0,0,0.9)] hover:-translate-y-0.5 hover:shadow-[0_3px_0_rgba(0,0,0,0.9)] transition-all disabled:opacity-50 disabled:pointer-events-none"
+      >
+        {loading ? (
+          <Loader2 size={14} strokeWidth={2.5} className="animate-spin" />
+        ) : (
+          <RefreshCw size={14} strokeWidth={2.5} />
+        )}
+        {loading ? 'Sync...' : 'Sync Sekarang'}
+      </button>
+      <p className="text-[10px] font-medium text-ink-subtle leading-tight">
+        Auto-sync setiap 10 menit
+      </p>
+    </div>
   )
 }

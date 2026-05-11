@@ -20,6 +20,7 @@ import { adminRoute } from '@/routes/admin'
 import { expireOrdersCron } from '@/routes/cron/expire-orders'
 import { stockAlertsCron } from '@/routes/cron/stock-alerts'
 import { retryNotificationsCron } from '@/routes/cron/retry-notifications'
+import { supplierSyncStockCron } from '@/routes/cron/supplier-sync-stock'
 
 const app = new Hono<AppEnv>()
 
@@ -52,6 +53,7 @@ app.route('/admin', adminRoute)
 app.route('/api/cron/expire-orders', expireOrdersCron)
 app.route('/api/cron/stock-alerts', stockAlertsCron)
 app.route('/api/cron/retry-notifications', retryNotificationsCron)
+app.route('/api/cron/supplier-sync-stock', supplierSyncStockCron)
 
 app.notFound((c) => c.json({ ok: false, code: 'NOT_FOUND', message: 'Route tidak ditemukan' }, 404))
 
@@ -66,21 +68,25 @@ app.onError((err, c) => {
   return c.json({ ok: false, code: 'INTERNAL_ERROR', message: 'Internal server error' }, 500)
 })
 
-const CRON_MAP: Record<string, string> = {
-  '*/5 * * * *': '/api/cron/expire-orders',
-  '*/30 * * * *': '/api/cron/stock-alerts',
-  '*/10 * * * *': '/api/cron/retry-notifications',
+// 1 cron schedule bisa trigger multiple endpoint — disusun array untuk
+// piggyback supplier-sync ke slot retry-notifications (Workers free tier
+// limit 3 cron triggers, jadi gak bisa add slot baru).
+const CRON_MAP: Record<string, string[]> = {
+  '*/5 * * * *': ['/api/cron/expire-orders'],
+  '*/30 * * * *': ['/api/cron/stock-alerts'],
+  '*/10 * * * *': ['/api/cron/retry-notifications', '/api/cron/supplier-sync-stock'],
 }
 
 export default {
   fetch: app.fetch,
   async scheduled(event: ScheduledEvent, env: Bindings, ctx: ExecutionContext): Promise<void> {
-    const path = CRON_MAP[event.cron]
-    if (!path) return
-    const req = new Request(`http://localhost${path}`, {
-      method: 'POST',
-      headers: { 'x-cron-secret': env.CRON_SECRET },
-    })
-    ctx.waitUntil(Promise.resolve(app.fetch(req, env)))
+    const paths = CRON_MAP[event.cron] ?? []
+    for (const path of paths) {
+      const req = new Request(`http://localhost${path}`, {
+        method: 'POST',
+        headers: { 'x-cron-secret': env.CRON_SECRET },
+      })
+      ctx.waitUntil(Promise.resolve(app.fetch(req, env)))
+    }
   },
 }
