@@ -10,6 +10,40 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8787'
 const MAX_SIZE_MB = 2
 const ALLOWED_EXT = '.webp,.png,.jpg,.jpeg'
 
+/**
+ * Baca dimensi gambar via createImageBitmap (modern) atau Image() fallback.
+ * Return { width, height } dalam pixel.
+ */
+async function readImageDimensions(file: File): Promise<{ width: number; height: number }> {
+  // Pakai createImageBitmap kalau available (faster, lebih low-level)
+  if (typeof createImageBitmap === 'function') {
+    try {
+      const bitmap = await createImageBitmap(file)
+      const dim = { width: bitmap.width, height: bitmap.height }
+      bitmap.close()
+      return dim
+    } catch {
+      // Fallback ke Image()
+    }
+  }
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file)
+    // Pakai window.Image — jangan `new Image()` karena `Image` di file ini
+    // sudah di-import dari next/image (React component, bukan DOM constructor)
+    const img = new window.Image()
+    img.onload = () => {
+      const dim = { width: img.naturalWidth, height: img.naturalHeight }
+      URL.revokeObjectURL(url)
+      resolve(dim)
+    }
+    img.onerror = () => {
+      URL.revokeObjectURL(url)
+      reject(new Error('Image decode failed'))
+    }
+    img.src = url
+  })
+}
+
 type Props = {
   /** Current URL value (atau kosong) */
   value: string
@@ -44,6 +78,22 @@ export function ThumbnailUpload({ value, onChange, slug }: Props) {
     const allowed = ['image/webp', 'image/png', 'image/jpeg', 'image/jpg']
     if (!allowed.includes(file.type)) {
       toast.error('Tipe file harus WebP, PNG, atau JPEG')
+      return
+    }
+
+    // Validasi aspect ratio 1:1 (toleransi 2% supaya nggak ribet untuk gambar
+    // hasil export tools yg kadang off by 1-2 pixel)
+    try {
+      const dimensions = await readImageDimensions(file)
+      const ratio = dimensions.width / dimensions.height
+      if (Math.abs(ratio - 1) > 0.02) {
+        toast.error(
+          `Gambar harus rasio 1:1 (square). Ukuran kamu: ${dimensions.width}×${dimensions.height} px (rasio ${ratio.toFixed(2)})`,
+        )
+        return
+      }
+    } catch {
+      toast.error('Gagal membaca dimensi gambar — file mungkin corrupt')
       return
     }
 
@@ -149,9 +199,9 @@ export function ThumbnailUpload({ value, onChange, slug }: Props) {
         </button>
       )}
 
-      <p className="mt-2 text-xs text-ink-subtle font-medium">
-        Format: <strong>WebP</strong> (recommended), PNG, atau JPEG · Maks{' '}
-        {MAX_SIZE_MB} MB · Auto-upload ke storage
+      <p className="mt-2 text-xs text-ink-subtle font-medium leading-relaxed">
+        Rasio <strong>1:1 (square)</strong> · Format <strong>WebP</strong> (recommended), PNG, atau
+        JPEG · Maks {MAX_SIZE_MB} MB · Auto-upload ke storage
       </p>
     </div>
   )

@@ -59,11 +59,8 @@ export function LandingProductCard({
         </span>
       )}
 
-      {/* Art / Brand area — wrapped in framed container with uniform cream margin all sides */}
-      <div
-        className="relative rounded-lg overflow-hidden bg-white shrink-0 border-2 border-black"
-        style={{ height: '50%' }}
-      >
+      {/* Art / Brand area — 1:1 ratio (admin enforce square upload) */}
+      <div className="relative rounded-lg overflow-hidden bg-white shrink-0 border-2 border-black aspect-square w-full">
         {product.thumbnail_url ? (
           <Image
             src={product.thumbnail_url}
