@@ -734,14 +734,69 @@ export class AdminTicketsService {
 }
 
 export class AdminCouponsService {
-  static async list() {
+  static async list(q?: {
+    status?: 'active' | 'inactive' | 'expired' | 'exhausted'
+    search?: string
+    page?: number
+    limit?: number
+    sort_by?: string
+    sort_dir?: 'asc' | 'desc'
+  }) {
     const supabase = createAdminClient()
-    const { data, error } = await supabase
+    const page = q?.page ?? 1
+    const limit = q?.limit ?? 50
+    const offset = (page - 1) * limit
+    const sortColumn = q?.sort_by ?? 'created_at'
+    const sortAsc = q?.sort_dir === 'asc'
+
+    let query = supabase
       .from('coupons')
-      .select('*')
-      .order('created_at', { ascending: false })
+      .select('*', { count: 'exact' })
+      .order(sortColumn, { ascending: sortAsc })
+      .range(offset, offset + limit - 1)
+
+    if (q?.status === 'active') {
+      query = query.eq('is_active', true)
+    } else if (q?.status === 'inactive') {
+      query = query.eq('is_active', false)
+    } else if (q?.status === 'expired') {
+      query = query.lt('expires_at', new Date().toISOString())
+    }
+    if (q?.search) {
+      const safe = q.search.replace(/[%,()]/g, '')
+      query = query.ilike('code', `%${safe}%`)
+    }
+
+    const { data, error, count } = await query
     if (error) throw new ApiError('INTERNAL_ERROR', error.message, 500)
-    return data ?? []
+
+    // Filter exhausted di JS (used_count >= max_uses) — Postgres comparison
+    // antar 2 kolom dengan max_uses nullable agak ribet via PostgREST.
+    let filtered = (data ?? []) as Array<{ used_count: number; max_uses: number | null }>
+    if (q?.status === 'exhausted') {
+      filtered = filtered.filter((r) => r.max_uses !== null && r.used_count >= r.max_uses)
+    }
+
+    // Aggregate metrics — total saving + total redemption (independent dari filter)
+    const { data: metricsData } = await supabase
+      .from('coupons')
+      .select('used_count, is_active')
+    const totalRedemption = (metricsData ?? []).reduce((s, r) => s + (r.used_count ?? 0), 0)
+    const totalActive = (metricsData ?? []).filter((r) => r.is_active).length
+
+    return {
+      coupons: filtered,
+      pagination: { page, limit, total: count ?? 0 },
+      metrics: { total_redemption: totalRedemption, total_active: totalActive },
+    }
+  }
+
+  static async getOne(id: string) {
+    const supabase = createAdminClient()
+    const { data, error } = await supabase.from('coupons').select('*').eq('id', id).maybeSingle()
+    if (error) throw new ApiError('INTERNAL_ERROR', error.message, 500)
+    if (!data) throw new ApiError('NOT_FOUND', 'Kupon tidak ditemukan', 404)
+    return data
   }
 
   static async create(input: {
@@ -777,7 +832,15 @@ export class AdminCouponsService {
     return data
   }
 
-  static async update(id: string, input: Partial<{ discount_value: number; max_uses: number; expires_at: string; is_active: boolean }>) {
+  static async update(
+    id: string,
+    input: Partial<{
+      discount_value: number
+      max_uses: number | null
+      expires_at: string | null
+      is_active: boolean
+    }>,
+  ) {
     const supabase = createAdminClient()
     const { data, error } = await supabase.from('coupons').update(input).eq('id', id).select('*').single()
     if (error) throw new ApiError('INTERNAL_ERROR', error.message, 500)

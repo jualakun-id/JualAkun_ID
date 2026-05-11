@@ -6,8 +6,22 @@ import type { AppEnv } from '@/types/bindings'
 
 export const adminCouponsRoute = new Hono<AppEnv>()
 
-adminCouponsRoute.get('/', async (c) => {
-  const data = await AdminCouponsService.list()
+const listSchema = z.object({
+  status: z.enum(['active', 'inactive', 'expired', 'exhausted']).optional(),
+  search: z.string().optional(),
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().max(100).default(50),
+  sort_by: z.enum(['code', 'discount_value', 'used_count', 'expires_at', 'is_active', 'created_at']).optional(),
+  sort_dir: z.enum(['asc', 'desc']).default('desc'),
+})
+
+adminCouponsRoute.get('/', zValidator('query', listSchema), async (c) => {
+  const data = await AdminCouponsService.list(c.req.valid('query'))
+  return c.json({ data })
+})
+
+adminCouponsRoute.get('/:id', async (c) => {
+  const data = await AdminCouponsService.getOne(c.req.param('id'))
   return c.json({ data })
 })
 
@@ -27,8 +41,8 @@ adminCouponsRoute.post('/', zValidator('json', createSchema), async (c) => {
 
 const updateSchema = z.object({
   discount_value: z.coerce.number().int().positive().optional(),
-  max_uses: z.coerce.number().int().positive().optional(),
-  expires_at: z.string().datetime().optional(),
+  max_uses: z.coerce.number().int().positive().nullable().optional(),
+  expires_at: z.string().datetime().nullable().optional(),
   is_active: z.boolean().optional(),
 })
 
