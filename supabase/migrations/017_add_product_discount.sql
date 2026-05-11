@@ -19,20 +19,34 @@ ALTER TABLE products
   ADD COLUMN IF NOT EXISTS discount_starts_at TIMESTAMPTZ NULL,
   ADD COLUMN IF NOT EXISTS discount_ends_at   TIMESTAMPTZ NULL;
 
--- Constraint: kalau original_price di-set, harus > price (otherwise nggak masuk akal)
-ALTER TABLE products
-  ADD CONSTRAINT IF NOT EXISTS products_original_price_check
-    CHECK (original_price IS NULL OR original_price > price);
+-- Constraints — Postgres tidak support "ADD CONSTRAINT IF NOT EXISTS",
+-- jadi pakai DO block dgn cek pg_constraint untuk idempotent.
 
--- Constraint: kalau discount_ends_at di-set, harus > discount_starts_at (kalau keduanya di-set)
--- Note: kalau salah satu null, OK (no constraint)
-ALTER TABLE products
-  ADD CONSTRAINT IF NOT EXISTS products_discount_dates_check
-    CHECK (
-      discount_starts_at IS NULL
-      OR discount_ends_at IS NULL
-      OR discount_ends_at > discount_starts_at
-    );
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'products_original_price_check'
+  ) THEN
+    ALTER TABLE products
+      ADD CONSTRAINT products_original_price_check
+      CHECK (original_price IS NULL OR original_price > price);
+  END IF;
+END $$;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'products_discount_dates_check'
+  ) THEN
+    ALTER TABLE products
+      ADD CONSTRAINT products_discount_dates_check
+      CHECK (
+        discount_starts_at IS NULL
+        OR discount_ends_at IS NULL
+        OR discount_ends_at > discount_starts_at
+      );
+  END IF;
+END $$;
 
 -- ============================================================
 -- Update RPC get_catalog_listing — include discount fields di output
