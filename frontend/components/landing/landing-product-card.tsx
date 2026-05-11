@@ -44,7 +44,7 @@ export function LandingProductCard({
 
   return (
     <div
-      className="rounded-xl border-2 border-black shadow-[0_4px_0_rgba(0,0,0,0.9)] flex flex-col overflow-hidden hover:shadow-[0_6px_0_rgba(0,0,0,0.9)] hover:-translate-y-0.5 transition-all duration-200 relative aspect-[3/4] p-4 gap-3"
+      className="rounded-xl border-2 border-black shadow-[0_4px_0_rgba(0,0,0,0.9)] flex flex-col overflow-hidden hover:shadow-[0_6px_0_rgba(0,0,0,0.9)] hover:-translate-y-0.5 transition-all duration-200 relative aspect-[3/5] p-4 gap-3"
       style={{
         backgroundColor: '#FAF7F2',
         backgroundImage:
