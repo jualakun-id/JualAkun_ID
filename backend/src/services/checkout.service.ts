@@ -76,7 +76,7 @@ export class CheckoutService {
     // 1. Validate product
     const { data: product, error: productErr } = await supabase
       .from('products')
-      .select('id, name, price, stock_count, is_active')
+      .select('id, name, price, display_stock, is_active')
       .eq('id', input.product_id)
       .maybeSingle()
 
@@ -86,8 +86,8 @@ export class CheckoutService {
     if (!product.is_active) {
       throw new ApiError('NOT_FOUND', 'Produk tidak tersedia', 404)
     }
-    if (product.stock_count === 0) {
-      throw new ApiError('STOCK_EMPTY', 'Stok produk habis', 400)
+    if (product.display_stock === 0) {
+      throw new ApiError('STOCK_EMPTY', 'Stok produk habis — silakan pilih produk lain', 400)
     }
 
     const amountIdr: number = product.price

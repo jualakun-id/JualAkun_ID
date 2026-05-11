@@ -3,6 +3,7 @@ import { FilterBar } from '@/components/admin/filter-bar'
 import { Pagination } from '@/components/admin/pagination'
 import { StockMonitorTableClient } from './stock-monitor-table-client'
 import { SupplierSyncButton } from './supplier-sync-button'
+import { WalletBalance } from './wallet-balance'
 import { adminFetch } from '@/lib/admin-fetch'
 import type { Category } from '@/types'
 
@@ -99,7 +100,12 @@ export default async function AdminStokMonitorPage({ searchParams }: Props) {
       <AdminHeader
         title="Stok Monitor"
         subtitle={`${out} habis · ${critical} kritis · ${data?.pagination.total ?? 0} produk`}
-        rightSlot={<SupplierSyncButton />}
+        rightSlot={
+          <div className="flex flex-wrap items-center gap-3">
+            <WalletBalance />
+            <SupplierSyncButton />
+          </div>
+        }
       />
 
       <FilterBar

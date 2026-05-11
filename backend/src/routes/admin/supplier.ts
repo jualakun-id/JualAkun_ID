@@ -9,6 +9,11 @@ adminSupplierRoute.get('/products', async (c) => {
   return c.json({ data })
 })
 
+adminSupplierRoute.get('/balance', async (c) => {
+  const data = await SupplierCanbosoService.getBalance()
+  return c.json({ data })
+})
+
 adminSupplierRoute.post('/sync-stock', async (c) => {
   const data = await SupplierCanbosoService.syncStock()
   return c.json({ data })

@@ -49,6 +49,41 @@ export class SupplierCanbosoService {
     return key
   }
 
+  /**
+   * Get saldo wallet Canboso. Dipakai admin untuk monitor saldo & top-up
+   * manual sebelum stock habis. Return null kalau timeout/error (admin
+   * tetap bisa lihat halaman, tidak block).
+   */
+  static async getBalance(): Promise<{
+    balance_usd: number
+    balance_text: string
+    updated_at: string
+  } | null> {
+    const ctrl = new AbortController()
+    const timeoutId = setTimeout(() => ctrl.abort(), 8_000)
+    try {
+      const res = await fetch(`${CANBOSO_BASE}/balance`, {
+        headers: { 'X-API-Key': this.getKey() },
+        signal: ctrl.signal,
+      })
+      if (!res.ok) return null
+      const json = (await res.json()) as {
+        balanceUsd: number
+        balanceText: string
+        updatedAt: string
+      }
+      return {
+        balance_usd: json.balanceUsd,
+        balance_text: json.balanceText,
+        updated_at: json.updatedAt,
+      }
+    } catch {
+      return null
+    } finally {
+      clearTimeout(timeoutId)
+    }
+  }
+
   /** List semua produk supplier — return minimal subset untuk admin UI. */
   static async listProducts() {
     // Timeout 10s — Canboso server di VN kadang lambat, tapi jangan biarkan
