@@ -1022,6 +1022,8 @@ export class AdminDashboardService {
 
 export class AdminUsersService {
   static async list(q: {
+    role?: 'user' | 'admin'
+    status?: 'active' | 'suspended' | 'banned'
     search?: string
     page: number
     limit: number
@@ -1038,10 +1040,38 @@ export class AdminUsersService {
       .select('id, full_name, phone_wa, role, status, credits, joined_at', { count: 'exact' })
       .order(sortColumn, { ascending: sortAsc })
       .range(offset, offset + q.limit - 1)
+    if (q.role) query = query.eq('role', q.role)
+    if (q.status) query = query.eq('status', q.status)
     if (q.search) query = query.or(`full_name.ilike.%${q.search}%,phone_wa.ilike.%${q.search}%`)
     const { data, error, count } = await query
     if (error) throw new ApiError('INTERNAL_ERROR', error.message, 500)
-    return { users: data ?? [], pagination: { page: q.page, limit: q.limit, total: count ?? 0 } }
+
+    // Aggregate metrics (independent dari filter) — pakai untuk subtitle
+    const { count: totalUsers } = await supabase
+      .from('profiles')
+      .select('id', { count: 'exact', head: true })
+      .eq('role', 'user')
+    const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+    const { count: newThisWeek } = await supabase
+      .from('profiles')
+      .select('id', { count: 'exact', head: true })
+      .eq('role', 'user')
+      .gte('joined_at', oneWeekAgo)
+    const { count: suspended } = await supabase
+      .from('profiles')
+      .select('id', { count: 'exact', head: true })
+      .eq('role', 'user')
+      .in('status', ['suspended', 'banned'])
+
+    return {
+      users: data ?? [],
+      pagination: { page: q.page, limit: q.limit, total: count ?? 0 },
+      metrics: {
+        total_users: totalUsers ?? 0,
+        new_this_week: newThisWeek ?? 0,
+        suspended_count: suspended ?? 0,
+      },
+    }
   }
 
   static async setStatus(userId: string, status: 'active' | 'suspended' | 'banned') {
@@ -1049,6 +1079,91 @@ export class AdminUsersService {
     const { error } = await supabase.from('profiles').update({ status }).eq('id', userId)
     if (error) throw new ApiError('INTERNAL_ERROR', error.message, 500)
     return { ok: true }
+  }
+
+  /**
+   * Get user detail untuk page /admin/pengguna/[id].
+   * Include: profile, email (dari auth.users), stats (total order, total
+   * spent, referral count), recent orders.
+   */
+  static async getOne(userId: string) {
+    const supabase = createAdminClient()
+    const { data: profile, error: profErr } = await supabase
+      .from('profiles')
+      .select('id, full_name, phone_wa, role, status, credits, joined_at, referral_code, referred_by')
+      .eq('id', userId)
+      .maybeSingle()
+    if (profErr) throw new ApiError('INTERNAL_ERROR', profErr.message, 500)
+    if (!profile) throw new ApiError('NOT_FOUND', 'User tidak ditemukan', 404)
+
+    // Email dari auth.users
+    const { data: authUser } = await supabase.auth.admin.getUserById(userId)
+    const email = authUser.user?.email ?? null
+    const lastSignIn = authUser.user?.last_sign_in_at ?? null
+
+    // Order stats
+    const { data: ordersData } = await supabase
+      .from('orders')
+      .select('id, order_number, total_idr, status, created_at, products!inner(name)')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(20)
+    const orders = (ordersData ?? []) as Array<{
+      id: string
+      order_number: string
+      total_idr: number
+      status: string
+      created_at: string
+      products: { name: string } | { name: string }[]
+    }>
+
+    const paidOrders = orders.filter((o) => ['paid', 'delivered', 'confirmed'].includes(o.status))
+    const totalSpent = paidOrders.reduce((s, o) => s + (o.total_idr ?? 0), 0)
+
+    // Referral count
+    const { count: referralCount } = await supabase
+      .from('referrals')
+      .select('id', { count: 'exact', head: true })
+      .eq('referrer_user_id', userId)
+      .eq('status', 'credited')
+
+    return {
+      ...profile,
+      email,
+      last_sign_in_at: lastSignIn,
+      stats: {
+        total_orders: orders.length,
+        paid_orders: paidOrders.length,
+        total_spent: totalSpent,
+        referral_count: referralCount ?? 0,
+      },
+      recent_orders: orders,
+    }
+  }
+
+  /**
+   * Adjust kredit user secara manual. Positif untuk add, negatif untuk
+   * deduct. Activity log untuk audit trail.
+   */
+  static async adjustCredits(userId: string, amount: number, reason?: string) {
+    const supabase = createAdminClient()
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('credits, full_name')
+      .eq('id', userId)
+      .maybeSingle()
+    if (!profile) throw new ApiError('NOT_FOUND', 'User tidak ditemukan', 404)
+    const currentCredits = (profile as { credits: number }).credits ?? 0
+    const newCredits = Math.max(0, currentCredits + amount)
+    const { error } = await supabase
+      .from('profiles')
+      .update({ credits: newCredits })
+      .eq('id', userId)
+    if (error) throw new ApiError('INTERNAL_ERROR', error.message, 500)
+    // Reason untuk audit trail (di-log untuk Cloudflare Logs — kalau perlu
+    // simpan permanen, bisa pakai table credit_adjustments di future)
+    if (reason) console.info('[admin/credits] adjust', { userId, amount, reason })
+    return { ok: true, previous: currentCredits, current: newCredits, delta: newCredits - currentCredits }
   }
 }
 
