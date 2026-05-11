@@ -1,7 +1,6 @@
 import { createAdminClient } from '@/lib/supabase'
 import { createInquiry, verifyCallbackSignature } from '@/lib/duitku'
 import { ApiError } from '@/types/errors'
-import { DeliveryService } from './delivery.service'
 import { CryptoService } from './crypto.service'
 import { NotificationService } from './notification.service'
 import { templates } from '@/templates/messages'
@@ -218,7 +217,7 @@ export class PaymentService {
   private static async handlePaid(order: OrderForPayment): Promise<void> {
     const supabase = createAdminClient()
 
-    // Mark order as paid (only if still pending_payment) — drives the RPC guard.
+    // Mark order as paid (only if still pending_payment).
     const { data: updated, error: updateErr } = await supabase
       .from('orders')
       .update({ status: 'paid', paid_at: new Date().toISOString() })
@@ -232,16 +231,84 @@ export class PaymentService {
       return
     }
 
+    // Manual fulfillment model (Opsi A): tidak auto-deliver.
+    // Order tetap di status 'paid' sampai admin fulfill manual via admin panel.
+    // Kirim notif "pembayaran berhasil, sedang diproses" ke buyer + alert admin.
     try {
-      await DeliveryService.deliverOrder(order.id)
-      await this.notifyBuyerDelivered(order)
+      await this.notifyBuyerPaymentReceived(order)
+      await this.alertAdminPendingFulfillment(order)
     } catch (err) {
-      console.error('[duitku] delivery failed', { order_id: order.id, err })
-      await this.alertAdminDeliveryFailed(order)
+      console.error('[duitku] post-paid notif failed', { order_id: order.id, err })
     }
   }
 
-  private static async notifyBuyerDelivered(order: OrderForPayment): Promise<void> {
+  private static async notifyBuyerPaymentReceived(order: OrderForPayment): Promise<void> {
+    const supabase = createAdminClient()
+    const { data } = await supabase
+      .from('orders')
+      .select(`profiles!orders_user_id_fkey(full_name, phone_wa), products!inner(name)`)
+      .eq('id', order.id)
+      .maybeSingle()
+    const profileRel = (data as { profiles?: { full_name?: string; phone_wa?: string } | { full_name?: string; phone_wa?: string }[] } | null)?.profiles
+    const profile = Array.isArray(profileRel) ? profileRel[0] : profileRel
+    const productRel = (data as { products: { name: string } | { name: string }[] }).products
+    const product = Array.isArray(productRel) ? productRel[0] : productRel
+
+    const { data: authUser } = await supabase.auth.admin.getUserById(order.user_id)
+    const email = authUser.user?.email
+
+    const tpl = templates.paymentReceived({
+      fullName: profile?.full_name ?? 'Buyer',
+      orderNumber: order.order_number,
+      productName: product?.name ?? 'Akun Digital',
+      totalIdr: order.total_idr,
+    })
+
+    if (profile?.phone_wa) {
+      await NotificationService.sendWhatsApp({
+        target: profile.phone_wa,
+        message: tpl.waText,
+        template: tpl.template,
+        userId: order.user_id,
+        orderId: order.id,
+      })
+    }
+    if (email) {
+      await NotificationService.sendEmail({
+        to: email,
+        subject: tpl.emailSubject,
+        html: tpl.emailHtml,
+        template: tpl.template,
+        userId: order.user_id,
+        orderId: order.id,
+      })
+    }
+  }
+
+  private static async alertAdminPendingFulfillment(order: OrderForPayment): Promise<void> {
+    const adminWa = process.env.ADMIN_WHATSAPP_NUMBER
+    if (!adminWa) return
+    const supabase = createAdminClient()
+    const { data } = await supabase
+      .from('orders')
+      .select('products!inner(name)')
+      .eq('id', order.id)
+      .maybeSingle()
+    const productRel = (data as { products: { name: string } | { name: string }[] } | null)?.products
+    const product = Array.isArray(productRel) ? productRel[0] : productRel
+    const tpl = templates.adminPendingFulfillment({
+      orderNumber: order.order_number,
+      productName: product?.name ?? 'Akun Digital',
+    })
+    await NotificationService.sendWhatsApp({
+      target: adminWa,
+      message: tpl.waText,
+      template: tpl.template,
+      orderId: order.id,
+    })
+  }
+
+  static async notifyBuyerDelivered(order: OrderForPayment): Promise<void> {
     const supabase = createAdminClient()
     const { data } = await supabase
       .from('orders')
@@ -300,15 +367,4 @@ export class PaymentService {
     }
   }
 
-  private static async alertAdminDeliveryFailed(order: OrderForPayment): Promise<void> {
-    const adminWa = process.env.ADMIN_WHATSAPP_NUMBER
-    if (!adminWa) return
-    const tpl = templates.adminDeliveryFailed({ orderNumber: order.order_number })
-    await NotificationService.sendWhatsApp({
-      target: adminWa,
-      message: tpl.waText,
-      template: tpl.template,
-      orderId: order.id,
-    })
-  }
 }

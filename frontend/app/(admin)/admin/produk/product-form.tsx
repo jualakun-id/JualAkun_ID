@@ -26,6 +26,7 @@ type Props = {
     original_price: number | null
     discount_starts_at: string | null
     discount_ends_at: string | null
+    display_stock: number
   }>
   /** Set true kalau ProductForm di-render di dalam Modal — drop card wrapper (border + padding + shadow). */
   embedded?: boolean
@@ -56,6 +57,7 @@ export function ProductForm({ categories, initial, embedded, onSuccess }: Props)
     price: initial?.price ?? 0,
     guarantee_days: initial?.guarantee_days ?? 30,
     is_active: initial?.is_active ?? false,
+    display_stock: initial?.display_stock ?? 0,
     original_price: initial?.original_price ?? '',
     discount_starts_at: isoToLocal(initial?.discount_starts_at),
     discount_ends_at: isoToLocal(initial?.discount_ends_at),
@@ -122,6 +124,7 @@ export function ProductForm({ categories, initial, embedded, onSuccess }: Props)
       price: Number(form.price),
       guarantee_days: Number(form.guarantee_days),
       is_active: form.is_active,
+      display_stock: Number(form.display_stock),
       original_price:
         showDiscount && form.original_price !== '' ? Number(form.original_price) : null,
       discount_starts_at:
@@ -191,7 +194,7 @@ export function ProductForm({ categories, initial, embedded, onSuccess }: Props)
           className="w-full rounded-lg border-2 border-black/15 bg-white px-4 py-3 text-[15px] font-medium text-ink placeholder:text-ink-subtle placeholder:font-normal focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/25"
         />
       </Field>
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Field label="Harga (Rp)" hint="Harga jual ke buyer">
           <Input
             type="number"
@@ -219,6 +222,16 @@ export function ProductForm({ categories, initial, embedded, onSuccess }: Props)
             required
             value={form.guarantee_days}
             onChange={(e) => update('guarantee_days', Number(e.target.value))}
+          />
+        </Field>
+        <Field label="Stok Tampilan" hint="Angka yang tampil di publik. Auto -1 saat admin fulfill order.">
+          <Input
+            type="number"
+            min={0}
+            required
+            value={form.display_stock}
+            onChange={(e) => update('display_stock', Number(e.target.value))}
+            placeholder="0"
           />
         </Field>
       </div>

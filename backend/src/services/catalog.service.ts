@@ -37,7 +37,7 @@ export class CatalogService {
       .select(
         `id, name, slug, thumbnail_url, price, original_price,
          discount_starts_at, discount_ends_at,
-         duration_days, guarantee_days, stock_count, sold_count,
+         duration_days, guarantee_days, display_stock, sold_count,
          rating_avg, rating_count,
          categories!inner ( name, slug )`,
         { count: 'exact' },
@@ -59,11 +59,13 @@ export class CatalogService {
     const { data, error, count } = await query
     if (error) throw new ApiError('INTERNAL_ERROR', `catalog list: ${error.message}`, 500)
 
-    // Normalize categories field (Supabase returns array atau object depending)
+    // Normalize categories + alias display_stock → stock_count untuk backward
+    // compat dengan frontend Product type yang masih pakai field 'stock_count'.
     const products = (data ?? []).map((p) => {
       const cats = (p as { categories: { name: string; slug: string } | { name: string; slug: string }[] }).categories
       const category = Array.isArray(cats) ? cats[0] : cats
-      return { ...p, category }
+      const { display_stock, ...rest } = p as Record<string, unknown> & { display_stock: number }
+      return { ...rest, stock_count: display_stock, category }
     })
 
     const total = count ?? 0
@@ -104,7 +106,7 @@ export class CatalogService {
         `id, name, slug, description, thumbnail_url, price, original_price,
          discount_starts_at, discount_ends_at,
          duration_days, guarantee_days,
-         stock_count, sold_count, rating_avg, rating_count, is_active,
+         display_stock, sold_count, rating_avg, rating_count, is_active,
          categories ( name, slug )`,
       )
       .eq('slug', slug)
@@ -124,6 +126,8 @@ export class CatalogService {
     const cat = product.categories as { name: string; slug: string } | { name: string; slug: string }[] | null
     const category = Array.isArray(cat) ? cat[0] : cat
 
-    return { ...product, categories: undefined, category, reviews: reviews ?? [] }
+    // Alias display_stock → stock_count untuk konsistensi frontend.
+    const { display_stock, ...rest } = product as Record<string, unknown> & { display_stock: number }
+    return { ...rest, stock_count: display_stock, categories: undefined, category, reviews: reviews ?? [] }
   }
 }

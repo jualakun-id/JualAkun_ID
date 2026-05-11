@@ -99,4 +99,29 @@ export const templates = {
     template: 'admin_delivery_failed',
     waText: `[ALERT] Delivery gagal untuk order ${p.orderNumber}. Cek admin panel: ${SITE}/admin/pesanan?status=delivery_failed`,
   }),
+
+  paymentReceived: (p: { fullName: string; orderNumber: string; productName: string; totalIdr: number }) => ({
+    template: 'payment_received',
+    waText:
+      `Halo ${p.fullName},\n\n` +
+      `Pembayaran untuk pesanan *${p.orderNumber}* (_${p.productName}_) berhasil diterima.\n` +
+      `Total: Rp ${p.totalIdr.toLocaleString('id-ID')}\n\n` +
+      `Pesanan sedang diproses oleh admin. Akun akan dikirim secepatnya via email & WhatsApp.\n\n` +
+      `Cek status di dashboard: ${SITE}/dashboard`,
+    emailSubject: `Pembayaran diterima — Pesanan ${p.orderNumber} sedang diproses`,
+    emailHtml: shell(
+      `<p>Halo <strong>${p.fullName}</strong>,</p>
+       <p>Pembayaran untuk pesanan <strong>${p.orderNumber}</strong> (<em>${p.productName}</em>) berhasil diterima.</p>
+       <p>Total: <strong>Rp ${p.totalIdr.toLocaleString('id-ID')}</strong></p>
+       <p>Pesanan sedang diproses oleh admin. Akun akan dikirim secepatnya via email & WhatsApp.</p>
+       <p><a href="${SITE}/dashboard" style="color:#1296A8">Cek status pesanan →</a></p>`,
+    ),
+  }),
+
+  adminPendingFulfillment: (p: { orderNumber: string; productName: string }) => ({
+    template: 'admin_pending_fulfillment',
+    waText:
+      `[FULFILL] Pesanan *${p.orderNumber}* untuk _${p.productName}_ baru di-bayar — perlu di-fulfill.\n\n` +
+      `Buka admin: ${SITE}/admin/pesanan?status=paid`,
+  }),
 } as const

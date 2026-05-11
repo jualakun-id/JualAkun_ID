@@ -12,7 +12,7 @@ const listSchema = z.object({
   search: z.string().optional(),
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().max(50).default(10),
-  sort_by: z.enum(['name', 'slug', 'stock_count', 'sold_count', 'price', 'duration_days']).optional(),
+  sort_by: z.enum(['name', 'slug', 'stock_count', 'display_stock', 'sold_count', 'price', 'duration_days']).optional(),
   sort_dir: z.enum(['asc', 'desc']).optional(),
 })
 

@@ -3,6 +3,7 @@ import { ApiError } from '@/types/errors'
 import { CryptoService } from './crypto.service'
 import { DeliveryService } from './delivery.service'
 import { NotificationService } from './notification.service'
+import { PaymentService } from './payment.service'
 
 /**
  * Extract path dalam bucket dari public URL Supabase Storage.
@@ -39,7 +40,7 @@ export class AdminProductsService {
     let query = supabase
       .from('products')
       .select(
-        `id, name, slug, price, duration_days, guarantee_days, stock_count, sold_count,
+        `id, name, slug, price, duration_days, guarantee_days, stock_count, display_stock, sold_count,
          is_active, thumbnail_url, created_at,
          categories!inner ( name, slug )`,
         { count: 'exact' },
@@ -49,7 +50,7 @@ export class AdminProductsService {
 
     if (q.status === 'active') query = query.eq('is_active', true)
     if (q.status === 'draft') query = query.eq('is_active', false)
-    if (q.status === 'out_of_stock') query = query.eq('stock_count', 0)
+    if (q.status === 'out_of_stock') query = query.eq('display_stock', 0)
     if (q.category_slug) query = query.eq('categories.slug', q.category_slug)
     if (q.search) {
       // ilike search di name OR slug — escape % dan komma untuk safety
@@ -78,6 +79,7 @@ export class AdminProductsService {
     original_price?: number | null
     discount_starts_at?: string | null
     discount_ends_at?: string | null
+    display_stock?: number
   }) {
     const supabase = createAdminClient()
     const { data, error } = await supabase
@@ -111,6 +113,7 @@ export class AdminProductsService {
       original_price: number | null
       discount_starts_at: string | null
       discount_ends_at: string | null
+      display_stock: number
     }>,
   ) {
     const supabase = createAdminClient()
@@ -164,7 +167,7 @@ export class AdminProductsService {
     const supabase = createAdminClient()
     const { data, error } = await supabase
       .from('products')
-      .select('id, category_id, name, slug, description, thumbnail_url, duration_days, price, guarantee_days, is_active, stock_count, sold_count, original_price, discount_starts_at, discount_ends_at')
+      .select('id, category_id, name, slug, description, thumbnail_url, duration_days, price, guarantee_days, is_active, stock_count, display_stock, sold_count, original_price, discount_starts_at, discount_ends_at')
       .eq('id', id)
       .maybeSingle()
     if (error) throw new ApiError('INTERNAL_ERROR', error.message, 500)
@@ -344,6 +347,83 @@ export class AdminOrdersService {
     }
     await DeliveryService.deliverOrder(orderId)
     return { ok: true, delivered: true }
+  }
+
+  /**
+   * Manual fulfillment (Opsi A — model on-demand).
+   * Admin input credentials saat order sudah paid. Flow:
+   *  1. Validate order status === 'paid' (atau 'delivery_failed' untuk retry)
+   *  2. Encrypt credentials → insert account_stock (is_used=true, order_id, used_at)
+   *  3. Update order: status='delivered', delivered_at=now
+   *  4. Decrement products.display_stock (atomic via RPC)
+   *  5. Trigger notif credentials ke buyer (email + WA)
+   */
+  static async fulfillManual(
+    orderId: string,
+    payload: { credentials: string; note?: string },
+  ) {
+    const supabase = createAdminClient()
+
+    const { data: order, error: orderErr } = await supabase
+      .from('orders')
+      .select('id, user_id, product_id, order_number, total_idr, status, guarantee_expires_at')
+      .eq('id', orderId)
+      .maybeSingle()
+    if (orderErr) throw new ApiError('INTERNAL_ERROR', orderErr.message, 500)
+    if (!order) throw new ApiError('NOT_FOUND', 'Pesanan tidak ditemukan', 404)
+    if (!['paid', 'delivery_failed'].includes(order.status)) {
+      throw new ApiError(
+        'VALIDATION_ERROR',
+        `Order status saat ini '${order.status}' — hanya bisa fulfill dari 'paid' atau 'delivery_failed'`,
+        400,
+      )
+    }
+
+    const credentialsEnc = await CryptoService.encrypt(payload.credentials)
+    const { data: stockRow, error: stockErr } = await supabase
+      .from('account_stock')
+      .insert({
+        product_id: order.product_id,
+        credentials_enc: credentialsEnc,
+        note: payload.note?.trim() || null,
+        is_used: true,
+        used_at: new Date().toISOString(),
+        order_id: order.id,
+      })
+      .select('id')
+      .single()
+    if (stockErr) throw new ApiError('INTERNAL_ERROR', `insert stock: ${stockErr.message}`, 500)
+
+    const { error: updateErr } = await supabase
+      .from('orders')
+      .update({ status: 'delivered', delivered_at: new Date().toISOString() })
+      .eq('id', order.id)
+    if (updateErr) {
+      // Rollback stock insert
+      await supabase.from('account_stock').delete().eq('id', stockRow.id)
+      throw new ApiError('INTERNAL_ERROR', `update order: ${updateErr.message}`, 500)
+    }
+
+    // Decrement display_stock (atomic, floor 0). Non-blocking — kalau gagal, log saja.
+    const { error: decErr } = await supabase.rpc('decrement_display_stock', { p_product_id: order.product_id })
+    if (decErr) console.warn('[fulfill] decrement_display_stock failed:', decErr.message)
+
+    // Kirim notif credentials ke buyer (reuse logic dari PaymentService).
+    try {
+      await PaymentService.notifyBuyerDelivered({
+        id: order.id,
+        user_id: order.user_id,
+        product_id: order.product_id,
+        order_number: order.order_number,
+        total_idr: order.total_idr,
+        status: 'delivered',
+      })
+    } catch (notifErr) {
+      console.error('[fulfill] notify buyer failed:', notifErr)
+      // Notif gagal tidak rollback order — credentials sudah masuk, admin bisa resend manual.
+    }
+
+    return { ok: true, delivered: true, stock_id: stockRow.id }
   }
 
   static async updateStatus(orderId: string, status: string) {
@@ -642,14 +722,16 @@ export class AdminStockMonitorService {
   }) {
     const supabase = createAdminClient()
     const offset = (q.page - 1) * q.limit
-    // Default sort: stock_count ASC (habis di atas). Override kalau client kirim sort_by.
-    const sortColumn = q.sort_by ?? 'stock_count'
+    // Default sort: display_stock ASC (habis di atas). Override kalau client kirim sort_by.
+    // sort_by 'stock_count' di-remap ke 'display_stock' supaya konsisten dengan model on-demand.
+    const sortByRaw = q.sort_by === 'stock_count' ? 'display_stock' : q.sort_by
+    const sortColumn = sortByRaw ?? 'display_stock'
     const sortAsc = q.sort_by ? q.sort_dir === 'asc' : true
 
     let query = supabase
       .from('products')
       .select(
-        `id, name, slug, price, duration_days, stock_count, sold_count,
+        `id, name, slug, price, duration_days, stock_count, display_stock, sold_count,
          is_active, thumbnail_url,
          categories!inner ( name, slug )`,
         { count: 'exact' },
@@ -658,8 +740,8 @@ export class AdminStockMonitorService {
       .order(sortColumn, { ascending: sortAsc })
       .range(offset, offset + q.limit - 1)
 
-    if (q.filter === 'critical') query = query.lte('stock_count', 5).gt('stock_count', 0)
-    if (q.filter === 'out') query = query.eq('stock_count', 0)
+    if (q.filter === 'critical') query = query.lte('display_stock', 5).gt('display_stock', 0)
+    if (q.filter === 'out') query = query.eq('display_stock', 0)
     if (q.category_slug) query = query.eq('categories.slug', q.category_slug)
     if (q.search) {
       const safe = q.search.replace(/[%,()]/g, '')
@@ -685,13 +767,13 @@ export class AdminStockMonitorService {
       .from('products')
       .select('id, categories!inner(slug)', { count: 'exact', head: true })
       .eq('is_active', true)
-      .eq('stock_count', 0)
+      .eq('display_stock', 0)
     let critQ = supabase
       .from('products')
       .select('id, categories!inner(slug)', { count: 'exact', head: true })
       .eq('is_active', true)
-      .lte('stock_count', 5)
-      .gt('stock_count', 0)
+      .lte('display_stock', 5)
+      .gt('display_stock', 0)
     if (category_slug) {
       outQ = outQ.eq('categories.slug', category_slug)
       critQ = critQ.eq('categories.slug', category_slug)

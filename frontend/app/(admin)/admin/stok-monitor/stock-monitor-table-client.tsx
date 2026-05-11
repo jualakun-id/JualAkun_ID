@@ -16,6 +16,7 @@ type StockRow = {
   price: number
   duration_days: number
   stock_count: number
+  display_stock: number
   sold_count: number
   is_active: boolean
   thumbnail_url: string | null
@@ -119,10 +120,10 @@ export function StockMonitorTableClient({ rows, categories, rowOffset, sortBy, s
             align: 'right',
           },
           {
-            key: 'stock_count',
+            key: 'display_stock',
             header: 'Stok',
-            sortKey: 'stock_count',
-            render: (r) => <StockBadge count={(r as unknown as StockRow).stock_count} />,
+            sortKey: 'display_stock',
+            render: (r) => <StockBadge count={(r as unknown as StockRow).display_stock} />,
             align: 'center',
           },
           {

@@ -13,6 +13,7 @@ type ProductRow = {
   price: number
   duration_days: number
   stock_count: number
+  display_stock: number
   sold_count: number
   is_active: boolean
   thumbnail_url: string | null

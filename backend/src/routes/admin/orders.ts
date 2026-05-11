@@ -32,6 +32,16 @@ adminOrdersRoute.post('/:id/deliver', async (c) => {
   return c.json({ data })
 })
 
+const fulfillSchema = z.object({
+  credentials: z.string().trim().min(3, 'Credentials minimal 3 karakter').max(2000),
+  note: z.string().trim().max(500).optional(),
+})
+
+adminOrdersRoute.post('/:id/fulfill', zValidator('json', fulfillSchema), async (c) => {
+  const data = await AdminOrdersService.fulfillManual(c.req.param('id'), c.req.valid('json'))
+  return c.json({ data })
+})
+
 const statusSchema = z.object({
   status: z.enum(['pending_payment', 'paid', 'delivering', 'delivered', 'confirmed', 'expired', 'delivery_failed', 'refunded']),
 })

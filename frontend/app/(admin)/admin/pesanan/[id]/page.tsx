@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { AdminHeader } from '@/components/admin/admin-header'
 import { StatusBadge } from '@/components/admin/status-badge'
 import { OrderActions } from './order-actions'
+import { FulfillForm } from './fulfill-form'
 import { adminFetch } from '@/lib/admin-fetch'
 import { formatRupiah, formatDateTime } from '@/lib/utils'
 
@@ -57,6 +58,10 @@ export default async function AdminPesananDetailPage({ params }: Props) {
             <Row label="Terkirim" value={order.delivered_at ? formatDateTime(order.delivered_at) : '—'} />
             <Row label="Dibuat" value={formatDateTime(order.created_at)} />
           </dl>
+
+          {['paid', 'delivery_failed'].includes(order.status) ? (
+            <FulfillForm orderId={id} productName={order.product?.name ?? 'Akun Digital'} />
+          ) : null}
 
           <OrderActions orderId={id} status={order.status} />
         </div>

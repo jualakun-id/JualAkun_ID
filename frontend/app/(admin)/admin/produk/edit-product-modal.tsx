@@ -21,6 +21,7 @@ type ProductDetail = {
   guarantee_days: number
   is_active: boolean
   stock_count: number
+  display_stock: number
   sold_count: number
   original_price: number | null
   discount_starts_at: string | null
@@ -84,7 +85,7 @@ export function EditProductModal({ open, productId, categories, onClose, initial
       title={product?.name ?? 'Edit Produk'}
       description={
         product
-          ? `SKU ${product.slug} · Stok: ${product.stock_count} · Terjual: ${product.sold_count}`
+          ? `SKU ${product.slug} · Stok Tampilan: ${product.display_stock} · Terjual: ${product.sold_count}`
           : 'Memuat data produk...'
       }
       size="xl"

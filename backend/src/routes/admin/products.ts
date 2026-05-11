@@ -13,7 +13,7 @@ const listQuerySchema = z.object({
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().max(100).default(20),
   sort_by: z
-    .enum(['name', 'slug', 'price', 'stock_count', 'sold_count', 'is_active', 'created_at'])
+    .enum(['name', 'slug', 'price', 'stock_count', 'display_stock', 'sold_count', 'is_active', 'created_at'])
     .optional(),
   sort_dir: z.enum(['asc', 'desc']).default('desc'),
 })
@@ -43,6 +43,8 @@ const createSchema = z.object({
   original_price: z.coerce.number().int().positive().nullable().optional(),
   discount_starts_at: z.string().datetime().nullable().optional(),
   discount_ends_at: z.string().datetime().nullable().optional(),
+  // Display stock — angka tampilan publik, admin-controlled
+  display_stock: z.coerce.number().int().nonnegative().optional(),
 })
 
 adminProductsRoute.post('/', zValidator('json', createSchema), async (c) => {
