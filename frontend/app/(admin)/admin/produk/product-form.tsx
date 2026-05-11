@@ -17,6 +17,8 @@ type SupplierOption = {
   wallet_price_text: string
   available: number
   sold: number
+  /** ID produk JualAkun yang sudah claim supplier ini. null = belum ada. */
+  taken_by_product_id: string | null
 }
 
 type Props = {
@@ -306,11 +308,18 @@ export function ProductForm({ categories, initial, embedded, onSuccess }: Props)
             className="w-full rounded-lg border-2 border-black/15 bg-white px-4 py-3 text-sm font-medium text-ink focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/25"
           >
             <option value="">— Tidak pakai supplier (full manual) —</option>
-            {supplierOptions.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name} · {s.wallet_price_text} · stok {s.available}
-              </option>
-            ))}
+            {supplierOptions
+              .filter((s) => {
+                // Hide supplier yang sudah di-claim produk lain.
+                // Keep yang null (belum di-claim) atau yang di-claim oleh produk ini sendiri.
+                if (!s.taken_by_product_id) return true
+                return s.taken_by_product_id === initial?.id
+              })
+              .map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name} · {s.wallet_price_text} · stok {s.available}
+                </option>
+              ))}
           </select>
         )}
       </Field>

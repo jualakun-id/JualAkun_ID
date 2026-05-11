@@ -90,7 +90,12 @@ export class SupplierCanbosoService {
     }
   }
 
-  /** List semua produk supplier — return minimal subset untuk admin UI. */
+  /**
+   * List semua produk supplier — return subset untuk admin UI.
+   * Tambah field `taken_by_product_id` per produk: kalau supplier product
+   * sudah di-link ke produk JualAkun, tampilkan id-nya supaya frontend
+   * bisa filter (kecuali untuk produk yang sedang di-edit).
+   */
   static async listProducts() {
     // Timeout 10s — Canboso server di VN kadang lambat, tapi jangan biarkan
     // Workers hang sampai 30s (Cloudflare CPU limit). Kalau timeout, throw
@@ -116,6 +121,20 @@ export class SupplierCanbosoService {
       throw new ApiError('INTERNAL_ERROR', `Supplier GET /products gagal (${res.status}): ${body.slice(0, 200)}`, 502)
     }
     const json = (await res.json()) as ProductsResponse
+
+    // Fetch mapping supplier_product_id → jualakun product.id supaya frontend
+    // tahu mana yang sudah di-claim. 1 supplier product = 1 jualakun product
+    // (no double-link) — supaya admin tidak bingung "kok stok di-mirror ke 2".
+    const supabase = createAdminClient()
+    const { data: mapped } = await supabase
+      .from('products')
+      .select('id, supplier_product_id')
+      .not('supplier_product_id', 'is', null)
+    const takenMap = new Map<string, string>()
+    for (const p of (mapped ?? []) as { id: string; supplier_product_id: string }[]) {
+      takenMap.set(p.supplier_product_id, p.id)
+    }
+
     return {
       walletCurrency: json.walletCurrency,
       products: json.products.map((p) => ({
@@ -128,6 +147,7 @@ export class SupplierCanbosoService {
         warranty_type: p.warrantyType,
         warranty_days: p.warrantyDays,
         hidden: p.hiddenInBotMenu,
+        taken_by_product_id: takenMap.get(p._id) ?? null,
       })),
     }
   }
