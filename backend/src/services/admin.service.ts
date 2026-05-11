@@ -1036,6 +1036,107 @@ export class AdminDashboardService {
     if (error) throw new ApiError('INTERNAL_ERROR', error.message, 500)
     return data ?? []
   }
+
+  /**
+   * Analytics overview — revenue + profit aggregate untuk periode + compare
+   * dengan periode sebelumnya untuk growth %. Pakai untuk KPI card row di
+   * /admin/analytics.
+   */
+  static async getAnalyticsOverview(days: number) {
+    const supabase = createAdminClient()
+    const now = Date.now()
+    const sinceCurrent = new Date(now - days * 86400_000).toISOString()
+    const sincePrevious = new Date(now - 2 * days * 86400_000).toISOString()
+
+    const aggregate = async (fromIso: string, toIso?: string) => {
+      let query = supabase
+        .from('orders')
+        .select('total_idr, cost_idr, status')
+        .in('status', ['paid', 'delivered', 'confirmed'])
+        .gte('created_at', fromIso)
+      if (toIso) query = query.lt('created_at', toIso)
+      const { data } = await query
+      const rows = (data ?? []) as Array<{ total_idr: number; cost_idr: number | null; status: string }>
+      const revenue = rows.reduce((s, r) => s + (r.total_idr ?? 0), 0)
+      const orders = rows.length
+      const withCost = rows.filter((r) => r.cost_idr !== null)
+      const profit = withCost.reduce((s, r) => s + (r.total_idr - (r.cost_idr ?? 0)), 0)
+      const revenueTracked = withCost.reduce((s, r) => s + r.total_idr, 0)
+      const margin = revenueTracked > 0 ? Math.round((profit / revenueTracked) * 100) : 0
+      return { revenue, orders, profit, margin, orders_tracked: withCost.length }
+    }
+
+    const [current, previous] = await Promise.all([
+      aggregate(sinceCurrent),
+      aggregate(sincePrevious, sinceCurrent),
+    ])
+
+    const growth = (a: number, b: number) => (b > 0 ? Math.round(((a - b) / b) * 100) : a > 0 ? 100 : 0)
+    const aov = current.orders > 0 ? Math.round(current.revenue / current.orders) : 0
+    const aovPrev = previous.orders > 0 ? Math.round(previous.revenue / previous.orders) : 0
+
+    return {
+      current,
+      previous,
+      growth: {
+        revenue_pct: growth(current.revenue, previous.revenue),
+        orders_pct: growth(current.orders, previous.orders),
+        profit_pct: growth(current.profit, previous.profit),
+        aov_pct: growth(aov, aovPrev),
+      },
+      aov,
+      aov_prev: aovPrev,
+    }
+  }
+
+  /**
+   * Status breakdown — count order per status dalam periode. Pakai untuk
+   * funnel visualization (pending → paid → delivered → confirmed).
+   */
+  static async getStatusBreakdown(days: number) {
+    const supabase = createAdminClient()
+    const since = new Date(Date.now() - days * 86400_000).toISOString()
+    const { data } = await supabase
+      .from('orders')
+      .select('status')
+      .gte('created_at', since)
+
+    const counts: Record<string, number> = {
+      pending_payment: 0, paid: 0, delivered: 0, confirmed: 0,
+      refunded: 0, expired: 0, delivery_failed: 0,
+    }
+    for (const r of (data ?? []) as Array<{ status: string }>) {
+      counts[r.status] = (counts[r.status] ?? 0) + 1
+    }
+    return counts
+  }
+
+  /**
+   * Profit trend harian — gabungan dengan revenue trend supaya 1 chart bisa
+   * tampilkan dua line (revenue + profit).
+   */
+  static async getProfitTrend(days: number) {
+    const supabase = createAdminClient()
+    const since = new Date(Date.now() - days * 86400_000).toISOString()
+    const { data } = await supabase
+      .from('orders')
+      .select('paid_at, total_idr, cost_idr')
+      .in('status', ['paid', 'delivered', 'confirmed'])
+      .gte('paid_at', since)
+      .order('paid_at', { ascending: true })
+
+    const buckets = new Map<string, { revenue: number; profit: number; orders: number }>()
+    for (const r of (data ?? []) as Array<{ paid_at: string | null; total_idr: number; cost_idr: number | null }>) {
+      if (!r.paid_at) continue
+      const day = r.paid_at.slice(0, 10)
+      const cur = buckets.get(day) ?? { revenue: 0, profit: 0, orders: 0 }
+      cur.revenue += r.total_idr
+      cur.profit += r.cost_idr !== null ? r.total_idr - r.cost_idr : 0
+      cur.orders += 1
+      buckets.set(day, cur)
+    }
+    return Array.from(buckets.entries()).map(([date, v]) => ({ date, ...v }))
+  }
 }
 
 export class AdminUsersService {

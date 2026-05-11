@@ -16,10 +16,25 @@ adminAnalyticsRoute.get('/profit', async (c) => {
   return c.json({ data })
 })
 
-const revenueSchema = z.object({ days: z.coerce.number().int().positive().max(365).default(30) })
+const periodSchema = z.object({ days: z.coerce.number().int().positive().max(365).default(30) })
 
-adminAnalyticsRoute.get('/revenue', zValidator('query', revenueSchema), async (c) => {
+adminAnalyticsRoute.get('/revenue', zValidator('query', periodSchema), async (c) => {
   const data = await AdminDashboardService.revenueTrend(c.req.valid('query').days)
+  return c.json({ data })
+})
+
+adminAnalyticsRoute.get('/overview', zValidator('query', periodSchema), async (c) => {
+  const data = await AdminDashboardService.getAnalyticsOverview(c.req.valid('query').days)
+  return c.json({ data })
+})
+
+adminAnalyticsRoute.get('/status-breakdown', zValidator('query', periodSchema), async (c) => {
+  const data = await AdminDashboardService.getStatusBreakdown(c.req.valid('query').days)
+  return c.json({ data })
+})
+
+adminAnalyticsRoute.get('/profit-trend', zValidator('query', periodSchema), async (c) => {
+  const data = await AdminDashboardService.getProfitTrend(c.req.valid('query').days)
   return c.json({ data })
 })
 
