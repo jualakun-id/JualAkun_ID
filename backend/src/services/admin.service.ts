@@ -1090,11 +1090,27 @@ export class AdminUsersService {
     const supabase = createAdminClient()
     const { data: profile, error: profErr } = await supabase
       .from('profiles')
-      .select('id, full_name, phone_wa, role, status, credits, joined_at, referral_code, referred_by')
+      .select('id, full_name, phone_wa, role, status, credits, joined_at, referral_code')
       .eq('id', userId)
       .maybeSingle()
     if (profErr) throw new ApiError('INTERNAL_ERROR', profErr.message, 500)
     if (!profile) throw new ApiError('NOT_FOUND', 'User tidak ditemukan', 404)
+
+    // Cari referred_by dari referrals table (kalau ada)
+    const { data: referredByRow } = await supabase
+      .from('referrals')
+      .select('referrer_user_id, profiles!referrals_referrer_user_id_fkey(full_name, referral_code)')
+      .eq('referred_user_id', userId)
+      .maybeSingle()
+    const referredByData = referredByRow as null | {
+      referrer_user_id: string
+      profiles: { full_name: string | null; referral_code: string } | { full_name: string | null; referral_code: string }[]
+    }
+    const referrerProfile = referredByData
+      ? Array.isArray(referredByData.profiles)
+        ? referredByData.profiles[0]
+        : referredByData.profiles
+      : null
 
     // Email dari auth.users
     const { data: authUser } = await supabase.auth.admin.getUserById(userId)
@@ -1131,6 +1147,9 @@ export class AdminUsersService {
       ...profile,
       email,
       last_sign_in_at: lastSignIn,
+      referred_by: referrerProfile
+        ? `${referrerProfile.full_name ?? '—'} (${referrerProfile.referral_code})`
+        : null,
       stats: {
         total_orders: orders.length,
         paid_orders: paidOrders.length,
