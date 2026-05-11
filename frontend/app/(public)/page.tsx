@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import {
   Zap, Shield, Headphones, Percent, Lock, MessageCircle,
   CheckCircle, CreditCard, Bell, ShoppingCart,
@@ -14,7 +15,6 @@ import { StepCard } from '@/components/landing/step-card'
 import { TrustCard } from '@/components/landing/trust-card'
 import { TestimonialCard } from '@/components/landing/testimonial-card'
 import { FAQAccordion } from '@/components/landing/faq-accordion'
-import { BrandLogo } from '@/components/landing/brand-logo'
 import { ProductBrowserSection } from '@/components/landing/product-browser-section'
 import { Reveal } from '@/components/reveal'
 
@@ -161,20 +161,17 @@ export default async function HomePage() {
               <BenefitItem icon={Percent}       title="Lebih Hemat 60–70%"     desc="Harga di bawah langganan resmi langsung." />
             </div>
 
-            {/* Center illustration */}
+            {/* Center illustration — Vexx-style vault dengan brand logos berhamburan */}
             <div className="flex justify-center order-1 md:order-2">
-              <div className="relative w-64 h-64 bg-brand-50 rounded-3xl p-6 flex items-center justify-center">
-                <div className="grid grid-cols-3 gap-3">
-                  {(['chatgpt','canva','notion','applemusic','duolingo','discord'] as const).map((b, i) => (
-                    <div
-                      key={b}
-                      className="w-14 h-14 bg-white rounded-2xl shadow-sm flex items-center justify-center animate-float"
-                      style={{ animationDelay: `${i * 0.2}s` }}
-                    >
-                      <BrandLogo brand={b} size={28} />
-                    </div>
-                  ))}
-                </div>
+              <div className="relative w-full max-w-sm aspect-square rounded-2xl overflow-hidden border-2 border-black shadow-[0_4px_0_rgba(0,0,0,0.9)]">
+                <Image
+                  src="/landing/why-us.webp"
+                  alt="Vault berisi akun premium asli dari brand-brand top — Google, ChatGPT, Claude, Adobe, Canva, Notion, Suno, dan lainnya"
+                  fill
+                  sizes="(min-width: 768px) 384px, 90vw"
+                  className="object-cover"
+                  priority={false}
+                />
               </div>
             </div>
 
