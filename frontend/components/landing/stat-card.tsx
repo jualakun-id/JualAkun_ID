@@ -54,14 +54,14 @@ type StatCardProps = {
 export function StatCard({ variant, value, label, icon: Icon, imageUrl }: StatCardProps) {
   const v = VARIANTS[variant]
 
-  // Mode dengan image art
+  // Mode dengan image art — image 16:9 + text below (card height adjusts otomatis)
   if (imageUrl) {
     return (
       <div
-        className={`${v.bg} rounded-2xl border-2 border-black shadow-[0_4px_0_rgba(0,0,0,0.9)] relative aspect-[4/3] flex flex-col p-3 gap-2`}
+        className={`${v.bg} rounded-2xl border-2 border-black shadow-[0_4px_0_rgba(0,0,0,0.9)] flex flex-col p-3 gap-2.5`}
       >
-        {/* Art image — framed dengan border + colored padding all sides */}
-        <div className="relative rounded-lg border-2 border-black overflow-hidden flex-1">
+        {/* Art image — 16:9 aspect ratio */}
+        <div className="relative rounded-lg border-2 border-black overflow-hidden aspect-[16/9] w-full">
           <Image
             src={imageUrl}
             alt={label}
@@ -71,7 +71,7 @@ export function StatCard({ variant, value, label, icon: Icon, imageUrl }: StatCa
           />
         </div>
         {/* Value + label below */}
-        <div className="shrink-0 text-center px-1">
+        <div className="shrink-0 text-center px-1 pb-1">
           <div className={`text-xl sm:text-2xl font-extrabold tracking-tight leading-none ${v.text}`}>
             {value}
           </div>

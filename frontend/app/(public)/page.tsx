@@ -132,13 +132,13 @@ export default async function HomePage() {
           </Reveal>
           <Reveal delay={1} className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-5">
             <StatCard variant="blue"   value="10+"  label="Akun Eksklusif"
-              imageUrl="https://clfewheqatyaefohmdpn.supabase.co/storage/v1/object/public/product-thumbnails/stat-blue.webp" />
+              imageUrl="https://clfewheqatyaefohmdpn.supabase.co/storage/v1/object/public/product-thumbnails/stat-blue.webp?v=2" />
             <StatCard variant="red"    value="100%" label="Asli &amp; Resmi"
-              imageUrl="https://clfewheqatyaefohmdpn.supabase.co/storage/v1/object/public/product-thumbnails/stat-red.webp" />
+              imageUrl="https://clfewheqatyaefohmdpn.supabase.co/storage/v1/object/public/product-thumbnails/stat-red.webp?v=2" />
             <StatCard variant="green"  value="< 5m" label="Kirim Otomatis"
-              imageUrl="https://clfewheqatyaefohmdpn.supabase.co/storage/v1/object/public/product-thumbnails/stat-green.webp" />
+              imageUrl="https://clfewheqatyaefohmdpn.supabase.co/storage/v1/object/public/product-thumbnails/stat-green.webp?v=2" />
             <StatCard variant="yellow" value="24/7" label="Support Cepat"
-              imageUrl="https://clfewheqatyaefohmdpn.supabase.co/storage/v1/object/public/product-thumbnails/stat-yellow.webp" />
+              imageUrl="https://clfewheqatyaefohmdpn.supabase.co/storage/v1/object/public/product-thumbnails/stat-yellow.webp?v=2" />
           </Reveal>
         </div>
       </section>
