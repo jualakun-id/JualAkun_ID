@@ -2,8 +2,8 @@ import Link from 'next/link'
 import Image from 'next/image'
 import {
   Zap, Shield, Headphones, Percent, Lock, MessageCircle,
-  CheckCircle, CreditCard, Bell, ShoppingCart,
-  Wallet, Package, Star, Users, TrendingUp, Award,
+  CheckCircle, CreditCard,
+  Users, TrendingUp, Award,
 } from 'lucide-react'
 import { serverFetch } from '@/lib/server-fetch'
 import type { Product } from '@/types'
@@ -198,12 +198,12 @@ export default async function HomePage() {
             5 langkah mudah untuk mendapatkan akun digital favorit kamu.
           </p>
           <div className="mt-12 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6 md:gap-4 max-w-3xl md:max-w-none mx-auto">
-            <StepCard num={1} label="Pilih Produk"     icon={Package} />
-            <StepCard num={2} label="Checkout"         icon={ShoppingCart} />
-            <StepCard num={3} label="Bayar"            icon={Wallet} />
-            <StepCard num={4} label="Pesanan Diterima" icon={Bell} />
+            <StepCard num={1} label="Pilih Produk"     imageSrc="/landing/step-1-pilih-produk.webp" />
+            <StepCard num={2} label="Checkout"         imageSrc="/landing/step-2-checkout.webp" />
+            <StepCard num={3} label="Bayar"            imageSrc="/landing/step-3-bayar.webp" />
+            <StepCard num={4} label="Pesanan Diterima" imageSrc="/landing/step-4-pesanan-diterima.webp" />
             <div className="col-span-2 sm:col-span-3 md:col-span-1 flex justify-center">
-              <StepCard num={5} label="Nikmati Akun" icon={Star} />
+              <StepCard num={5} label="Nikmati Akun" imageSrc="/landing/step-5-nikmati-akun.webp" />
             </div>
           </div>
         </div>
