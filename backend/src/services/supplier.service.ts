@@ -36,7 +36,9 @@ type ProductsResponse = {
  */
 export class SupplierCanbosoService {
   private static getKey(): string {
-    const key = process.env.SUPPLIER_CANBOSO_API_KEY
+    // Trim — PowerShell pipe ke `wrangler secret put` kadang append \r\n
+    // ke value, bikin auth gagal di supplier walaupun key benar.
+    const key = process.env.SUPPLIER_CANBOSO_API_KEY?.trim()
     if (!key) {
       throw new ApiError(
         'INTERNAL_ERROR',
