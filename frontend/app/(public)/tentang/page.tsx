@@ -130,7 +130,7 @@ export default function TentangPage() {
             </p>
             <div className="mt-5 flex flex-wrap gap-3">
               <Link
-                href="/#ai"
+                href="/#produk"
                 className="bg-brand-500 hover:bg-brand-400 text-ink font-bold px-5 py-2.5 rounded-lg border-2 border-black shadow-[0_3px_0_rgba(0,0,0,0.9)] hover:shadow-[0_4px_0_rgba(0,0,0,0.9)] hover:-translate-y-0.5 active:translate-y-1 active:shadow-[0_1px_0_rgba(0,0,0,0.9)] transition-all duration-150 text-sm inline-flex items-center"
               >
                 Lihat Katalog

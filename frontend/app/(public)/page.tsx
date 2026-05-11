@@ -15,7 +15,7 @@ import { TrustCard } from '@/components/landing/trust-card'
 import { TestimonialCard } from '@/components/landing/testimonial-card'
 import { FAQAccordion } from '@/components/landing/faq-accordion'
 import { BrandLogo } from '@/components/landing/brand-logo'
-import { CategoryProductsSection } from '@/components/landing/category-products-section'
+import { ProductBrowserSection } from '@/components/landing/product-browser-section'
 import { Reveal } from '@/components/reveal'
 
 type CatalogResponse = {
@@ -23,31 +23,15 @@ type CatalogResponse = {
   pagination: { page: number; limit: number; total: number; total_pages: number }
 }
 
+type Category = { id: string; name: string; slug: string; sort_order: number; is_active: boolean }
+
 export const revalidate = 300
 
-const CATEGORY_SECTIONS = [
-  {
-    slug: 'ai',
-    label: 'AI & Asisten',
-    desc: 'ChatGPT Plus, Claude Pro, Grok Super, Gemini AI, Google Ultra — chatbot & asisten AI premium.',
-  },
-  {
-    slug: 'kreator',
-    label: 'Kreator & Multimedia',
-    desc: 'Adobe CC, Canva Pro, CapCut Pro, Suno Music, Kling AI, ElevenLabs — tools content creator.',
-  },
-] as const
-
 export default async function HomePage() {
-  const [ai, kreator] = await Promise.all([
-    serverFetch<CatalogResponse>('/catalog?category_slug=ai&sort=sold_count&limit=8', { revalidate: 300 }),
-    serverFetch<CatalogResponse>('/catalog?category_slug=kreator&sort=sold_count&limit=8', { revalidate: 300 }),
+  const [initialCatalog, categories] = await Promise.all([
+    serverFetch<CatalogResponse>('/catalog?sort=sold_count&limit=8', { revalidate: 300 }),
+    serverFetch<Category[]>('/catalog/categories', { revalidate: 300 }),
   ])
-
-  const sectionsData = [
-    { ...CATEGORY_SECTIONS[0], data: ai },
-    { ...CATEGORY_SECTIONS[1], data: kreator },
-  ]
 
   const faqSchema = {
     '@context': 'https://schema.org',
@@ -84,7 +68,7 @@ export default async function HomePage() {
               </p>
               <div className="mt-7 sm:mt-8 flex flex-wrap items-center justify-center md:justify-start gap-3 sm:gap-4">
                 <Link
-                  href="/#ai"
+                  href="/#produk"
                   className="group bg-white text-brand-700 hover:text-brand-800 font-extrabold px-7 sm:px-8 py-3.5 rounded-lg border-2 border-black shadow-[0_4px_0_rgba(0,0,0,0.9)] hover:shadow-[0_6px_0_rgba(0,0,0,0.9)] hover:-translate-y-0.5 active:translate-y-1 active:shadow-[0_2px_0_rgba(0,0,0,0.9)] transition-all duration-150 text-base inline-flex items-center gap-2"
                 >
                   Lihat Layanan
@@ -203,17 +187,11 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── CATEGORY SECTIONS ──────────────────────────────── */}
-      {sectionsData.map((section, idx) => (
-        <CategoryProductsSection
-          key={section.slug}
-          slug={section.slug}
-          label={section.label}
-          desc={section.desc}
-          initialData={section.data}
-          bgAlt={idx % 2 === 0}
-        />
-      ))}
+      {/* ── PRODUCT CATALOG (unified, dgn filter category dropdown + sort + pagination) ── */}
+      <ProductBrowserSection
+        categories={(categories ?? []).map((c) => ({ slug: c.slug, name: c.name }))}
+        initialData={initialCatalog}
+      />
 
       {/* ── HOW IT WORKS ───────────────────────────────────── */}
       <section id="cara-pesan" className="bg-white py-16 md:py-20 scroll-mt-24">

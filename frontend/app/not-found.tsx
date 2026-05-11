@@ -44,7 +44,7 @@ export default function NotFound() {
             Ke Beranda
           </Link>
           <Link
-            href="/#ai"
+            href="/#produk"
             className="inline-flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-ink font-extrabold px-6 py-3 rounded-lg border-2 border-black shadow-[0_3px_0_rgba(0,0,0,0.9)] hover:shadow-[0_5px_0_rgba(0,0,0,0.9)] hover:-translate-y-0.5 active:translate-y-1 active:shadow-[0_1px_0_rgba(0,0,0,0.9)] transition-all duration-150 text-sm"
           >
             <Search size={16} strokeWidth={2.5} />

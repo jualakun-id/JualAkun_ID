@@ -27,9 +27,8 @@ Jualakun.id adalah platform marketplace asal Indonesia (domain .id) yang fokus m
 
 ## Beranda
 
-- [Beranda](${SITE_URL}/): Halaman utama dengan list semua kategori produk dan benefits
-- [AI & Asisten](${SITE_URL}/#ai): Section produk AI assistants (ChatGPT, Claude, Grok, Gemini, Google Ultra)
-- [Kreator & Multimedia](${SITE_URL}/#kreator): Section produk untuk content creator (Adobe, Canva, CapCut, Suno, Kling, ElevenLabs)
+- [Beranda](${SITE_URL}/): Halaman utama dengan benefits dan stats
+- [Katalog Produk](${SITE_URL}/#produk): Daftar lengkap produk dengan filter kategori (AI & Asisten, Kreator & Multimedia) + sort (Terlaris, Terbaru, Termurah, Termahal) + pagination
 - [Cara Berlangganan](${SITE_URL}/#cara-pesan): 5 langkah cara membeli akun di Jualakun.id
 - [FAQ](${SITE_URL}/#faq): Pertanyaan yang sering ditanyakan tentang garansi, pembayaran, legalitas
 

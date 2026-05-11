@@ -34,8 +34,7 @@ export function Footer() {
           <FooterColumn
             title="Produk"
             links={[
-              { href: '/#ai', label: 'AI & Asisten' },
-              { href: '/#kreator', label: 'Kreator & Multimedia' },
+              { href: '/#produk', label: 'Lihat Katalog' },
               { href: '/#cara-pesan', label: 'Cara Pesan' },
               { href: '/#faq', label: 'FAQ' },
             ]}

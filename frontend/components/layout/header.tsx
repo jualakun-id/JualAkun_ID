@@ -7,8 +7,7 @@ import { Menu, X } from 'lucide-react'
 import { Logo } from '@/components/branding/logo'
 
 const NAV_ITEMS = [
-  { href: '/#ai', label: 'AI & Asisten' },
-  { href: '/#kreator', label: 'Kreator' },
+  { href: '/#produk', label: 'Katalog' },
   { href: '/#cara-pesan', label: 'Cara Pesan' },
   { href: '/#faq', label: 'FAQ' },
 ]

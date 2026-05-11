@@ -70,24 +70,18 @@ const breadcrumbSchema = {
     {
       '@type': 'ListItem',
       position: 2,
-      name: 'AI & Asisten',
-      item: `${SITE_URL}/#ai`,
+      name: 'Katalog Produk',
+      item: `${SITE_URL}/#produk`,
     },
     {
       '@type': 'ListItem',
       position: 3,
-      name: 'Kreator & Multimedia',
-      item: `${SITE_URL}/#kreator`,
-    },
-    {
-      '@type': 'ListItem',
-      position: 4,
       name: 'Cara Pesan',
       item: `${SITE_URL}/#cara-pesan`,
     },
     {
       '@type': 'ListItem',
-      position: 5,
+      position: 4,
       name: 'FAQ',
       item: `${SITE_URL}/#faq`,
     },
