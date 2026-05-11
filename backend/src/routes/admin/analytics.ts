@@ -38,6 +38,11 @@ adminAnalyticsRoute.get('/profit-trend', zValidator('query', periodSchema), asyn
   return c.json({ data })
 })
 
+adminAnalyticsRoute.get('/category-breakdown', zValidator('query', periodSchema), async (c) => {
+  const data = await AdminDashboardService.getCategoryBreakdown(c.req.valid('query').days)
+  return c.json({ data })
+})
+
 const topSchema = z.object({ limit: z.coerce.number().int().positive().max(50).default(10) })
 
 adminAnalyticsRoute.get('/top-products', zValidator('query', topSchema), async (c) => {

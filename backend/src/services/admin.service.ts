@@ -1112,6 +1112,44 @@ export class AdminDashboardService {
   }
 
   /**
+   * Revenue + orders breakdown per kategori produk untuk periode tertentu.
+   * Pakai untuk chart "Per-Category Share" — lihat AI vs Kreator share.
+   */
+  static async getCategoryBreakdown(days: number) {
+    const supabase = createAdminClient()
+    const since = new Date(Date.now() - days * 86400_000).toISOString()
+    const { data } = await supabase
+      .from('orders')
+      .select('total_idr, products!inner(category_id, categories!inner(name, slug))')
+      .in('status', ['paid', 'delivered', 'confirmed'])
+      .gte('created_at', since)
+
+    const buckets = new Map<string, { name: string; slug: string; revenue: number; orders: number }>()
+    for (const r of (data ?? []) as Array<{
+      total_idr: number
+      products: { category_id: string; categories: { name: string; slug: string } | { name: string; slug: string }[] } | { category_id: string; categories: { name: string; slug: string } | { name: string; slug: string }[] }[]
+    }>) {
+      const prodRel = Array.isArray(r.products) ? r.products[0] : r.products
+      if (!prodRel) continue
+      const catRel = Array.isArray(prodRel.categories) ? prodRel.categories[0] : prodRel.categories
+      if (!catRel) continue
+      const key = catRel.slug
+      const cur = buckets.get(key) ?? { name: catRel.name, slug: catRel.slug, revenue: 0, orders: 0 }
+      cur.revenue += r.total_idr ?? 0
+      cur.orders += 1
+      buckets.set(key, cur)
+    }
+
+    const totalRevenue = Array.from(buckets.values()).reduce((s, b) => s + b.revenue, 0)
+    return Array.from(buckets.values())
+      .map((b) => ({
+        ...b,
+        share_pct: totalRevenue > 0 ? Math.round((b.revenue / totalRevenue) * 100) : 0,
+      }))
+      .sort((a, b) => b.revenue - a.revenue)
+  }
+
+  /**
    * Profit trend harian — gabungan dengan revenue trend supaya 1 chart bisa
    * tampilkan dua line (revenue + profit).
    */

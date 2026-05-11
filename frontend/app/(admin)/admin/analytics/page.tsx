@@ -2,8 +2,13 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { TrendingUp, TrendingDown, Minus, ShoppingBag, Wallet, Target, DollarSign } from 'lucide-react'
 import { AdminHeader } from '@/components/admin/admin-header'
+import { AutoRefreshControl } from './auto-refresh-control'
 import { adminFetch } from '@/lib/admin-fetch'
 import { formatRupiah, formatDate } from '@/lib/utils'
+
+// Server component data fetch is cached per-request. Untuk auto-refresh
+// trigger refetch, halaman ini set dynamic = 'force-dynamic'.
+export const dynamic = 'force-dynamic'
 
 type Overview = {
   current: { revenue: number; orders: number; profit: number; margin: number; orders_tracked: number }
@@ -15,6 +20,7 @@ type Overview = {
 
 type DailyPoint = { date: string; revenue: number; profit: number; orders: number }
 type StatusBreakdown = Record<string, number>
+type CategorySlice = { name: string; slug: string; revenue: number; orders: number; share_pct: number }
 type TopProduct = { id: string; name: string; sold_count: number; price: number; thumbnail_url: string | null }
 
 type Props = {
@@ -34,10 +40,11 @@ export default async function AdminAnalyticsPage({ searchParams }: Props) {
   const sp = await searchParams
   const days = Math.min(365, Math.max(1, parseInt(sp.days ?? '30', 10) || 30))
 
-  const [overview, profitTrend, statusBreakdown, top] = await Promise.all([
+  const [overview, profitTrend, statusBreakdown, categoryBreakdown, top] = await Promise.all([
     adminFetch<Overview>(`/admin/analytics/overview?days=${days}`),
     adminFetch<DailyPoint[]>(`/admin/analytics/profit-trend?days=${days}`),
     adminFetch<StatusBreakdown>(`/admin/analytics/status-breakdown?days=${days}`),
+    adminFetch<CategorySlice[]>(`/admin/analytics/category-breakdown?days=${days}`),
     adminFetch<TopProduct[]>(`/admin/analytics/top-products?limit=10`),
   ])
 
@@ -52,20 +59,23 @@ export default async function AdminAnalyticsPage({ searchParams }: Props) {
         title="Analytics"
         subtitle={`${days} hari terakhir · vs ${days} hari sebelumnya`}
         rightSlot={
-          <div className="flex flex-wrap gap-1.5">
-            {PERIOD_OPTIONS.map((opt) => (
-              <Link
-                key={opt.value}
-                href={`/admin/analytics?days=${opt.value}`}
-                className={`rounded-md border-2 px-3 py-1.5 text-xs font-bold transition-colors ${
-                  days === opt.value
-                    ? 'border-black bg-brand-500 text-ink shadow-[0_2px_0_rgba(0,0,0,0.9)]'
-                    : 'border-black/15 bg-white text-ink-muted hover:border-brand-400 hover:text-brand-700'
-                }`}
-              >
-                {opt.label}
-              </Link>
-            ))}
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap gap-1.5">
+              {PERIOD_OPTIONS.map((opt) => (
+                <Link
+                  key={opt.value}
+                  href={`/admin/analytics?days=${opt.value}`}
+                  className={`rounded-md border-2 px-3 py-1.5 text-xs font-bold transition-colors ${
+                    days === opt.value
+                      ? 'border-black bg-brand-500 text-ink shadow-[0_2px_0_rgba(0,0,0,0.9)]'
+                      : 'border-black/15 bg-white text-ink-muted hover:border-brand-400 hover:text-brand-700'
+                  }`}
+                >
+                  {opt.label}
+                </Link>
+              ))}
+            </div>
+            <AutoRefreshControl />
           </div>
         }
       />
@@ -138,11 +148,96 @@ export default async function AdminAnalyticsPage({ searchParams }: Props) {
         )}
       </div>
 
-      {/* Funnel + Status breakdown + Top products */}
+      {/* Category share — full width */}
+      <CategoryShareSection categories={categoryBreakdown ?? []} />
+
+      {/* Funnel + Top products */}
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_1fr]">
         <FunnelBreakdown breakdown={statusBreakdown ?? {}} />
         <TopProductsList products={top ?? []} />
       </div>
+    </div>
+  )
+}
+
+const CATEGORY_TONES = [
+  'bg-brand-500 text-ink',
+  'bg-success text-white',
+  'bg-warning text-ink',
+  'bg-danger text-white',
+  'bg-purple-500 text-white',
+]
+
+function CategoryShareSection({ categories }: { categories: CategorySlice[] }) {
+  const totalRevenue = categories.reduce((s, c) => s + c.revenue, 0)
+  const totalOrders = categories.reduce((s, c) => s + c.orders, 0)
+  const maxShare = Math.max(...categories.map((c) => c.share_pct), 1)
+
+  return (
+    <div className="mt-6 rounded-2xl border-2 border-black bg-white p-6 shadow-[0_3px_0_rgba(0,0,0,0.9)]">
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+        <div>
+          <h2 className="font-heading text-xl font-extrabold tracking-tight">Per-Category Share</h2>
+          <p className="mt-0.5 text-xs text-ink-muted">Distribusi revenue & orders per kategori produk.</p>
+        </div>
+        <span className="text-xs text-ink-subtle font-bold">
+          Total: {formatRupiah(totalRevenue)} · {totalOrders} order
+        </span>
+      </div>
+
+      {categories.length === 0 ? (
+        <p className="text-sm text-ink-muted text-center py-8">
+          Belum ada order untuk dianalisis distribusi kategorinya.
+        </p>
+      ) : (
+        <>
+          {/* Stacked horizontal bar (visual single-bar split) */}
+          <div className="flex h-10 rounded-lg border-2 border-black overflow-hidden">
+            {categories.map((c, i) => (
+              <div
+                key={c.slug}
+                className={`${CATEGORY_TONES[i % CATEGORY_TONES.length]} flex items-center justify-center text-xs font-extrabold transition-all hover:brightness-95`}
+                style={{ width: `${c.share_pct}%` }}
+                title={`${c.name}: ${formatRupiah(c.revenue)} · ${c.orders} order · ${c.share_pct}%`}
+              >
+                {c.share_pct >= 8 ? `${c.share_pct}%` : ''}
+              </div>
+            ))}
+          </div>
+
+          {/* Detail per kategori */}
+          <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {categories.map((c, i) => {
+              const tone = CATEGORY_TONES[i % CATEGORY_TONES.length]
+              const barWidth = Math.max((c.share_pct / maxShare) * 100, 4)
+              return (
+                <div key={c.slug} className="rounded-lg border-2 border-black/15 bg-brand-50/30 p-3">
+                  <div className="flex items-center justify-between gap-2 mb-1.5">
+                    <span className="inline-flex items-center gap-1.5">
+                      <span className={`inline-block w-3 h-3 rounded-sm border border-black ${tone}`} aria-hidden="true" />
+                      <span className="font-bold text-sm text-ink">{c.name}</span>
+                    </span>
+                    <span className="text-xs font-extrabold text-ink tabular-nums">{c.share_pct}%</span>
+                  </div>
+                  <div className="text-xs">
+                    <div className="flex items-baseline justify-between">
+                      <span className="text-ink-muted">Revenue</span>
+                      <span className="font-bold tabular-nums">{formatRupiah(c.revenue)}</span>
+                    </div>
+                    <div className="flex items-baseline justify-between mt-0.5">
+                      <span className="text-ink-muted">Orders</span>
+                      <span className="font-bold tabular-nums">{c.orders}</span>
+                    </div>
+                  </div>
+                  <div className="mt-2 h-1 rounded-full bg-gray-200 overflow-hidden">
+                    <div className={tone.split(' ')[0]} style={{ width: `${barWidth}%`, height: '100%' }} />
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </>
+      )}
     </div>
   )
 }
