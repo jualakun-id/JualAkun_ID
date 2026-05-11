@@ -10,9 +10,14 @@ import { createBrowserClient } from '@/lib/supabase'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8787'
 
-type Props = { productId: string; initialStock: number }
+type Props = {
+  productId: string
+  initialStock: number
+  /** Set true kalau di-render dalam Modal — drop card wrapper (border + shadow + padding) */
+  embedded?: boolean
+}
 
-export function StockManager({ productId, initialStock }: Props) {
+export function StockManager({ productId, initialStock, embedded }: Props) {
   const router = useRouter()
   const toast = useToast()
   const fileRef = useRef<HTMLInputElement>(null)
@@ -79,12 +84,24 @@ export function StockManager({ productId, initialStock }: Props) {
     router.refresh()
   }
 
+  const wrapperClass = embedded
+    ? 'space-y-5'
+    : 'space-y-5 rounded-2xl border-2 border-black bg-white p-6 shadow-[0_3px_0_rgba(0,0,0,0.9)]'
+
   return (
-    <div className="space-y-5 rounded-2xl border-2 border-black bg-white p-6 shadow-[0_3px_0_rgba(0,0,0,0.9)]">
-      <div>
-        <h2 className="font-heading text-xl font-extrabold tracking-tight">Kelola Stok</h2>
-        <p className="mt-1 text-sm text-ink-muted">Stok tersedia: <strong>{stockCount}</strong> unit</p>
-      </div>
+    <div className={wrapperClass}>
+      {!embedded ? (
+        <div>
+          <h2 className="font-heading text-xl font-extrabold tracking-tight">Kelola Stok</h2>
+          <p className="mt-1 text-sm text-ink-muted">
+            Stok tersedia: <strong>{stockCount}</strong> unit
+          </p>
+        </div>
+      ) : (
+        <div className="rounded-lg border-2 border-brand-200 bg-brand-50 p-3 text-sm font-bold text-brand-700">
+          Stok tersedia: <span className="text-ink">{stockCount}</span> unit
+        </div>
+      )}
 
       <form onSubmit={handleSingle} className="space-y-3 rounded-lg border border-black/10 bg-brand-50/40 p-4">
         <h3 className="font-heading text-lg font-extrabold">Tambah Single</h3>

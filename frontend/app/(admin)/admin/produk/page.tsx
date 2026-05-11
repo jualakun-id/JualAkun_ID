@@ -1,12 +1,9 @@
-import Link from 'next/link'
 import { AdminHeader } from '@/components/admin/admin-header'
 import { FilterBar } from '@/components/admin/filter-bar'
-import { DataTable } from '@/components/admin/data-table'
-import { StockBadge } from '@/components/admin/stock-badge'
 import { Pagination } from '@/components/admin/pagination'
 import { AddProductButton } from './add-product-button'
+import { ProductsTableClient } from './products-table-client'
 import { adminFetch } from '@/lib/admin-fetch'
-import { formatRupiah } from '@/lib/utils'
 import type { Category } from '@/types'
 
 type ProductRow = {
@@ -38,7 +35,6 @@ export default async function AdminProdukPage({ searchParams }: Props) {
   if (sp.status) params.set('status', sp.status)
   params.set('page', String(page))
 
-  // Fetch list + categories in parallel — categories dipakai untuk dropdown form modal
   const [data, categories] = await Promise.all([
     adminFetch<ListResponse>(`/admin/products?${params.toString()}`),
     adminFetch<Category[]>('/catalog/categories'),
@@ -70,63 +66,10 @@ export default async function AdminProdukPage({ searchParams }: Props) {
       />
 
       <div className="mt-4">
-        <DataTable
-          rows={(data?.products ?? []) as unknown as Record<string, unknown>[]}
-          columns={[
-            {
-              key: 'no',
-              header: 'No',
-              render: (_r, idx) => (
-                <span className="font-mono text-xs font-bold text-ink-subtle tabular-nums">
-                  {rowOffset + idx + 1}
-                </span>
-              ),
-              align: 'center',
-              className: 'w-12',
-            },
-            {
-              key: 'name',
-              header: 'Produk',
-              render: (r) => {
-                const row = r as unknown as ProductRow
-                const cat = Array.isArray(row.categories) ? row.categories[0] : row.categories
-                return (
-                  <Link href={`/admin/produk/${row.id}`} className="hover:text-brand-700">
-                    <div className="font-bold text-ink">{row.name}</div>
-                    <div className="text-xs text-ink-subtle font-medium">{cat?.name ?? '—'} · {row.duration_days} hari</div>
-                  </Link>
-                )
-              },
-            },
-            {
-              key: 'sku',
-              header: 'SKU',
-              render: (r) => {
-                const row = r as unknown as ProductRow
-                return (
-                  <span className="inline-flex items-center rounded-md border border-black/10 bg-brand-50/40 px-2 py-1 font-mono text-xs font-bold text-ink-muted">
-                    {row.slug}
-                  </span>
-                )
-              },
-            },
-            { key: 'price', header: 'Harga', render: (r) => formatRupiah((r as unknown as ProductRow).price), align: 'right' },
-            { key: 'stock_count', header: 'Stok', render: (r) => <StockBadge count={(r as unknown as ProductRow).stock_count} />, align: 'center' },
-            { key: 'sold_count', header: 'Terjual', render: (r) => (r as unknown as ProductRow).sold_count.toLocaleString('id-ID'), align: 'right' },
-            {
-              key: 'is_active',
-              header: 'Status',
-              render: (r) => {
-                const active = (r as unknown as ProductRow).is_active
-                return (
-                  <span className={`inline-flex items-center rounded-md border px-2.5 py-1 text-xs font-bold whitespace-nowrap ${active ? 'bg-success/15 text-success border-success/40' : 'bg-gray-100 text-ink-muted border-gray-300'}`}>
-                    {active ? 'Aktif' : 'Draft'}
-                  </span>
-                )
-              },
-              align: 'center',
-            },
-          ]}
+        <ProductsTableClient
+          products={data?.products ?? []}
+          categories={categories ?? []}
+          rowOffset={rowOffset}
         />
 
         {data?.pagination ? (
