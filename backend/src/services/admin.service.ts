@@ -320,9 +320,10 @@ export class AdminOrdersService {
     let query = supabase
       .from('orders')
       .select(
-        `id, order_number, total_idr, status, payment_method, payment_status,
-         created_at, paid_at, delivered_at,
-         products!inner ( name ),
+        `id, order_number, total_idr, cost_idr, status, payment_method, payment_status,
+         created_at, paid_at, delivered_at, expires_at,
+         products!inner ( name, slug, supplier_product_id ),
+         profiles!orders_user_id_fkey ( full_name, phone_wa ),
          user_id`,
         { count: 'exact' },
       )
@@ -520,6 +521,62 @@ export class AdminOrdersService {
       })
     }
     return { ok: true }
+  }
+
+  /**
+   * Admin manual mark order as confirmed (buyer lupa konfirmasi setelah delivered).
+   */
+  static async markConfirmed(orderId: string) {
+    const supabase = createAdminClient()
+    const { data: order } = await supabase
+      .from('orders')
+      .select('id, status, order_number')
+      .eq('id', orderId)
+      .maybeSingle()
+    if (!order) throw new ApiError('NOT_FOUND', 'Pesanan tidak ditemukan', 404)
+    if (order.status !== 'delivered') {
+      throw new ApiError('VALIDATION_ERROR', `Order status '${order.status}' — hanya bisa confirm dari 'delivered'`, 400)
+    }
+    const { error } = await supabase
+      .from('orders')
+      .update({ status: 'confirmed' })
+      .eq('id', orderId)
+    if (error) throw new ApiError('INTERNAL_ERROR', error.message, 500)
+    return { ok: true, order_number: (order as { order_number: string }).order_number }
+  }
+
+  /**
+   * Resend notif yang sudah ada di notifications_log. Re-trigger sesuai
+   * channel + template asli. Pakai untuk credential delivery yang gagal /
+   * buyer minta resend.
+   */
+  static async resendNotification(orderId: string, notifId: string) {
+    const supabase = createAdminClient()
+    const { data: notif } = await supabase
+      .from('notifications_log')
+      .select('id, channel, template, user_id, order_id')
+      .eq('id', notifId)
+      .eq('order_id', orderId)
+      .maybeSingle()
+    if (!notif) throw new ApiError('NOT_FOUND', 'Notifikasi tidak ditemukan', 404)
+
+    // Untuk credential delivery, paling akurat trigger ulang via PaymentService.notifyBuyerDelivered
+    if (notif.template === 'account_delivered') {
+      const { data: order } = await supabase
+        .from('orders')
+        .select('id, user_id, product_id, order_number, total_idr, status')
+        .eq('id', orderId)
+        .maybeSingle()
+      if (!order) throw new ApiError('NOT_FOUND', 'Order tidak ditemukan', 404)
+      await PaymentService.notifyBuyerDelivered(order as {
+        id: string; user_id: string; product_id: string; order_number: string; total_idr: number; status: string
+      })
+      return { ok: true, resent: 'account_delivered' }
+    }
+
+    // Untuk template lain, mark notif lama jadi 'failed' supaya cron retry pick up
+    await supabase.from('notifications_log').update({ status: 'failed' }).eq('id', notifId)
+    return { ok: true, requeued: true }
   }
 
   /**

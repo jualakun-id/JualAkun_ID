@@ -50,6 +50,16 @@ adminOrdersRoute.post('/:id/supplier-purchase', async (c) => {
   return c.json({ data })
 })
 
+adminOrdersRoute.post('/:id/confirm', async (c) => {
+  const data = await AdminOrdersService.markConfirmed(c.req.param('id'))
+  return c.json({ data })
+})
+
+adminOrdersRoute.post('/:id/notifications/:notifId/resend', async (c) => {
+  const data = await AdminOrdersService.resendNotification(c.req.param('id'), c.req.param('notifId'))
+  return c.json({ data })
+})
+
 const statusSchema = z.object({
   status: z.enum(['pending_payment', 'paid', 'delivering', 'delivered', 'confirmed', 'expired', 'delivery_failed', 'refunded']),
 })
