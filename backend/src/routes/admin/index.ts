@@ -8,6 +8,7 @@ import { adminCouponsRoute } from './coupons'
 import { adminUsersRoute } from './users'
 import { adminAnalyticsRoute } from './analytics'
 import { adminNotificationsRoute } from './notifications'
+import { adminSettingsRoute } from './settings'
 import { adminStockMonitorRoute } from './stock-monitor'
 import { adminSupplierRoute } from './supplier'
 import { adminUploadRoute } from './upload'
@@ -24,6 +25,7 @@ adminRoute.route('/coupons', adminCouponsRoute)
 adminRoute.route('/users', adminUsersRoute)
 adminRoute.route('/analytics', adminAnalyticsRoute)
 adminRoute.route('/notifications', adminNotificationsRoute)
+adminRoute.route('/settings', adminSettingsRoute)
 adminRoute.route('/stock-monitor', adminStockMonitorRoute)
 adminRoute.route('/supplier', adminSupplierRoute)
 adminRoute.route('/upload', adminUploadRoute)

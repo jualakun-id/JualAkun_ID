@@ -1,13 +1,8 @@
 import { createAdminClient } from '@/lib/supabase'
 import { ApiError } from '@/types/errors'
+import { ExchangeRateService } from './exchange-rate.service'
 
 const CANBOSO_BASE = 'https://canboso.com/api/telegram-buyer'
-
-// Kurs USD → IDR untuk konversi modal supplier ke rupiah. Pakai 18000
-// (top-up Binance USDT 2026-05) sebagai konservatif buffer — modal yang
-// di-record sedikit overestimate, lebih aman untuk margin calculation.
-// Admin tetap bisa adjust manual di FulfillForm sebelum kirim.
-const USD_IDR_RATE = 18000
 
 type SupplierStats = { total: number; sold: number; available: number }
 
@@ -63,6 +58,8 @@ export class SupplierCanbosoService {
   static async getBalance(): Promise<{
     balance_usd: number
     balance_text: string
+    balance_idr: number
+    exchange_rate: number
     updated_at: string
   } | null> {
     const ctrl = new AbortController()
@@ -78,9 +75,12 @@ export class SupplierCanbosoService {
         balanceText: string
         updatedAt: string
       }
+      const rate = await ExchangeRateService.getUsdIdr()
       return {
         balance_usd: json.balanceUsd,
         balance_text: json.balanceText,
+        balance_idr: Math.round(json.balanceUsd * rate),
+        exchange_rate: rate,
         updated_at: json.updatedAt,
       }
     } catch {
@@ -217,7 +217,8 @@ export class SupplierCanbosoService {
       (typeof obj.totalUsd === 'number' ? obj.totalUsd : undefined) ??
       (typeof obj.cost === 'number' ? obj.cost : undefined) ??
       null
-    const costIdr = costUsd !== null ? Math.round(costUsd * USD_IDR_RATE) : null
+    const rate = await ExchangeRateService.getUsdIdr()
+    const costIdr = costUsd !== null ? Math.round(costUsd * rate) : null
     return {
       raw: typeof parsed === 'string' ? parsed : JSON.stringify(parsed, null, 2),
       cost_usd: costUsd,

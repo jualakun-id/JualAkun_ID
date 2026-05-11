@@ -34,18 +34,18 @@ const VARIANT_CONFIG: Record<
 > = {
   success: {
     icon: CheckCircle2,
-    className: 'bg-success/10 border-success/40 text-success',
-    iconClassName: 'text-success',
+    className: 'bg-success border-black text-white',
+    iconClassName: 'text-white',
   },
   error: {
     icon: AlertTriangle,
-    className: 'bg-danger/10 border-danger/40 text-danger',
-    iconClassName: 'text-danger',
+    className: 'bg-danger border-black text-white',
+    iconClassName: 'text-white',
   },
   info: {
     icon: Info,
-    className: 'bg-brand-50 border-brand-200 text-brand-700',
-    iconClassName: 'text-brand-600',
+    className: 'bg-brand-500 border-black text-ink',
+    iconClassName: 'text-ink',
   },
 }
 
@@ -80,7 +80,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       <div
         aria-live="polite"
         aria-atomic="false"
-        className="fixed top-4 right-4 z-[60] flex flex-col gap-2 pointer-events-none"
+        className="fixed bottom-4 left-4 z-[60] flex flex-col-reverse gap-2 pointer-events-none"
       >
         {toasts.map((t) => (
           <ToastItem key={t.id} toast={t} onDismiss={() => dismiss(t.id)} />
@@ -104,19 +104,19 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }
   return (
     <div
       role="status"
-      className={`pointer-events-auto flex items-start gap-2.5 rounded-xl border-2 ${cfg.className} px-4 py-3 shadow-[0_4px_0_rgba(0,0,0,0.9)] min-w-[280px] max-w-sm transition-all duration-200 ${
-        exiting ? 'opacity-0 translate-x-2' : 'opacity-100 translate-x-0 animate-pop-in'
+      className={`pointer-events-auto flex items-start gap-3 rounded-xl border-2 ${cfg.className} px-4 py-3 shadow-[0_4px_0_rgba(0,0,0,0.9)] min-w-[300px] max-w-md transition-all duration-200 ${
+        exiting ? 'opacity-0 -translate-x-2' : 'opacity-100 translate-x-0 animate-pop-in'
       }`}
     >
-      <Icon size={18} className={`shrink-0 mt-0.5 ${cfg.iconClassName}`} strokeWidth={2.25} />
-      <p className="flex-1 text-sm font-medium leading-snug">{toast.message}</p>
+      <Icon size={20} className={`shrink-0 mt-0.5 ${cfg.iconClassName}`} strokeWidth={2.75} />
+      <p className="flex-1 text-sm font-extrabold leading-snug">{toast.message}</p>
       <button
         type="button"
         onClick={onDismiss}
         aria-label="Tutup notifikasi"
-        className={`shrink-0 rounded p-0.5 hover:bg-black/5 ${cfg.iconClassName}`}
+        className={`shrink-0 rounded p-0.5 hover:bg-black/15 ${cfg.iconClassName}`}
       >
-        <X size={14} strokeWidth={2.5} />
+        <X size={16} strokeWidth={3} />
       </button>
     </div>
   )
