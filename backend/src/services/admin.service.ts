@@ -4,6 +4,22 @@ import { CryptoService } from './crypto.service'
 import { DeliveryService } from './delivery.service'
 import { NotificationService } from './notification.service'
 
+/**
+ * Extract path dalam bucket dari public URL Supabase Storage.
+ * Contoh:
+ *   "https://xxx.supabase.co/storage/v1/object/public/product-thumbnails/abc-123.webp"
+ *   → "abc-123.webp"
+ * Return null kalau URL bukan dari bucket yang dimaksud (mis. external CDN).
+ */
+function extractBucketPath(url: string, bucket: string): string | null {
+  // Hapus query string dulu (kalau ada ?v=2 cache-bust)
+  const clean = url.split('?')[0]
+  const marker = `/storage/v1/object/public/${bucket}/`
+  const idx = clean.indexOf(marker)
+  if (idx === -1) return null
+  return clean.slice(idx + marker.length)
+}
+
 export class AdminProductsService {
   static async list(q: { status?: string; category_slug?: string; page: number; limit: number }) {
     const supabase = createAdminClient()
@@ -37,7 +53,7 @@ export class AdminProductsService {
     name: string
     slug: string
     description?: string
-    thumbnail_url?: string
+    thumbnail_url?: string | null
     duration_days: number
     price: number
     guarantee_days?: number
@@ -64,10 +80,59 @@ export class AdminProductsService {
     return data
   }
 
-  static async update(id: string, input: Partial<{ name: string; description: string; thumbnail_url: string; duration_days: number; price: number; guarantee_days: number; is_active: boolean; category_id: string; original_price: number | null; discount_starts_at: string | null; discount_ends_at: string | null }>) {
+  static async update(
+    id: string,
+    input: Partial<{
+      name: string
+      description: string
+      thumbnail_url: string | null
+      duration_days: number
+      price: number
+      guarantee_days: number
+      is_active: boolean
+      category_id: string
+      original_price: number | null
+      discount_starts_at: string | null
+      discount_ends_at: string | null
+    }>,
+  ) {
     const supabase = createAdminClient()
-    const { data, error } = await supabase.from('products').update(input).eq('id', id).select('*').single()
-    if (error) throw new ApiError('INTERNAL_ERROR', error.message, 500)
+
+    // Kalau payload include thumbnail_url, cek apakah replacing — kalau iya hapus file lama
+    // dari Storage supaya nggak orphan (akumulasi storage)
+    if ('thumbnail_url' in input) {
+      const { data: current } = await supabase
+        .from('products')
+        .select('thumbnail_url')
+        .eq('id', id)
+        .single()
+      const oldUrl = current?.thumbnail_url as string | null | undefined
+      const newUrl = input.thumbnail_url ?? null
+      if (oldUrl && oldUrl !== newUrl) {
+        const oldPath = extractBucketPath(oldUrl, 'product-thumbnails')
+        if (oldPath) {
+          // Fire-and-forget delete — kalau gagal, log tapi jangan block update
+          const { error: delErr } = await supabase.storage
+            .from('product-thumbnails')
+            .remove([oldPath])
+          if (delErr) {
+            console.warn('[products.update] gagal delete old thumbnail:', oldPath, delErr.message)
+          }
+        }
+      }
+    }
+
+    const { data, error } = await supabase
+      .from('products')
+      .update(input)
+      .eq('id', id)
+      .select('*')
+      .single()
+    if (error) {
+      if (error.code === '23514')
+        throw new ApiError('VALIDATION_ERROR', 'Harga diskon harus lebih kecil dari harga asli', 400)
+      throw new ApiError('INTERNAL_ERROR', error.message, 500)
+    }
     return data
   }
 

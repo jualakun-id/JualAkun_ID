@@ -104,12 +104,20 @@ export function ProductForm({ categories, initial, embedded, onSuccess }: Props)
     }
 
     setLoading(true)
+    // thumbnail_url:
+    //   - kalau form kosong (admin clear via tombol X) → kirim null EKSPLISIT
+    //     supaya backend tahu intent "hapus" dan delete file lama dari storage
+    //   - kalau ada URL → kirim URL-nya
+    // Khusus create mode: kalau null/kosong, kirim undefined (jangan paksa kosong)
+    const thumbnailValue = isEdit
+      ? form.thumbnail_url || null
+      : form.thumbnail_url || undefined
     const body = {
       category_id: form.category_id,
       name: form.name,
       slug: form.slug,
       description: form.description || undefined,
-      thumbnail_url: form.thumbnail_url || undefined,
+      thumbnail_url: thumbnailValue,
       duration_days: Number(form.duration_days),
       price: Number(form.price),
       guarantee_days: Number(form.guarantee_days),

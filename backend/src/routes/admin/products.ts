@@ -28,7 +28,8 @@ const createSchema = z.object({
   name: z.string().trim().min(2).max(100),
   slug: z.string().trim().min(2).max(100).regex(/^[a-z0-9-]+$/),
   description: z.string().optional(),
-  thumbnail_url: z.string().url().optional(),
+  // thumbnail_url: kosong → null (explicit clear, untuk hapus file lama dari storage)
+  thumbnail_url: z.string().url().nullable().optional(),
   duration_days: z.coerce.number().int().positive(),
   price: z.coerce.number().int().positive(),
   guarantee_days: z.coerce.number().int().nonnegative().optional(),
