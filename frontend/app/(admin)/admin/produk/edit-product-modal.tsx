@@ -28,6 +28,12 @@ type ProductDetail = {
   discount_ends_at: string | null
   supplier_product_id: string | null
   supplier_synced_at: string | null
+  cost_stats: {
+    sample_size: number
+    avg_cost_idr: number
+    avg_revenue_idr: number
+    avg_margin_pct: number
+  } | null
 }
 
 type Props = {

@@ -37,6 +37,12 @@ type Props = {
     discount_ends_at: string | null
     display_stock: number
     supplier_product_id: string | null
+    cost_stats: {
+      sample_size: number
+      avg_cost_idr: number
+      avg_revenue_idr: number
+      avg_margin_pct: number
+    } | null
   }>
   /** Set true kalau ProductForm di-render di dalam Modal — drop card wrapper (border + padding + shadow). */
   embedded?: boolean
@@ -225,6 +231,12 @@ export function ProductForm({ categories, initial, embedded, onSuccess }: Props)
           className="w-full rounded-lg border-2 border-black/15 bg-white px-4 py-3 text-[15px] font-medium text-ink placeholder:text-ink-subtle placeholder:font-normal focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/25"
         />
       </Field>
+
+      {/* ── COST INSIGHT (30 hari terakhir) ─────────────────────── */}
+      {initial?.cost_stats && initial.cost_stats.sample_size > 0 ? (
+        <CostInsightCard stats={initial.cost_stats} currentPrice={Number(form.price)} />
+      ) : null}
+
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Field label="Harga (Rp)" hint="Harga jual ke buyer">
           <Input
@@ -391,6 +403,62 @@ function Field({
       <label className="text-sm font-bold text-ink">{label}</label>
       <div className="mt-2">{children}</div>
       {hint ? <p className="mt-1.5 text-xs text-ink-subtle font-medium leading-relaxed">{hint}</p> : null}
+    </div>
+  )
+}
+
+function CostInsightCard({
+  stats,
+  currentPrice,
+}: {
+  stats: { sample_size: number; avg_cost_idr: number; avg_revenue_idr: number; avg_margin_pct: number }
+  currentPrice: number
+}) {
+  const projectedMargin =
+    currentPrice > 0 ? Math.round(((currentPrice - stats.avg_cost_idr) / currentPrice) * 100) : 0
+  const marginColor =
+    projectedMargin >= 30
+      ? 'text-success'
+      : projectedMargin >= 15
+        ? 'text-warning'
+        : 'text-danger'
+  const fmt = (n: number) => `Rp ${n.toLocaleString('id-ID')}`
+
+  return (
+    <div className="rounded-xl border-2 border-black/15 bg-brand-50/40 p-4 space-y-2">
+      <div className="flex items-center justify-between gap-2">
+        <h4 className="text-sm font-bold text-ink">Insight Modal & Margin (30 hari terakhir)</h4>
+        <span className="text-[10px] font-bold text-ink-subtle uppercase tracking-wider">
+          {stats.sample_size} order
+        </span>
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+        <Stat label="Modal Avg" value={fmt(stats.avg_cost_idr)} />
+        <Stat label="Revenue Avg" value={fmt(stats.avg_revenue_idr)} />
+        <Stat label="Margin Avg" value={`${stats.avg_margin_pct}%`} />
+        <Stat
+          label="Proyeksi Margin (harga sekarang)"
+          value={<span className={marginColor}>{projectedMargin}%</span>}
+        />
+      </div>
+      {projectedMargin < 15 ? (
+        <p className="text-xs text-danger font-medium">
+          ⚠️ Margin tipis — pertimbangkan naikkan harga jual atau cari supplier lebih murah.
+        </p>
+      ) : projectedMargin < 30 ? (
+        <p className="text-xs text-warning font-medium">
+          Margin moderate. Aman untuk skala kecil, tapi sensitif terhadap kenaikan modal.
+        </p>
+      ) : null}
+    </div>
+  )
+}
+
+function Stat({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="rounded-lg bg-white border border-black/10 px-3 py-2">
+      <div className="text-[10px] font-bold text-ink-subtle uppercase tracking-wide">{label}</div>
+      <div className="mt-0.5 text-sm font-extrabold text-ink tabular-nums">{value}</div>
     </div>
   )
 }

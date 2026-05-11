@@ -11,6 +11,11 @@ adminAnalyticsRoute.get('/dashboard', async (c) => {
   return c.json({ data })
 })
 
+adminAnalyticsRoute.get('/profit', async (c) => {
+  const data = await AdminDashboardService.getProfitKpis()
+  return c.json({ data })
+})
+
 const revenueSchema = z.object({ days: z.coerce.number().int().positive().max(365).default(30) })
 
 adminAnalyticsRoute.get('/revenue', zValidator('query', revenueSchema), async (c) => {

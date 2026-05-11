@@ -3,6 +3,11 @@ import { ApiError } from '@/types/errors'
 
 const CANBOSO_BASE = 'https://canboso.com/api/telegram-buyer'
 
+// Kurs USD → IDR untuk konversi modal supplier ke rupiah. Hardcode 16500
+// sebagai estimasi konservatif (mid-2026). Admin tetap bisa adjust manual
+// di FulfillForm sebelum kirim. Update const ini kalau rate berubah > 5%.
+const USD_IDR_RATE = 16500
+
 type SupplierStats = { total: number; sold: number; available: number }
 
 type SupplierProduct = {
@@ -180,7 +185,11 @@ export class SupplierCanbosoService {
    * default: body `{ productId, quantity: 1 }`. Adjust kalau supplier balas
    * error schema mismatch.
    */
-  static async purchase(supplierProductId: string): Promise<{ raw: string; price_usd?: number }> {
+  static async purchase(supplierProductId: string): Promise<{
+    raw: string
+    cost_usd: number | null
+    cost_idr: number | null
+  }> {
     const res = await fetch(`${CANBOSO_BASE}/purchase`, {
       method: 'POST',
       headers: {
@@ -198,11 +207,20 @@ export class SupplierCanbosoService {
     try {
       parsed = JSON.parse(text)
     } catch {
-      return { raw: text }
+      return { raw: text, cost_usd: null, cost_idr: null }
     }
+    const obj = parsed as Record<string, unknown>
+    const costUsd =
+      (typeof obj.price === 'number' ? obj.price : undefined) ??
+      (typeof obj.usdPricing === 'number' ? obj.usdPricing : undefined) ??
+      (typeof obj.totalUsd === 'number' ? obj.totalUsd : undefined) ??
+      (typeof obj.cost === 'number' ? obj.cost : undefined) ??
+      null
+    const costIdr = costUsd !== null ? Math.round(costUsd * USD_IDR_RATE) : null
     return {
       raw: typeof parsed === 'string' ? parsed : JSON.stringify(parsed, null, 2),
-      price_usd: (parsed as { price?: number; usdPricing?: number })?.price ?? (parsed as { usdPricing?: number })?.usdPricing,
+      cost_usd: costUsd,
+      cost_idr: costIdr,
     }
   }
 }

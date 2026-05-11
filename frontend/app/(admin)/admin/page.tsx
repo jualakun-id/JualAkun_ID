@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { DollarSign, ShoppingBag, Users, Truck, LifeBuoy, Gift } from 'lucide-react'
+import { DollarSign, ShoppingBag, Users, Truck, LifeBuoy, Gift, TrendingUp, Wallet } from 'lucide-react'
 import { AdminHeader } from '@/components/admin/admin-header'
 import { KpiCard } from '@/components/admin/kpi-card'
 import { HealthScore } from '@/components/admin/health-score'
@@ -15,10 +15,27 @@ type Kpis = {
   tickets: { open: number }
 }
 
+type ProfitPeriod = {
+  orders_tracked: number
+  orders_untracked: number
+  revenue_idr: number
+  cost_idr: number
+  profit_idr: number
+  margin_pct: number
+}
+
+type ProfitKpis = {
+  today: ProfitPeriod
+  this_month: ProfitPeriod
+}
+
 export const metadata = { title: 'Admin Dashboard' }
 
 export default async function AdminDashboardPage() {
-  const kpis = await adminFetch<Kpis>('/admin/analytics/dashboard')
+  const [kpis, profit] = await Promise.all([
+    adminFetch<Kpis>('/admin/analytics/dashboard'),
+    adminFetch<ProfitKpis>('/admin/analytics/profit'),
+  ])
   const score = computeHealthScore(kpis)
 
   const items = []
@@ -46,6 +63,18 @@ export default async function AdminDashboardPage() {
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         <KpiCard icon={<DollarSign size={20} strokeWidth={2.25} />} label="GMV Hari Ini" value={formatRupiah(kpis?.revenue.today ?? 0)} />
+        <KpiCard
+          icon={<TrendingUp size={20} strokeWidth={2.25} />}
+          label="Profit Hari Ini"
+          value={formatRupiah(profit?.today.profit_idr ?? 0)}
+          subLabel={profit?.today ? `${profit.today.margin_pct}% margin · ${profit.today.orders_tracked} order` : 'belum ada data'}
+        />
+        <KpiCard
+          icon={<Wallet size={20} strokeWidth={2.25} />}
+          label="Profit Bulan Ini"
+          value={formatRupiah(profit?.this_month.profit_idr ?? 0)}
+          subLabel={profit?.this_month ? `${profit.this_month.margin_pct}% margin · ${profit.this_month.orders_tracked} order` : 'belum ada data'}
+        />
         <KpiCard icon={<ShoppingBag size={20} strokeWidth={2.25} />} label="Pesanan Hari Ini" value={kpis?.orders.today_total ?? 0} />
         <KpiCard icon={<Users size={20} strokeWidth={2.25} />} label="User Baru" value={kpis?.users.new_this_week ?? 0} subLabel="7 hari terakhir" />
         <KpiCard icon={<Truck size={20} strokeWidth={2.25} />} label="Menunggu Bayar" value={kpis?.orders.pending_payment ?? 0} />

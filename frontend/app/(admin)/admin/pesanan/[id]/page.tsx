@@ -21,6 +21,9 @@ type OrderDetail = {
   paid_at: string | null
   delivered_at: string | null
   created_at: string
+  cost_idr: number | null
+  cost_usd: number | null
+  cost_source: string | null
   product: { name: string; slug: string; supplier_product_id?: string | null } | null
   buyer: { email: string | null }
   notifications: { id: string; channel: string; template: string; status: string; created_at: string }[]
@@ -57,6 +60,17 @@ export default async function AdminPesananDetailPage({ params }: Props) {
             <Row label="Dibayar" value={order.paid_at ? formatDateTime(order.paid_at) : '—'} />
             <Row label="Terkirim" value={order.delivered_at ? formatDateTime(order.delivered_at) : '—'} />
             <Row label="Dibuat" value={formatDateTime(order.created_at)} />
+            {order.cost_idr !== null ? (
+              <>
+                <Row
+                  label="Modal"
+                  value={`${formatRupiah(order.cost_idr)}${order.cost_source ? ` · ${order.cost_source === 'supplier_canboso' ? 'Canboso' : order.cost_source}` : ''}`}
+                />
+                <ProfitRow revenue={order.total_idr} cost={order.cost_idr} />
+              </>
+            ) : order.status === 'delivered' ? (
+              <Row label="Modal" value="— (pre-tracking)" />
+            ) : null}
           </dl>
 
           {['paid', 'delivery_failed'].includes(order.status) ? (
@@ -103,6 +117,27 @@ function Row({ label, value, bold }: { label: string; value: string; bold?: bool
     <div className="contents">
       <dt className="text-ink-muted">{label}</dt>
       <dd className={bold ? 'font-heading font-bold text-brand-700' : 'text-ink'}>{value}</dd>
+    </div>
+  )
+}
+
+function ProfitRow({ revenue, cost }: { revenue: number; cost: number }) {
+  const profit = revenue - cost
+  const marginPct = revenue > 0 ? Math.round((profit / revenue) * 100) : 0
+  const tone =
+    marginPct >= 30
+      ? 'text-success'
+      : marginPct >= 15
+        ? 'text-warning'
+        : marginPct >= 0
+          ? 'text-ink-muted'
+          : 'text-danger'
+  return (
+    <div className="contents">
+      <dt className="text-ink-muted">Profit</dt>
+      <dd className={`font-heading font-bold ${tone}`}>
+        {formatRupiah(profit)} <span className="text-xs">({marginPct}%)</span>
+      </dd>
     </div>
   )
 }

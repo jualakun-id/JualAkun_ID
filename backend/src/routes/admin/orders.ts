@@ -35,6 +35,9 @@ adminOrdersRoute.post('/:id/deliver', async (c) => {
 const fulfillSchema = z.object({
   credentials: z.string().trim().min(3, 'Credentials minimal 3 karakter').max(2000),
   note: z.string().trim().max(500).optional(),
+  cost_idr: z.coerce.number().int().nonnegative('Modal tidak boleh negatif'),
+  cost_usd: z.coerce.number().nonnegative().optional(),
+  cost_source: z.enum(['supplier_canboso', 'manual', 'unknown']).default('manual'),
 })
 
 adminOrdersRoute.post('/:id/fulfill', zValidator('json', fulfillSchema), async (c) => {

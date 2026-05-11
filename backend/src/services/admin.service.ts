@@ -175,7 +175,39 @@ export class AdminProductsService {
       .maybeSingle()
     if (error) throw new ApiError('INTERNAL_ERROR', error.message, 500)
     if (!data) throw new ApiError('NOT_FOUND', 'Produk tidak ditemukan', 404)
-    return data
+
+    // Modal stats 30 hari terakhir — untuk hint pricing dynamic di form
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+    const { data: costRows } = await supabase
+      .from('orders')
+      .select('cost_idr, total_idr')
+      .eq('product_id', id)
+      .eq('status', 'delivered')
+      .not('cost_idr', 'is', null)
+      .gte('delivered_at', thirtyDaysAgo)
+
+    let cost_stats: {
+      sample_size: number
+      avg_cost_idr: number
+      avg_revenue_idr: number
+      avg_margin_pct: number
+    } | null = null
+    if (costRows && costRows.length > 0) {
+      const n = costRows.length
+      const totalCost = costRows.reduce((s, r) => s + (r.cost_idr ?? 0), 0)
+      const totalRev = costRows.reduce((s, r) => s + (r.total_idr ?? 0), 0)
+      const avgCost = Math.round(totalCost / n)
+      const avgRev = Math.round(totalRev / n)
+      const avgMarginPct = avgRev > 0 ? Math.round(((avgRev - avgCost) / avgRev) * 100) : 0
+      cost_stats = {
+        sample_size: n,
+        avg_cost_idr: avgCost,
+        avg_revenue_idr: avgRev,
+        avg_margin_pct: avgMarginPct,
+      }
+    }
+
+    return { ...data, cost_stats }
   }
 
   static async addStock(productId: string, accounts: { credentials: string; note?: string }[]) {
@@ -307,6 +339,7 @@ export class AdminOrdersService {
         `id, order_number, amount_idr, discount_idr, credit_used_idr, total_idr, coupon_code,
          status, payment_provider, payment_method, payment_status, payment_transaction_id,
          paid_at, delivered_at, created_at, expires_at, user_id,
+         cost_idr, cost_usd, cost_source,
          products!inner ( name, slug, supplier_product_id )`,
       )
       .eq('id', orderId)
@@ -363,7 +396,13 @@ export class AdminOrdersService {
    */
   static async fulfillManual(
     orderId: string,
-    payload: { credentials: string; note?: string },
+    payload: {
+      credentials: string
+      note?: string
+      cost_idr: number
+      cost_usd?: number
+      cost_source: 'supplier_canboso' | 'manual' | 'unknown'
+    },
   ) {
     const supabase = createAdminClient()
 
@@ -399,7 +438,13 @@ export class AdminOrdersService {
 
     const { error: updateErr } = await supabase
       .from('orders')
-      .update({ status: 'delivered', delivered_at: new Date().toISOString() })
+      .update({
+        status: 'delivered',
+        delivered_at: new Date().toISOString(),
+        cost_idr: payload.cost_idr,
+        cost_usd: payload.cost_usd ?? null,
+        cost_source: payload.cost_source,
+      })
       .eq('id', order.id)
     if (updateErr) {
       // Rollback stock insert
@@ -644,6 +689,44 @@ export class AdminDashboardService {
       buckets.set(day, cur)
     }
     return Array.from(buckets.entries()).map(([date, v]) => ({ date, ...v }))
+  }
+
+  /**
+   * Profit KPI — hari ini & bulan ini.
+   * Profit = total_idr - cost_idr untuk order delivered, cost_idr IS NOT NULL.
+   * Order pre-migration / cost null di-exclude (avoid skew, jadi sample size
+   * jujur). Return juga jumlah delivered tanpa cost (orphan count) supaya
+   * admin tau coverage tracking.
+   */
+  static async getProfitKpis() {
+    const supabase = createAdminClient()
+    const now = new Date()
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString()
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
+
+    const sumProfit = async (sinceIso: string) => {
+      const { data, error } = await supabase
+        .from('orders')
+        .select('cost_idr, total_idr')
+        .eq('status', 'delivered')
+        .gte('delivered_at', sinceIso)
+      if (error) throw new ApiError('INTERNAL_ERROR', error.message, 500)
+      const rows = (data ?? []) as { cost_idr: number | null; total_idr: number }[]
+      const withCost = rows.filter((r) => r.cost_idr !== null)
+      const revenue = withCost.reduce((s, r) => s + r.total_idr, 0)
+      const cost = withCost.reduce((s, r) => s + (r.cost_idr ?? 0), 0)
+      return {
+        orders_tracked: withCost.length,
+        orders_untracked: rows.length - withCost.length,
+        revenue_idr: revenue,
+        cost_idr: cost,
+        profit_idr: revenue - cost,
+        margin_pct: revenue > 0 ? Math.round(((revenue - cost) / revenue) * 100) : 0,
+      }
+    }
+
+    const [today, month] = await Promise.all([sumProfit(todayStart), sumProfit(monthStart)])
+    return { today, this_month: month }
   }
 
   static async topProducts(limit: number) {
