@@ -24,6 +24,7 @@ export class AdminProductsService {
   static async list(q: {
     status?: string
     category_slug?: string
+    search?: string
     page: number
     limit: number
     sort_by?: string
@@ -50,6 +51,11 @@ export class AdminProductsService {
     if (q.status === 'draft') query = query.eq('is_active', false)
     if (q.status === 'out_of_stock') query = query.eq('stock_count', 0)
     if (q.category_slug) query = query.eq('categories.slug', q.category_slug)
+    if (q.search) {
+      // ilike search di name OR slug — escape % dan komma untuk safety
+      const safe = q.search.replace(/[%,()]/g, '')
+      query = query.or(`name.ilike.%${safe}%,slug.ilike.%${safe}%`)
+    }
 
     const { data, error, count } = await query
     if (error) throw new ApiError('INTERNAL_ERROR', error.message, 500)
@@ -311,6 +317,7 @@ export class AdminOrdersService {
 export class AdminTicketsService {
   static async list(q: {
     status?: string
+    search?: string
     page: number
     limit: number
     sort_by?: string
@@ -332,6 +339,10 @@ export class AdminTicketsService {
       .order(sortColumn, { ascending: sortAsc })
       .range(offset, offset + q.limit - 1)
     if (q.status) query = query.eq('status', q.status)
+    if (q.search) {
+      const safe = q.search.replace(/[%,()]/g, '')
+      query = query.ilike('description', `%${safe}%`)
+    }
     const { data, error, count } = await query
     if (error) throw new ApiError('INTERNAL_ERROR', error.message, 500)
     return { tickets: data ?? [], pagination: { page: q.page, limit: q.limit, total: count ?? 0 } }

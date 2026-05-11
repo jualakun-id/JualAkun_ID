@@ -8,6 +8,7 @@ export const adminTicketsRoute = new Hono<AppEnv>()
 
 const listSchema = z.object({
   status: z.enum(['open', 'in_review', 'resolved_replaced', 'resolved_refunded', 'rejected', 'closed']).optional(),
+  search: z.string().optional(),
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().max(100).default(20),
   sort_by: z.enum(['reason', 'status', 'created_at']).optional(),

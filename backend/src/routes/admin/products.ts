@@ -9,6 +9,7 @@ export const adminProductsRoute = new Hono<AppEnv>()
 const listQuerySchema = z.object({
   status: z.enum(['active', 'draft', 'out_of_stock']).optional(),
   category_slug: z.string().optional(),
+  search: z.string().optional(),
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().max(100).default(20),
   sort_by: z

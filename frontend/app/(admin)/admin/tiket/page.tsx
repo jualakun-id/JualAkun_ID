@@ -23,6 +23,7 @@ type ListResponse = {
 type Props = {
   searchParams: Promise<{
     status?: string
+    search?: string
     page?: string
     sort_by?: string
     sort_dir?: 'asc' | 'desc'
@@ -36,6 +37,7 @@ export default async function AdminTiketPage({ searchParams }: Props) {
   const page = Math.max(1, parseInt(sp.page ?? '1', 10) || 1)
   const params = new URLSearchParams()
   if (sp.status) params.set('status', sp.status)
+  if (sp.search) params.set('search', sp.search)
   params.set('page', String(page))
   params.set('limit', '10')
   if (sp.sort_by) params.set('sort_by', sp.sort_by)
@@ -44,12 +46,14 @@ export default async function AdminTiketPage({ searchParams }: Props) {
 
   const pagBaseParams = new URLSearchParams()
   if (sp.status) pagBaseParams.set('status', sp.status)
+  if (sp.search) pagBaseParams.set('search', sp.search)
   if (sp.sort_by) pagBaseParams.set('sort_by', sp.sort_by)
   if (sp.sort_dir) pagBaseParams.set('sort_dir', sp.sort_dir)
   const basePath = `/admin/tiket${pagBaseParams.toString() ? `?${pagBaseParams.toString()}` : ''}`
 
   const sortBaseParams = new URLSearchParams()
   if (sp.status) sortBaseParams.set('status', sp.status)
+  if (sp.search) sortBaseParams.set('search', sp.search)
   const sortBasePath = `/admin/tiket${sortBaseParams.toString() ? `?${sortBaseParams.toString()}` : ''}`
 
   return (
@@ -63,6 +67,7 @@ export default async function AdminTiketPage({ searchParams }: Props) {
           { label: 'In Review', value: 'in_review', href: '/admin/tiket?status=in_review' },
           { label: 'Resolved', value: 'resolved_replaced', href: '/admin/tiket?status=resolved_replaced' },
         ]}
+        searchQuery={{ name: 'search', placeholder: 'Cari isi tiket / deskripsi...', defaultValue: sp.search }}
       />
       <div className="mt-4">
         <DataTable
