@@ -192,6 +192,46 @@ export class AdminProductsService {
     return { added: rows.length, total_stock: prod?.stock_count ?? 0 }
   }
 
+  /**
+   * List semua stok untuk produk — credentials TIDAK di-return (cuma metadata).
+   * Sort FIFO: created_at ASC (yang lama duluan terkirim).
+   */
+  static async listStock(productId: string) {
+    const supabase = createAdminClient()
+    const { data, error } = await supabase
+      .from('account_stock')
+      .select('id, note, is_used, used_at, order_id, created_at')
+      .eq('product_id', productId)
+      .order('is_used', { ascending: true })
+      .order('created_at', { ascending: true })
+    if (error) throw new ApiError('INTERNAL_ERROR', error.message, 500)
+    return data ?? []
+  }
+
+  /**
+   * Hard delete stok item — HANYA boleh kalau `is_used=false` (belum terjual).
+   * Stok yang sudah di-deliver ke buyer tidak boleh dihapus (audit trail).
+   * Trigger DB auto-sync `products.stock_count`.
+   */
+  static async deleteStock(productId: string, stockId: string) {
+    const supabase = createAdminClient()
+    const { data: row, error: selErr } = await supabase
+      .from('account_stock')
+      .select('id, product_id, is_used')
+      .eq('id', stockId)
+      .maybeSingle()
+    if (selErr) throw new ApiError('INTERNAL_ERROR', selErr.message, 500)
+    if (!row) throw new ApiError('NOT_FOUND', 'Stok tidak ditemukan', 404)
+    if (row.product_id !== productId)
+      throw new ApiError('VALIDATION_ERROR', 'Stok bukan milik produk ini', 400)
+    if (row.is_used)
+      throw new ApiError('VALIDATION_ERROR', 'Stok ini sudah terjual — tidak bisa dihapus', 400)
+
+    const { error: delErr } = await supabase.from('account_stock').delete().eq('id', stockId)
+    if (delErr) throw new ApiError('INTERNAL_ERROR', delErr.message, 500)
+    return { ok: true }
+  }
+
   static async addStockBulkCsv(productId: string, csvText: string) {
     const lines = csvText.split(/\r?\n/).filter((l) => l.trim().length > 0)
     const errors: string[] = []

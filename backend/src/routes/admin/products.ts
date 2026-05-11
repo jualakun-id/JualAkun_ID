@@ -86,3 +86,13 @@ adminProductsRoute.post('/:id/stock/bulk', async (c) => {
   const data = await AdminProductsService.addStockBulkCsv(c.req.param('id'), text)
   return c.json({ data }, 201)
 })
+
+adminProductsRoute.get('/:id/stock', async (c) => {
+  const data = await AdminProductsService.listStock(c.req.param('id'))
+  return c.json({ data })
+})
+
+adminProductsRoute.delete('/:id/stock/:stockId', async (c) => {
+  const data = await AdminProductsService.deleteStock(c.req.param('id'), c.req.param('stockId'))
+  return c.json({ data })
+})
