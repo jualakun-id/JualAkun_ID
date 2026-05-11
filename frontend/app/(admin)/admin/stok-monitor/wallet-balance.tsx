@@ -16,33 +16,44 @@ export async function WalletBalance() {
   const balance = await adminFetch<Balance | null>('/admin/supplier/balance')
   if (!balance) {
     return (
-      <div className="inline-flex items-center gap-2 rounded-lg border-2 border-black/15 bg-white px-3 py-2 text-xs">
-        <Wallet size={14} strokeWidth={2.5} className="text-ink-subtle" />
-        <span className="font-bold text-ink-muted">Saldo: —</span>
+      <div className="flex flex-col items-end gap-1">
+        <div className="inline-flex items-center gap-2 rounded-lg border-2 border-black bg-white px-3.5 py-2 text-sm font-extrabold text-ink-muted shadow-[0_2px_0_rgba(0,0,0,0.9)]">
+          <Wallet size={16} strokeWidth={2.5} />
+          <span>Saldo: —</span>
+        </div>
+        <p className="text-[10px] font-medium text-ink-subtle leading-tight">
+          Supplier offline
+        </p>
       </div>
     )
   }
 
   const usd = balance.balance_usd
+  // Sticker style: solid bg + border-2 black + shadow biar match SupplierSyncButton
   const tone =
     usd < 2
-      ? 'border-danger/40 bg-danger/10 text-danger'
+      ? 'bg-danger text-white'
       : usd < 10
-        ? 'border-warning/50 bg-warning/10 text-warning'
-        : 'border-success/40 bg-success/10 text-success'
+        ? 'bg-warning text-ink'
+        : 'bg-success text-white'
   const isLow = usd < 2
 
   return (
-    <a
-      href="https://t.me/CanbosoBot"
-      target="_blank"
-      rel="noopener noreferrer"
-      title="Klik untuk top-up via bot Canboso di Telegram"
-      className={`inline-flex items-center gap-2 rounded-lg border-2 px-3 py-2 text-xs font-extrabold hover:-translate-y-0.5 transition-transform ${tone}`}
-    >
-      {isLow ? <AlertTriangle size={14} strokeWidth={2.5} /> : <Wallet size={14} strokeWidth={2.5} />}
-      <span>Saldo Canboso: {balance.balance_text}</span>
-      {isLow ? <span className="text-[10px] font-bold uppercase">Top-up!</span> : null}
-    </a>
+    <div className="flex flex-col items-end gap-1">
+      <a
+        href="https://t.me/CanbosoBot"
+        target="_blank"
+        rel="noopener noreferrer"
+        title="Klik untuk top-up via bot Canboso di Telegram"
+        className={`inline-flex items-center gap-2 rounded-lg border-2 border-black px-3.5 py-2 text-sm font-extrabold shadow-[0_2px_0_rgba(0,0,0,0.9)] hover:-translate-y-0.5 hover:shadow-[0_3px_0_rgba(0,0,0,0.9)] transition-all ${tone}`}
+      >
+        {isLow ? <AlertTriangle size={16} strokeWidth={2.5} /> : <Wallet size={16} strokeWidth={2.5} />}
+        <span>Saldo: {balance.balance_text}</span>
+        {isLow ? <span className="ml-1 rounded-md bg-white/25 px-1.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wide">Top-up!</span> : null}
+      </a>
+      <p className="text-[10px] font-medium text-ink-subtle leading-tight">
+        Klik untuk top-up
+      </p>
+    </div>
   )
 }
