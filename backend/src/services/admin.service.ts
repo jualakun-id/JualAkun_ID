@@ -5,6 +5,7 @@ import { DeliveryService } from './delivery.service'
 import { NotificationService } from './notification.service'
 import { PaymentService } from './payment.service'
 import { SupplierCanbosoService } from './supplier.service'
+import { ActivityLogService } from './activity-log.service'
 
 /**
  * Extract path dalam bucket dari public URL Supabase Storage.
@@ -471,13 +472,45 @@ export class AdminOrdersService {
       // Notif gagal tidak rollback order — credentials sudah masuk, admin bisa resend manual.
     }
 
+    // Log activity feed untuk admin
+    await ActivityLogService.log({
+      event_type: 'order_delivered',
+      ref_id: order.id,
+      ref_table: 'orders',
+      title: `Order dikirim: ${order.order_number}`,
+      description: `Akun di-deliver ke buyer · Modal Rp ${payload.cost_idr.toLocaleString('id-ID')}`,
+      metadata: {
+        order_number: order.order_number,
+        cost_idr: payload.cost_idr,
+        cost_source: payload.cost_source,
+        total_idr: order.total_idr,
+        profit_idr: order.total_idr - payload.cost_idr,
+      },
+    })
+
     return { ok: true, delivered: true, stock_id: stockRow.id }
   }
 
   static async updateStatus(orderId: string, status: string) {
     const supabase = createAdminClient()
+    const { data: existing } = await supabase
+      .from('orders')
+      .select('order_number, total_idr')
+      .eq('id', orderId)
+      .maybeSingle()
     const { error } = await supabase.from('orders').update({ status }).eq('id', orderId)
     if (error) throw new ApiError('INTERNAL_ERROR', error.message, 500)
+
+    if (status === 'refunded' && existing) {
+      await ActivityLogService.log({
+        event_type: 'order_refunded',
+        ref_id: orderId,
+        ref_table: 'orders',
+        title: `Refund diproses: ${(existing as { order_number: string }).order_number}`,
+        description: `Order di-refund · Total Rp ${(existing as { total_idr: number }).total_idr.toLocaleString('id-ID')}`,
+        metadata: existing,
+      })
+    }
     return { ok: true }
   }
 
@@ -605,6 +638,16 @@ export class AdminTicketsService {
       })
       .eq('id', ticketId)
     if (error) throw new ApiError('INTERNAL_ERROR', error.message, 500)
+
+    await ActivityLogService.log({
+      event_type: 'ticket_resolved',
+      ref_id: ticketId,
+      ref_table: 'support_tickets',
+      title: `Tiket di-resolve (${input.status})`,
+      description: input.resolution.slice(0, 200),
+      metadata: { status: input.status, admin_id: adminId },
+    })
+
     return { ok: true }
   }
 }

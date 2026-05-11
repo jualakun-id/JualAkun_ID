@@ -1,5 +1,6 @@
 import { createAdminClient } from '@/lib/supabase'
 import { ApiError } from '@/types/errors'
+import { ActivityLogService } from './activity-log.service'
 
 type CreateTicketInput = {
   order_id: string
@@ -53,6 +54,15 @@ export class TicketsService {
       .single()
 
     if (error) throw new ApiError('INTERNAL_ERROR', error.message, 500)
+
+    await ActivityLogService.log({
+      event_type: 'ticket_created',
+      ref_id: data.id,
+      ref_table: 'support_tickets',
+      title: `Tiket garansi baru: ${input.reason}`,
+      description: input.description?.slice(0, 200) ?? null,
+      metadata: { reason: input.reason, order_id: input.order_id, user_id: userId },
+    })
 
     return {
       ticket_id: data.id,

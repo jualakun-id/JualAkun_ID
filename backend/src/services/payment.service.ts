@@ -3,6 +3,7 @@ import { createInquiry, verifyCallbackSignature } from '@/lib/duitku'
 import { ApiError } from '@/types/errors'
 import { CryptoService } from './crypto.service'
 import { NotificationService } from './notification.service'
+import { ActivityLogService } from './activity-log.service'
 import { templates } from '@/templates/messages'
 
 type CreateTransactionResult = {
@@ -240,6 +241,21 @@ export class PaymentService {
     } catch (err) {
       console.error('[duitku] post-paid notif failed', { order_id: order.id, err })
     }
+
+    // Log activity feed untuk admin
+    await ActivityLogService.log({
+      event_type: 'order_paid',
+      ref_id: order.id,
+      ref_table: 'orders',
+      title: `Pembayaran diterima: ${order.order_number}`,
+      description: `Total Rp ${order.total_idr.toLocaleString('id-ID')} — perlu di-fulfill`,
+      metadata: {
+        order_number: order.order_number,
+        total_idr: order.total_idr,
+        user_id: order.user_id,
+        product_id: order.product_id,
+      },
+    })
   }
 
   private static async notifyBuyerPaymentReceived(order: OrderForPayment): Promise<void> {

@@ -1,30 +1,40 @@
 import { AdminHeader } from '@/components/admin/admin-header'
 import { FilterBar } from '@/components/admin/filter-bar'
-import { DataTable } from '@/components/admin/data-table'
-import { StatusBadge } from '@/components/admin/status-badge'
 import { Pagination } from '@/components/admin/pagination'
-import { RetryButton } from './retry-button'
+import { ActivityFeedClient } from './activity-feed-client'
 import { adminFetch } from '@/lib/admin-fetch'
-import { formatDateTime } from '@/lib/utils'
 
-type LogRow = {
+type EventType =
+  | 'user_registered'
+  | 'order_created'
+  | 'order_paid'
+  | 'order_delivered'
+  | 'order_refunded'
+  | 'ticket_created'
+  | 'ticket_resolved'
+
+type ActivityRow = {
   id: string
-  channel: 'wa' | 'email'
-  template: string
-  status: 'pending' | 'sent' | 'failed'
-  error: string | null
+  event_type: EventType
+  ref_id: string | null
+  ref_table: string | null
+  title: string
+  description: string | null
+  metadata: Record<string, unknown> | null
+  is_read: boolean
   created_at: string
 }
 
 type ListResponse = {
-  logs: LogRow[]
+  logs: ActivityRow[]
   pagination: { page: number; limit: number; total: number }
+  unread_count: number
 }
 
 type Props = {
   searchParams: Promise<{
-    status?: string
-    channel?: string
+    event_type?: string
+    is_read?: string
     page?: string
     sort_by?: string
     sort_dir?: 'asc' | 'desc'
@@ -37,60 +47,60 @@ export default async function AdminNotifikasiPage({ searchParams }: Props) {
   const sp = await searchParams
   const page = Math.max(1, parseInt(sp.page ?? '1', 10) || 1)
   const params = new URLSearchParams()
-  if (sp.status) params.set('status', sp.status)
-  if (sp.channel) params.set('channel', sp.channel)
+  if (sp.event_type) params.set('event_type', sp.event_type)
+  if (sp.is_read) params.set('is_read', sp.is_read)
   params.set('page', String(page))
-  params.set('limit', '10')
-  if (sp.sort_by) params.set('sort_by', sp.sort_by)
-  if (sp.sort_dir) params.set('sort_dir', sp.sort_dir)
-  const data = await adminFetch<ListResponse>(`/admin/notifications?${params.toString()}`)
+  params.set('limit', '15')
+
+  const data = await adminFetch<ListResponse>(`/admin/activity-log?${params.toString()}`)
 
   const pagBaseParams = new URLSearchParams()
-  if (sp.status) pagBaseParams.set('status', sp.status)
-  if (sp.channel) pagBaseParams.set('channel', sp.channel)
+  if (sp.event_type) pagBaseParams.set('event_type', sp.event_type)
+  if (sp.is_read) pagBaseParams.set('is_read', sp.is_read)
   if (sp.sort_by) pagBaseParams.set('sort_by', sp.sort_by)
   if (sp.sort_dir) pagBaseParams.set('sort_dir', sp.sort_dir)
   const basePath = `/admin/notifikasi${pagBaseParams.toString() ? `?${pagBaseParams.toString()}` : ''}`
 
   const sortBaseParams = new URLSearchParams()
-  if (sp.status) sortBaseParams.set('status', sp.status)
-  if (sp.channel) sortBaseParams.set('channel', sp.channel)
+  if (sp.event_type) sortBaseParams.set('event_type', sp.event_type)
+  if (sp.is_read) sortBaseParams.set('is_read', sp.is_read)
   const sortBasePath = `/admin/notifikasi${sortBaseParams.toString() ? `?${sortBaseParams.toString()}` : ''}`
+
+  const total = data?.pagination.total ?? 0
+  const unread = data?.unread_count ?? 0
+
+  const buildPill = (val: string) => {
+    const p = new URLSearchParams()
+    if (val) p.set('event_type', val)
+    if (sp.is_read) p.set('is_read', sp.is_read)
+    return `/admin/notifikasi${p.toString() ? `?${p.toString()}` : ''}`
+  }
 
   return (
     <div className="px-6 md:px-8 py-8">
-      <AdminHeader title="Log Notifikasi" subtitle={`${data?.pagination.total ?? 0} notif`} />
+      <AdminHeader
+        title="Notifikasi"
+        subtitle={`${total} aktivitas · ${unread} belum dibaca`}
+      />
+
       <FilterBar
-        activeValue={sp.status ?? 'all'}
+        activeValue={sp.event_type ?? 'all'}
         pills={[
-          { label: 'Semua', value: 'all', href: '/admin/notifikasi' },
-          { label: 'Pending', value: 'pending', href: '/admin/notifikasi?status=pending' },
-          { label: 'Terkirim', value: 'sent', href: '/admin/notifikasi?status=sent' },
-          { label: 'Gagal', value: 'failed', href: '/admin/notifikasi?status=failed' },
+          { label: 'Semua', value: 'all', href: buildPill('') },
+          { label: 'User Baru', value: 'user_registered', href: buildPill('user_registered') },
+          { label: 'Pembayaran', value: 'order_paid', href: buildPill('order_paid') },
+          { label: 'Pengiriman', value: 'order_delivered', href: buildPill('order_delivered') },
+          { label: 'Refund', value: 'order_refunded', href: buildPill('order_refunded') },
+          { label: 'Tiket', value: 'ticket_created', href: buildPill('ticket_created') },
         ]}
       />
+
       <div className="mt-4">
-        <DataTable
-          rows={(data?.logs ?? []) as unknown as Record<string, unknown>[]}
+        <ActivityFeedClient
+          rows={data?.logs ?? []}
           sortBy={sp.sort_by ?? null}
           sortDir={sp.sort_dir ?? 'desc'}
           sortBasePath={sortBasePath}
-          columns={[
-            { key: 'channel', header: 'Channel', sortKey: 'channel', render: (r) => <span className="font-mono uppercase text-xs">{(r as unknown as LogRow).channel}</span> },
-            { key: 'template', header: 'Template', sortKey: 'template', render: (r) => <span className="font-mono text-xs">{(r as unknown as LogRow).template}</span> },
-            { key: 'status', header: 'Status', sortKey: 'status', render: (r) => <StatusBadge variant="notification" status={(r as unknown as LogRow).status} />, align: 'center' },
-            { key: 'error', header: 'Error', render: (r) => <span className="text-xs text-danger">{(r as unknown as LogRow).error?.slice(0, 60) ?? '—'}</span> },
-            { key: 'created_at', header: 'Waktu', sortKey: 'created_at', render: (r) => formatDateTime((r as unknown as LogRow).created_at) },
-            {
-              key: 'action',
-              header: '',
-              render: (r) => {
-                const row = r as unknown as LogRow
-                return row.status === 'failed' ? <RetryButton id={row.id} /> : null
-              },
-              align: 'right',
-            },
-          ]}
         />
 
         {data?.pagination ? (
