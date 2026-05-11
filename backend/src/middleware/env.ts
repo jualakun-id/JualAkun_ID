@@ -19,6 +19,7 @@ const KEYS: (keyof Bindings)[] = [
   'ADMIN_WHATSAPP_NUMBER',
   'CORS_ORIGINS',
   'CRON_SECRET',
+  'SUPPLIER_CANBOSO_API_KEY',
 ]
 
 export async function envMiddleware(c: Context, next: Next): Promise<void> {

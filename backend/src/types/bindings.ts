@@ -16,6 +16,7 @@ export type Bindings = {
   ADMIN_WHATSAPP_NUMBER: string
   CORS_ORIGINS: string
   CRON_SECRET: string
+  SUPPLIER_CANBOSO_API_KEY: string
 }
 
 export type Variables = {
