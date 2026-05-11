@@ -44,6 +44,7 @@ const updateSchema = z.object({
   max_uses: z.coerce.number().int().positive().nullable().optional(),
   expires_at: z.string().datetime().nullable().optional(),
   is_active: z.boolean().optional(),
+  valid_for_products: z.array(z.string().uuid()).nullable().optional(),
 })
 
 adminCouponsRoute.patch('/:id', zValidator('json', updateSchema), async (c) => {
@@ -53,5 +54,10 @@ adminCouponsRoute.patch('/:id', zValidator('json', updateSchema), async (c) => {
 
 adminCouponsRoute.delete('/:id', async (c) => {
   const data = await AdminCouponsService.deactivate(c.req.param('id'))
+  return c.json({ data })
+})
+
+adminCouponsRoute.get('/:id/analytics', async (c) => {
+  const data = await AdminCouponsService.getAnalytics(c.req.param('id'))
   return c.json({ data })
 })

@@ -839,12 +839,85 @@ export class AdminCouponsService {
       max_uses: number | null
       expires_at: string | null
       is_active: boolean
+      valid_for_products: string[] | null
     }>,
   ) {
     const supabase = createAdminClient()
     const { data, error } = await supabase.from('coupons').update(input).eq('id', id).select('*').single()
     if (error) throw new ApiError('INTERNAL_ERROR', error.message, 500)
     return data
+  }
+
+  /**
+   * Analytics per-kupon: list order yang pakai kupon ini + aggregate metrics.
+   * Pakai untuk page detail /admin/kupon/[id].
+   */
+  static async getAnalytics(id: string) {
+    const supabase = createAdminClient()
+    const { data: coupon, error: coupErr } = await supabase
+      .from('coupons')
+      .select('*')
+      .eq('id', id)
+      .maybeSingle()
+    if (coupErr) throw new ApiError('INTERNAL_ERROR', coupErr.message, 500)
+    if (!coupon) throw new ApiError('NOT_FOUND', 'Kupon tidak ditemukan', 404)
+
+    // Order list yang pakai kupon ini (filter by coupon_code, bukan by id —
+    // historical orders simpan code, bukan id reference)
+    const { data: orders } = await supabase
+      .from('orders')
+      .select(
+        `id, order_number, total_idr, amount_idr, discount_idr, status, created_at,
+         products!inner ( name, slug )`,
+      )
+      .eq('coupon_code', (coupon as { code: string }).code)
+      .order('created_at', { ascending: false })
+      .limit(100)
+
+    const rows = (orders ?? []) as Array<{
+      total_idr: number
+      discount_idr: number
+      status: string
+    }>
+    const totalDiscount = rows.reduce((s, r) => s + (r.discount_idr ?? 0), 0)
+    const totalRevenue = rows.reduce((s, r) => s + (r.total_idr ?? 0), 0)
+    const paidOrders = rows.filter((r) => ['paid', 'delivered', 'confirmed'].includes(r.status)).length
+    const conversionRate = rows.length > 0 ? Math.round((paidOrders / rows.length) * 100) : 0
+
+    return {
+      coupon,
+      orders: orders ?? [],
+      metrics: {
+        total_orders: rows.length,
+        paid_orders: paidOrders,
+        conversion_rate_pct: conversionRate,
+        total_discount_given: totalDiscount,
+        total_revenue: totalRevenue,
+      },
+    }
+  }
+
+  /**
+   * Auto-deactivate kupon yang sudah lewat expires_at. Run by cron.
+   * Return list kupon yang baru di-deactivate untuk activity log.
+   */
+  static async autoDeactivateExpired() {
+    const supabase = createAdminClient()
+    const now = new Date().toISOString()
+    const { data: expired } = await supabase
+      .from('coupons')
+      .select('id, code')
+      .eq('is_active', true)
+      .not('expires_at', 'is', null)
+      .lt('expires_at', now)
+    const list = (expired ?? []) as { id: string; code: string }[]
+    if (list.length === 0) return { deactivated: 0, items: [] }
+    const { error } = await supabase
+      .from('coupons')
+      .update({ is_active: false })
+      .in('id', list.map((c) => c.id))
+    if (error) throw new ApiError('INTERNAL_ERROR', error.message, 500)
+    return { deactivated: list.length, items: list }
   }
 
   static async deactivate(id: string) {

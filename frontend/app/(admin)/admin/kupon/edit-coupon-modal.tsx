@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/components/toast'
 import { api } from '@/lib/api'
+import { ProductMultiSelect } from './product-multi-select'
 
 type Coupon = {
   id: string
@@ -18,6 +19,7 @@ type Coupon = {
   used_count: number
   expires_at: string | null
   is_active: boolean
+  valid_for_products: string[] | null
 }
 
 type Props = {
@@ -44,6 +46,7 @@ export function EditCouponModal({ open, couponId, onClose }: Props) {
   const [maxUses, setMaxUses] = useState('')
   const [expiresAt, setExpiresAt] = useState('')
   const [isActive, setIsActive] = useState(true)
+  const [validForProducts, setValidForProducts] = useState<string[] | null>(null)
 
   useEffect(() => {
     if (!open || !couponId) {
@@ -65,6 +68,7 @@ export function EditCouponModal({ open, couponId, onClose }: Props) {
       setMaxUses(result.data.max_uses?.toString() ?? '')
       setExpiresAt(isoToLocal(result.data.expires_at))
       setIsActive(result.data.is_active)
+      setValidForProducts(result.data.valid_for_products ?? null)
     })
     return () => { cancelled = true }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -79,6 +83,7 @@ export function EditCouponModal({ open, couponId, onClose }: Props) {
       max_uses: maxUses ? Number(maxUses) : null,
       expires_at: expiresAt ? new Date(expiresAt).toISOString() : null,
       is_active: isActive,
+      valid_for_products: validForProducts,
     })
     setSaving(false)
     if (!result.ok) {
@@ -148,6 +153,16 @@ export function EditCouponModal({ open, couponId, onClose }: Props) {
               disabled={saving}
             />
             <p className="mt-1 text-xs text-ink-subtle">Kosongkan = tanpa batas</p>
+          </div>
+
+          <div>
+            <label className="text-xs font-bold text-ink-muted uppercase tracking-wider">
+              Produk yang Berlaku
+            </label>
+            <div className="mt-1.5">
+              <ProductMultiSelect value={validForProducts} onChange={setValidForProducts} disabled={saving} />
+            </div>
+            <p className="mt-1 text-xs text-ink-subtle">Kosong = berlaku semua produk</p>
           </div>
 
           <label className="flex items-start gap-3 rounded-lg border-2 border-black/15 bg-brand-50/40 p-3 cursor-pointer hover:border-brand-400 transition-colors">

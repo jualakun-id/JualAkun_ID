@@ -3,6 +3,7 @@ import { cronMiddleware } from '@/middleware/cron'
 import { createAdminClient } from '@/lib/supabase'
 import { NotificationService } from '@/services/notification.service'
 import { ActivityLogService } from '@/services/activity-log.service'
+import { AdminCouponsService } from '@/services/admin.service'
 import { templates } from '@/templates/messages'
 import type { AppEnv } from '@/types/bindings'
 
@@ -11,6 +12,24 @@ export const stockAlertsCron = new Hono<AppEnv>()
 stockAlertsCron.use('*', cronMiddleware)
 
 stockAlertsCron.post('/', async (c) => {
+  // Piggyback: auto-deactivate kupon expired (gak butuh slot cron sendiri)
+  try {
+    const expiredResult = await AdminCouponsService.autoDeactivateExpired()
+    for (const item of expiredResult.items) {
+      await ActivityLogService.log({
+        event_type: 'coupon_deactivated',
+        ref_id: item.id,
+        ref_table: 'coupons',
+        title: `Kupon auto-deactivated: ${item.code}`,
+        description: 'Lewat tanggal expires_at — di-deactivate otomatis',
+        metadata: { auto: true },
+      })
+    }
+  } catch (err) {
+    console.warn('[cron/stock-alerts] coupon auto-deactivate failed:', err)
+    // Don't fail the rest of the cron
+  }
+
   const supabase = createAdminClient()
   // Pakai display_stock (admin-managed) untuk monitoring publik
   const { data: lowStock, error } = await supabase
