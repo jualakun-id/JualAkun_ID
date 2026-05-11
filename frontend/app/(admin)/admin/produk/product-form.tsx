@@ -171,7 +171,7 @@ export function ProductForm({ categories, initial, embedded, onSuccess }: Props)
       </Field>
       <Field
         label="Nama produk"
-        hint='Hindari kata "Garansi" — sudah ditampilkan otomatis sebagai badge di card produk. Contoh OK: "Claude Pro", "ChatGPT Plus 1 Bulan"'
+        hint='Hindari kata "Garansi" — sudah ditampilkan otomatis sebagai badge di card produk. Slug URL auto-generate dari nama.'
       >
         <Input
           required
@@ -182,20 +182,6 @@ export function ProductForm({ categories, initial, embedded, onSuccess }: Props)
           placeholder="Contoh: Claude Pro"
         />
       </Field>
-      {!isEdit ? (
-        <Field label="Slug (URL)" hint="Auto-generate dari nama. Bisa di-edit manual — hanya huruf kecil, angka, dan tanda −">
-          <Input
-            required
-            pattern="[a-z0-9-]+"
-            minLength={2}
-            maxLength={100}
-            value={form.slug}
-            onChange={(e) => update('slug', e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'))}
-            className="font-mono"
-            placeholder="claude-pro-full-garansi"
-          />
-        </Field>
-      ) : null}
       <Field label="Deskripsi" hint="Opsional. Tampil di halaman detail produk">
         <textarea
           rows={4}
