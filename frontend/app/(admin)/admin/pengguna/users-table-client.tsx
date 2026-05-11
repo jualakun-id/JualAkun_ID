@@ -2,12 +2,12 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import { Shield, UserCog, Ban, RotateCcw, Loader2, Eye } from 'lucide-react'
 import { DataTable, type SortDir } from '@/components/admin/data-table'
 import { useToast } from '@/components/toast'
 import { api } from '@/lib/api'
 import { formatRupiah, formatDate } from '@/lib/utils'
+import { UserDetailModal } from './user-detail-modal'
 
 type UserRow = {
   id: string
@@ -30,6 +30,7 @@ export function UsersTableClient({ users, sortBy, sortDir, sortBasePath }: Props
   const router = useRouter()
   const toast = useToast()
   const [actingId, setActingId] = useState<string | null>(null)
+  const [detailId, setDetailId] = useState<string | null>(null)
 
   async function handleStatusChange(u: UserRow, status: 'active' | 'suspended' | 'banned') {
     const labels = { active: 'aktifkan', suspended: 'suspend', banned: 'ban' }
@@ -46,7 +47,8 @@ export function UsersTableClient({ users, sortBy, sortDir, sortBasePath }: Props
   }
 
   return (
-    <DataTable
+    <>
+      <DataTable
       rows={users as unknown as Record<string, unknown>[]}
       sortBy={sortBy}
       sortDir={sortDir}
@@ -66,10 +68,14 @@ export function UsersTableClient({ users, sortBy, sortDir, sortBasePath }: Props
           render: (r) => {
             const u = r as unknown as UserRow
             return (
-              <Link href={`/admin/pengguna/${u.id}`} className="hover:text-brand-700">
+              <button
+                type="button"
+                onClick={() => setDetailId(u.id)}
+                className="text-left hover:text-brand-700"
+              >
                 <div className="font-bold text-ink">{u.full_name ?? <span className="text-ink-subtle italic">— belum isi —</span>}</div>
                 <div className="text-xs text-ink-subtle font-mono mt-0.5">{u.id.slice(0, 8)}</div>
-              </Link>
+              </button>
             )
           },
         },
@@ -150,24 +156,26 @@ export function UsersTableClient({ users, sortBy, sortDir, sortBasePath }: Props
             // Hide actions untuk admin role — protect dari self-ban accident
             if (u.role === 'admin') {
               return (
-                <Link
-                  href={`/admin/pengguna/${u.id}`}
+                <button
+                  type="button"
+                  onClick={() => setDetailId(u.id)}
                   title="Lihat detail"
                   className="inline-flex items-center rounded-md border-2 border-black/15 bg-white px-2 py-1 text-xs font-bold text-ink-muted hover:border-brand-400 hover:text-brand-700"
                 >
                   <Eye size={11} strokeWidth={2.5} />
-                </Link>
+                </button>
               )
             }
             return (
               <div className="flex justify-end gap-1.5">
-                <Link
-                  href={`/admin/pengguna/${u.id}`}
+                <button
+                  type="button"
+                  onClick={() => setDetailId(u.id)}
                   title="Lihat detail"
                   className="inline-flex items-center rounded-md border-2 border-black/15 bg-white px-2 py-1 text-xs font-bold text-ink-muted hover:border-brand-400 hover:text-brand-700"
                 >
                   <Eye size={11} strokeWidth={2.5} />
-                </Link>
+                </button>
                 {u.status === 'active' ? (
                   <>
                     <button
@@ -207,5 +215,12 @@ export function UsersTableClient({ users, sortBy, sortDir, sortBasePath }: Props
         },
       ]}
     />
+
+      <UserDetailModal
+        open={detailId !== null}
+        userId={detailId}
+        onClose={() => setDetailId(null)}
+      />
+    </>
   )
 }
