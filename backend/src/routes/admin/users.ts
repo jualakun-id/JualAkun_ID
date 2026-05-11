@@ -28,6 +28,11 @@ adminUsersRoute.get('/:id', async (c) => {
   return c.json({ data })
 })
 
+adminUsersRoute.get('/:id/timeline', async (c) => {
+  const data = await AdminUsersService.getUserTimeline(c.req.param('id'))
+  return c.json({ data })
+})
+
 const statusSchema = z.object({ status: z.enum(['active', 'suspended', 'banned']) })
 
 adminUsersRoute.patch('/:id/status', zValidator('json', statusSchema), async (c) => {

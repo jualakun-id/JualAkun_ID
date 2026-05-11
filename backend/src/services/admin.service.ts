@@ -1142,6 +1142,45 @@ export class AdminUsersService {
   }
 
   /**
+   * Timeline aktivitas user — gabungan dari:
+   *   - admin_activity_log dengan ref_id=userId (user_registered)
+   *   - admin_activity_log dengan metadata.user_id=userId (semua event yang
+   *     reference user ini: order_created, order_paid, ticket_created, dll)
+   *   - orders milik user (history pesanan ringkas)
+   * Return sorted chronological desc, limit 50.
+   */
+  static async getUserTimeline(userId: string) {
+    const supabase = createAdminClient()
+
+    // Activity log: gabungkan 2 query (ref_id=userId DAN metadata->user_id=userId)
+    const { data: directEvents } = await supabase
+      .from('admin_activity_log')
+      .select('id, event_type, ref_id, ref_table, title, description, metadata, created_at')
+      .eq('ref_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(50)
+
+    const { data: relatedEvents } = await supabase
+      .from('admin_activity_log')
+      .select('id, event_type, ref_id, ref_table, title, description, metadata, created_at')
+      .contains('metadata', { user_id: userId })
+      .order('created_at', { ascending: false })
+      .limit(50)
+
+    // Merge + dedup by id
+    const eventMap = new Map<string, Record<string, unknown>>()
+    for (const e of (directEvents ?? []) as Array<{ id: string }>) eventMap.set(e.id, e)
+    for (const e of (relatedEvents ?? []) as Array<{ id: string }>) eventMap.set(e.id, e)
+    const events = Array.from(eventMap.values()).sort((a, b) => {
+      const aTime = new Date((a as { created_at: string }).created_at).getTime()
+      const bTime = new Date((b as { created_at: string }).created_at).getTime()
+      return bTime - aTime
+    })
+
+    return events.slice(0, 50)
+  }
+
+  /**
    * Adjust kredit user secara manual. Positif untuk add, negatif untuk
    * deduct. Activity log untuk audit trail.
    */

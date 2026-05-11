@@ -7,6 +7,7 @@ import { DataTable } from '@/components/admin/data-table'
 import { StatusBadge } from '@/components/admin/status-badge'
 import { UserStatusActions } from './user-status-actions'
 import { AdjustCreditsForm } from './adjust-credits-form'
+import { UserTimeline } from './user-timeline'
 import { adminFetch } from '@/lib/admin-fetch'
 import { formatRupiah, formatDate, formatDateTime } from '@/lib/utils'
 
@@ -148,6 +149,10 @@ export default async function UserDetailPage({ params }: Props) {
           </p>
           <AdjustCreditsForm userId={user.id} currentCredits={user.credits} />
         </div>
+      </div>
+
+      <div className="mt-6">
+        <UserTimeline userId={user.id} />
       </div>
 
       <div className="mt-6">
