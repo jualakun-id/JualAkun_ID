@@ -12,10 +12,10 @@ import { StatCard } from '@/components/landing/stat-card'
 import { BenefitItem } from '@/components/landing/benefit-item'
 import { StepCard } from '@/components/landing/step-card'
 import { TrustCard } from '@/components/landing/trust-card'
-import { LandingProductCard } from '@/components/landing/landing-product-card'
 import { TestimonialCard } from '@/components/landing/testimonial-card'
 import { FAQAccordion } from '@/components/landing/faq-accordion'
 import { BrandLogo } from '@/components/landing/brand-logo'
+import { CategoryProductsSection } from '@/components/landing/category-products-section'
 import { Reveal } from '@/components/reveal'
 
 type CatalogResponse = {
@@ -205,7 +205,14 @@ export default async function HomePage() {
 
       {/* ── CATEGORY SECTIONS ──────────────────────────────── */}
       {sectionsData.map((section, idx) => (
-        <CategorySection key={section.slug} section={section} bgAlt={idx % 2 === 0} />
+        <CategoryProductsSection
+          key={section.slug}
+          slug={section.slug}
+          label={section.label}
+          desc={section.desc}
+          initialData={section.data}
+          bgAlt={idx % 2 === 0}
+        />
       ))}
 
       {/* ── HOW IT WORKS ───────────────────────────────────── */}
@@ -329,42 +336,6 @@ export default async function HomePage() {
   )
 }
 
-type SectionData = {
-  slug: string
-  label: string
-  desc: string
-  data: CatalogResponse | null
-}
-
-function CategorySection({ section, bgAlt }: { section: SectionData; bgAlt: boolean }) {
-  const products = section.data?.products ?? []
-  return (
-    <section
-      id={section.slug}
-      className={`scroll-mt-24 py-16 md:py-20 ${bgAlt ? 'bg-brand-50' : 'bg-white'}`}
-    >
-      <div className="container mx-auto px-4 max-w-7xl">
-        <div className="text-center mb-10">
-          <h2 className="font-heading text-3xl md:text-4xl font-extrabold text-ink tracking-tight">{section.label}</h2>
-          <p className="text-ink-muted text-base md:text-lg font-medium mt-4 max-w-xl mx-auto">{section.desc}</p>
-        </div>
-
-        {products.length ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-            {products.map((p) => (
-              <LandingProductCard key={p.id} product={p} />
-            ))}
-          </div>
-        ) : (
-          <div className={`text-center py-12 rounded-2xl border border-dashed border-gray-200 ${bgAlt ? 'bg-white/50' : 'bg-brand-50/50'}`}>
-            <Package className="w-10 h-10 mx-auto text-ink-subtle/40 mb-2" aria-hidden="true" />
-            <p className="text-ink-muted text-base font-medium">Belum ada produk di kategori {section.label}.</p>
-          </div>
-        )}
-      </div>
-    </section>
-  )
-}
 
 const FAQS = [
   {
