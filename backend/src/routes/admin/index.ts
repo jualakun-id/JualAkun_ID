@@ -9,6 +9,7 @@ import { adminUsersRoute } from './users'
 import { adminAnalyticsRoute } from './analytics'
 import { adminNotificationsRoute } from './notifications'
 import { adminStockMonitorRoute } from './stock-monitor'
+import { adminSupplierRoute } from './supplier'
 import { adminUploadRoute } from './upload'
 import type { AppEnv } from '@/types/bindings'
 
@@ -24,4 +25,5 @@ adminRoute.route('/users', adminUsersRoute)
 adminRoute.route('/analytics', adminAnalyticsRoute)
 adminRoute.route('/notifications', adminNotificationsRoute)
 adminRoute.route('/stock-monitor', adminStockMonitorRoute)
+adminRoute.route('/supplier', adminSupplierRoute)
 adminRoute.route('/upload', adminUploadRoute)

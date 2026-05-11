@@ -21,7 +21,7 @@ type OrderDetail = {
   paid_at: string | null
   delivered_at: string | null
   created_at: string
-  product: { name: string; slug: string } | null
+  product: { name: string; slug: string; supplier_product_id?: string | null } | null
   buyer: { email: string | null }
   notifications: { id: string; channel: string; template: string; status: string; created_at: string }[]
 }
@@ -60,7 +60,11 @@ export default async function AdminPesananDetailPage({ params }: Props) {
           </dl>
 
           {['paid', 'delivery_failed'].includes(order.status) ? (
-            <FulfillForm orderId={id} productName={order.product?.name ?? 'Akun Digital'} />
+            <FulfillForm
+              orderId={id}
+              productName={order.product?.name ?? 'Akun Digital'}
+              hasSupplier={!!order.product?.supplier_product_id}
+            />
           ) : null}
 
           <OrderActions orderId={id} status={order.status} />

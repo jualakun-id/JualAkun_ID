@@ -26,6 +26,8 @@ type ProductDetail = {
   original_price: number | null
   discount_starts_at: string | null
   discount_ends_at: string | null
+  supplier_product_id: string | null
+  supplier_synced_at: string | null
 }
 
 type Props = {

@@ -42,6 +42,11 @@ adminOrdersRoute.post('/:id/fulfill', zValidator('json', fulfillSchema), async (
   return c.json({ data })
 })
 
+adminOrdersRoute.post('/:id/supplier-purchase', async (c) => {
+  const data = await AdminOrdersService.supplierPurchase(c.req.param('id'))
+  return c.json({ data })
+})
+
 const statusSchema = z.object({
   status: z.enum(['pending_payment', 'paid', 'delivering', 'delivered', 'confirmed', 'expired', 'delivery_failed', 'refunded']),
 })

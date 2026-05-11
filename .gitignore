@@ -6,6 +6,9 @@
 # Supabase CLI temp
 supabase/.temp/
 
+# Wrangler local cache (jangan commit auth tokens / build artifacts)
+.wrangler/
+
 # OS
 .DS_Store
 Thumbs.db

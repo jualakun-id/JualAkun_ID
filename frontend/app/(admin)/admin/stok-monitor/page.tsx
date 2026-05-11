@@ -2,6 +2,7 @@ import { AdminHeader } from '@/components/admin/admin-header'
 import { FilterBar } from '@/components/admin/filter-bar'
 import { Pagination } from '@/components/admin/pagination'
 import { StockMonitorTableClient } from './stock-monitor-table-client'
+import { SupplierSyncButton } from './supplier-sync-button'
 import { adminFetch } from '@/lib/admin-fetch'
 import type { Category } from '@/types'
 
@@ -98,6 +99,7 @@ export default async function AdminStokMonitorPage({ searchParams }: Props) {
       <AdminHeader
         title="Stok Monitor"
         subtitle={`${out} habis · ${critical} kritis · ${data?.pagination.total ?? 0} produk`}
+        rightSlot={<SupplierSyncButton />}
       />
 
       <FilterBar

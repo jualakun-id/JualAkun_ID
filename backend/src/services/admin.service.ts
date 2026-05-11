@@ -4,6 +4,7 @@ import { CryptoService } from './crypto.service'
 import { DeliveryService } from './delivery.service'
 import { NotificationService } from './notification.service'
 import { PaymentService } from './payment.service'
+import { SupplierCanbosoService } from './supplier.service'
 
 /**
  * Extract path dalam bucket dari public URL Supabase Storage.
@@ -80,6 +81,7 @@ export class AdminProductsService {
     discount_starts_at?: string | null
     discount_ends_at?: string | null
     display_stock?: number
+    supplier_product_id?: string | null
   }) {
     const supabase = createAdminClient()
     const { data, error } = await supabase
@@ -114,6 +116,7 @@ export class AdminProductsService {
       discount_starts_at: string | null
       discount_ends_at: string | null
       display_stock: number
+      supplier_product_id: string | null
     }>,
   ) {
     const supabase = createAdminClient()
@@ -167,7 +170,7 @@ export class AdminProductsService {
     const supabase = createAdminClient()
     const { data, error } = await supabase
       .from('products')
-      .select('id, category_id, name, slug, description, thumbnail_url, duration_days, price, guarantee_days, is_active, stock_count, display_stock, sold_count, original_price, discount_starts_at, discount_ends_at')
+      .select('id, category_id, name, slug, description, thumbnail_url, duration_days, price, guarantee_days, is_active, stock_count, display_stock, sold_count, original_price, discount_starts_at, discount_ends_at, supplier_product_id, supplier_synced_at')
       .eq('id', id)
       .maybeSingle()
     if (error) throw new ApiError('INTERNAL_ERROR', error.message, 500)
@@ -304,7 +307,7 @@ export class AdminOrdersService {
         `id, order_number, amount_idr, discount_idr, credit_used_idr, total_idr, coupon_code,
          status, payment_provider, payment_method, payment_status, payment_transaction_id,
          paid_at, delivered_at, created_at, expires_at, user_id,
-         products!inner ( name, slug )`,
+         products!inner ( name, slug, supplier_product_id )`,
       )
       .eq('id', orderId)
       .maybeSingle()
@@ -319,7 +322,7 @@ export class AdminOrdersService {
       .eq('order_id', orderId)
       .order('created_at', { ascending: false })
 
-    const productRel = (order as { products: { name: string; slug: string } | { name: string; slug: string }[] }).products
+    const productRel = (order as { products: { name: string; slug: string; supplier_product_id: string | null } | { name: string; slug: string; supplier_product_id: string | null }[] }).products
     const product = Array.isArray(productRel) ? productRel[0] : productRel
 
     return {
@@ -431,6 +434,41 @@ export class AdminOrdersService {
     const { error } = await supabase.from('orders').update({ status }).eq('id', orderId)
     if (error) throw new ApiError('INTERNAL_ERROR', error.message, 500)
     return { ok: true }
+  }
+
+  /**
+   * Admin trigger pembelian ke supplier (Canboso) untuk 1 order.
+   * Validasi: order harus punya product yang sudah di-link ke supplier_product_id.
+   * Tidak auto-fulfill — return raw response untuk admin paste ke Fulfill form.
+   */
+  static async supplierPurchase(orderId: string) {
+    const supabase = createAdminClient()
+    const { data: order, error } = await supabase
+      .from('orders')
+      .select('id, status, product_id, products!inner(supplier_product_id, name)')
+      .eq('id', orderId)
+      .maybeSingle()
+    if (error) throw new ApiError('INTERNAL_ERROR', error.message, 500)
+    if (!order) throw new ApiError('NOT_FOUND', 'Pesanan tidak ditemukan', 404)
+    if (!['paid', 'delivery_failed'].includes(order.status)) {
+      throw new ApiError(
+        'VALIDATION_ERROR',
+        `Order status '${order.status}' — hanya bisa beli ke supplier dari status 'paid' atau 'delivery_failed'`,
+        400,
+      )
+    }
+
+    const productRel = (order as { products: { supplier_product_id: string | null; name: string } | { supplier_product_id: string | null; name: string }[] }).products
+    const product = Array.isArray(productRel) ? productRel[0] : productRel
+    if (!product?.supplier_product_id) {
+      throw new ApiError(
+        'VALIDATION_ERROR',
+        `Produk "${product?.name}" belum di-link ke supplier (set supplier_product_id di form produk)`,
+        400,
+      )
+    }
+
+    return SupplierCanbosoService.purchase(product.supplier_product_id)
   }
 }
 

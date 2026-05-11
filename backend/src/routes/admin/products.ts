@@ -45,6 +45,8 @@ const createSchema = z.object({
   discount_ends_at: z.string().datetime().nullable().optional(),
   // Display stock — angka tampilan publik, admin-controlled
   display_stock: z.coerce.number().int().nonnegative().optional(),
+  // Supplier mapping (Canboso Telegram Buyer). NULL = produk full manual.
+  supplier_product_id: z.string().trim().nullable().optional(),
 })
 
 adminProductsRoute.post('/', zValidator('json', createSchema), async (c) => {

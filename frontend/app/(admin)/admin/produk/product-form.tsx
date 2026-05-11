@@ -1,14 +1,23 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Tag } from 'lucide-react'
+import { Tag, Link2 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { ThumbnailUpload } from '@/components/ui/thumbnail-upload'
 import { useToast } from '@/components/toast'
 import { api } from '@/lib/api'
 import type { Category } from '@/types'
+
+type SupplierOption = {
+  id: string
+  name: string
+  price_usd: number
+  wallet_price_text: string
+  available: number
+  sold: number
+}
 
 type Props = {
   categories: Category[]
@@ -27,6 +36,7 @@ type Props = {
     discount_starts_at: string | null
     discount_ends_at: string | null
     display_stock: number
+    supplier_product_id: string | null
   }>
   /** Set true kalau ProductForm di-render di dalam Modal — drop card wrapper (border + padding + shadow). */
   embedded?: boolean
@@ -58,6 +68,7 @@ export function ProductForm({ categories, initial, embedded, onSuccess }: Props)
     guarantee_days: initial?.guarantee_days ?? 30,
     is_active: initial?.is_active ?? false,
     display_stock: initial?.display_stock ?? 0,
+    supplier_product_id: initial?.supplier_product_id ?? '',
     original_price: initial?.original_price ?? '',
     discount_starts_at: isoToLocal(initial?.discount_starts_at),
     discount_ends_at: isoToLocal(initial?.discount_ends_at),
@@ -66,6 +77,25 @@ export function ProductForm({ categories, initial, embedded, onSuccess }: Props)
   const [showDiscount, setShowDiscount] = useState(
     !!initial?.original_price || !!initial?.discount_starts_at || !!initial?.discount_ends_at,
   )
+  const [supplierOptions, setSupplierOptions] = useState<SupplierOption[]>([])
+  const [supplierLoading, setSupplierLoading] = useState(true)
+  const [supplierError, setSupplierError] = useState<string | null>(null)
+
+  // Fetch supplier products (1x on-mount) untuk dropdown mapping
+  useEffect(() => {
+    let cancelled = false
+    api.get<{ walletCurrency: string; products: SupplierOption[] }>('/admin/supplier/products')
+      .then((result) => {
+        if (cancelled) return
+        setSupplierLoading(false)
+        if (!result.ok) {
+          setSupplierError(result.message ?? 'Gagal load supplier')
+          return
+        }
+        setSupplierOptions(result.data.products)
+      })
+    return () => { cancelled = true }
+  }, [])
 
   function update<K extends keyof typeof form>(key: K, value: typeof form[K]) {
     setForm((f) => ({ ...f, [key]: value }))
@@ -125,6 +155,7 @@ export function ProductForm({ categories, initial, embedded, onSuccess }: Props)
       guarantee_days: Number(form.guarantee_days),
       is_active: form.is_active,
       display_stock: Number(form.display_stock),
+      supplier_product_id: form.supplier_product_id || null,
       original_price:
         showDiscount && form.original_price !== '' ? Number(form.original_price) : null,
       discount_starts_at:
@@ -243,6 +274,35 @@ export function ProductForm({ categories, initial, embedded, onSuccess }: Props)
         />
       </Field>
 
+      {/* ── SUPPLIER MAPPING (Canboso) ─────────────────────────── */}
+      <Field
+        label={<span className="inline-flex items-center gap-1.5"><Link2 size={14} strokeWidth={2.5} className="text-brand-600" /> Supplier (Canboso)</span>}
+        hint="Link ke produk Canboso supaya admin bisa 'Beli dari Supplier' saat fulfill + auto-sync stock. Pilih 'Tidak pakai supplier' untuk produk full manual."
+      >
+        {supplierLoading ? (
+          <div className="rounded-lg border-2 border-black/15 bg-brand-50/40 px-4 py-3 text-sm text-ink-muted">
+            Memuat daftar supplier...
+          </div>
+        ) : supplierError ? (
+          <div className="rounded-lg border-2 border-danger/30 bg-danger/5 px-4 py-3 text-sm text-danger">
+            {supplierError}
+          </div>
+        ) : (
+          <select
+            value={form.supplier_product_id}
+            onChange={(e) => update('supplier_product_id', e.target.value)}
+            className="w-full rounded-lg border-2 border-black/15 bg-white px-4 py-3 text-sm font-medium text-ink focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/25"
+          >
+            <option value="">— Tidak pakai supplier (full manual) —</option>
+            {supplierOptions.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name} · {s.wallet_price_text} · stok {s.available}
+              </option>
+            ))}
+          </select>
+        )}
+      </Field>
+
       {/* ── DISKON SECTION ──────────────────────────────────────── */}
       <div className="rounded-xl border-2 border-black/15 bg-brand-50/30 p-4">
         <label className="flex items-center gap-3 cursor-pointer">
@@ -322,7 +382,7 @@ function Field({
   hint,
   children,
 }: {
-  label: string
+  label: React.ReactNode
   hint?: string
   children: React.ReactNode
 }) {
