@@ -11,6 +11,10 @@ const listQuerySchema = z.object({
   category_slug: z.string().optional(),
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().max(100).default(20),
+  sort_by: z
+    .enum(['name', 'slug', 'price', 'stock_count', 'sold_count', 'is_active', 'created_at'])
+    .optional(),
+  sort_dir: z.enum(['asc', 'desc']).default('desc'),
 })
 
 adminProductsRoute.get('/', zValidator('query', listQuerySchema), async (c) => {

@@ -24,7 +24,14 @@ type ListResponse = {
   pagination: { page: number; limit: number; total: number }
 }
 
-type Props = { searchParams: Promise<{ status?: string; page?: string }> }
+type Props = {
+  searchParams: Promise<{
+    status?: string
+    page?: string
+    sort_by?: string
+    sort_dir?: 'asc' | 'desc'
+  }>
+}
 
 export const metadata = { title: 'Admin — Produk' }
 
@@ -35,15 +42,25 @@ export default async function AdminProdukPage({ searchParams }: Props) {
   if (sp.status) params.set('status', sp.status)
   params.set('page', String(page))
   params.set('limit', '10')
+  if (sp.sort_by) params.set('sort_by', sp.sort_by)
+  if (sp.sort_dir) params.set('sort_dir', sp.sort_dir)
 
   const [data, categories] = await Promise.all([
     adminFetch<ListResponse>(`/admin/products?${params.toString()}`),
     adminFetch<Category[]>('/catalog/categories'),
   ])
 
-  const filterParams = new URLSearchParams()
-  if (sp.status) filterParams.set('status', sp.status)
-  const basePath = `/admin/produk${filterParams.toString() ? `?${filterParams.toString()}` : ''}`
+  // Pagination basePath: preserve filter + sort (drop page only)
+  const pagBaseParams = new URLSearchParams()
+  if (sp.status) pagBaseParams.set('status', sp.status)
+  if (sp.sort_by) pagBaseParams.set('sort_by', sp.sort_by)
+  if (sp.sort_dir) pagBaseParams.set('sort_dir', sp.sort_dir)
+  const basePath = `/admin/produk${pagBaseParams.toString() ? `?${pagBaseParams.toString()}` : ''}`
+
+  // SortBasePath: preserve filter only (drop page + sort_by + sort_dir karena akan di-override)
+  const sortBaseParams = new URLSearchParams()
+  if (sp.status) sortBaseParams.set('status', sp.status)
+  const sortBasePath = `/admin/produk${sortBaseParams.toString() ? `?${sortBaseParams.toString()}` : ''}`
 
   // Offset untuk numbering global (cross-page): (page - 1) * limit
   const rowOffset = ((data?.pagination.page ?? 1) - 1) * (data?.pagination.limit ?? 0)
@@ -71,6 +88,9 @@ export default async function AdminProdukPage({ searchParams }: Props) {
           products={data?.products ?? []}
           categories={categories ?? []}
           rowOffset={rowOffset}
+          sortBy={sp.sort_by ?? null}
+          sortDir={sp.sort_dir ?? 'desc'}
+          sortBasePath={sortBasePath}
         />
 
         {data?.pagination ? (

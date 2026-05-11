@@ -22,7 +22,15 @@ type ListResponse = {
   pagination: { page: number; limit: number; total: number }
 }
 
-type Props = { searchParams: Promise<{ status?: string; search?: string; page?: string }> }
+type Props = {
+  searchParams: Promise<{
+    status?: string
+    search?: string
+    page?: string
+    sort_by?: string
+    sort_dir?: 'asc' | 'desc'
+  }>
+}
 
 export const metadata = { title: 'Admin — Pesanan' }
 
@@ -34,13 +42,23 @@ export default async function AdminPesananPage({ searchParams }: Props) {
   if (sp.search) params.set('search', sp.search)
   params.set('page', String(page))
   params.set('limit', '10')
+  if (sp.sort_by) params.set('sort_by', sp.sort_by)
+  if (sp.sort_dir) params.set('sort_dir', sp.sort_dir)
   const data = await adminFetch<ListResponse>(`/admin/orders?${params.toString()}`)
 
-  // Build basePath untuk pagination (preserve other filters)
-  const filterParams = new URLSearchParams()
-  if (sp.status) filterParams.set('status', sp.status)
-  if (sp.search) filterParams.set('search', sp.search)
-  const basePath = `/admin/pesanan${filterParams.toString() ? `?${filterParams.toString()}` : ''}`
+  // Pagination basePath: preserve filter + sort (drop page only)
+  const pagBaseParams = new URLSearchParams()
+  if (sp.status) pagBaseParams.set('status', sp.status)
+  if (sp.search) pagBaseParams.set('search', sp.search)
+  if (sp.sort_by) pagBaseParams.set('sort_by', sp.sort_by)
+  if (sp.sort_dir) pagBaseParams.set('sort_dir', sp.sort_dir)
+  const basePath = `/admin/pesanan${pagBaseParams.toString() ? `?${pagBaseParams.toString()}` : ''}`
+
+  // SortBasePath: preserve filter only (drop page + sort)
+  const sortBaseParams = new URLSearchParams()
+  if (sp.status) sortBaseParams.set('status', sp.status)
+  if (sp.search) sortBaseParams.set('search', sp.search)
+  const sortBasePath = `/admin/pesanan${sortBaseParams.toString() ? `?${sortBaseParams.toString()}` : ''}`
 
   return (
     <div className="px-6 md:px-8 py-8">
@@ -63,6 +81,9 @@ export default async function AdminPesananPage({ searchParams }: Props) {
       <div className="mt-4">
         <DataTable
           rows={(data?.orders ?? []) as unknown as Record<string, unknown>[]}
+          sortBy={sp.sort_by ?? null}
+          sortDir={sp.sort_dir ?? 'desc'}
+          sortBasePath={sortBasePath}
           rowClassName={(r) => {
             const row = r as unknown as OrderRow
             if (row.status === 'delivery_failed') return 'bg-danger/5'
@@ -72,6 +93,7 @@ export default async function AdminPesananPage({ searchParams }: Props) {
             {
               key: 'order_number',
               header: 'Order #',
+              sortKey: 'order_number',
               render: (r) => {
                 const row = r as unknown as OrderRow
                 const product = Array.isArray(row.products) ? row.products[0] : row.products
@@ -83,10 +105,10 @@ export default async function AdminPesananPage({ searchParams }: Props) {
                 )
               },
             },
-            { key: 'payment_method', header: 'Pembayaran', render: (r) => (r as unknown as OrderRow).payment_method ?? '—' },
-            { key: 'status', header: 'Status', render: (r) => <StatusBadge variant="order" status={(r as unknown as OrderRow).status} />, align: 'center' },
-            { key: 'total_idr', header: 'Total', render: (r) => formatRupiah((r as unknown as OrderRow).total_idr), align: 'right' },
-            { key: 'created_at', header: 'Waktu', render: (r) => formatDateTime((r as unknown as OrderRow).created_at) },
+            { key: 'payment_method', header: 'Pembayaran', sortKey: 'payment_method', render: (r) => (r as unknown as OrderRow).payment_method ?? '—' },
+            { key: 'status', header: 'Status', sortKey: 'status', render: (r) => <StatusBadge variant="order" status={(r as unknown as OrderRow).status} />, align: 'center' },
+            { key: 'total_idr', header: 'Total', sortKey: 'total_idr', render: (r) => formatRupiah((r as unknown as OrderRow).total_idr), align: 'right' },
+            { key: 'created_at', header: 'Waktu', sortKey: 'created_at', render: (r) => formatDateTime((r as unknown as OrderRow).created_at) },
           ]}
         />
 

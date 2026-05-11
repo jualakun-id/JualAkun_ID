@@ -20,7 +20,14 @@ type ListResponse = {
   pagination: { page: number; limit: number; total: number }
 }
 
-type Props = { searchParams: Promise<{ status?: string; page?: string }> }
+type Props = {
+  searchParams: Promise<{
+    status?: string
+    page?: string
+    sort_by?: string
+    sort_dir?: 'asc' | 'desc'
+  }>
+}
 
 export const metadata = { title: 'Admin — Tiket' }
 
@@ -31,11 +38,19 @@ export default async function AdminTiketPage({ searchParams }: Props) {
   if (sp.status) params.set('status', sp.status)
   params.set('page', String(page))
   params.set('limit', '10')
+  if (sp.sort_by) params.set('sort_by', sp.sort_by)
+  if (sp.sort_dir) params.set('sort_dir', sp.sort_dir)
   const data = await adminFetch<ListResponse>(`/admin/tickets?${params.toString()}`)
 
-  const filterParams = new URLSearchParams()
-  if (sp.status) filterParams.set('status', sp.status)
-  const basePath = `/admin/tiket${filterParams.toString() ? `?${filterParams.toString()}` : ''}`
+  const pagBaseParams = new URLSearchParams()
+  if (sp.status) pagBaseParams.set('status', sp.status)
+  if (sp.sort_by) pagBaseParams.set('sort_by', sp.sort_by)
+  if (sp.sort_dir) pagBaseParams.set('sort_dir', sp.sort_dir)
+  const basePath = `/admin/tiket${pagBaseParams.toString() ? `?${pagBaseParams.toString()}` : ''}`
+
+  const sortBaseParams = new URLSearchParams()
+  if (sp.status) sortBaseParams.set('status', sp.status)
+  const sortBasePath = `/admin/tiket${sortBaseParams.toString() ? `?${sortBaseParams.toString()}` : ''}`
 
   return (
     <div className="px-6 md:px-8 py-8">
@@ -52,6 +67,9 @@ export default async function AdminTiketPage({ searchParams }: Props) {
       <div className="mt-4">
         <DataTable
           rows={(data?.tickets ?? []) as unknown as Record<string, unknown>[]}
+          sortBy={sp.sort_by ?? null}
+          sortDir={sp.sort_dir ?? 'desc'}
+          sortBasePath={sortBasePath}
           columns={[
             {
               key: 'id',
@@ -68,9 +86,9 @@ export default async function AdminTiketPage({ searchParams }: Props) {
                 )
               },
             },
-            { key: 'reason', header: 'Alasan', render: (r) => <span className="text-xs uppercase">{(r as unknown as TicketRow).reason}</span> },
-            { key: 'status', header: 'Status', render: (r) => <StatusBadge variant="ticket" status={(r as unknown as TicketRow).status} />, align: 'center' },
-            { key: 'created_at', header: 'Dibuat', render: (r) => formatDateTime((r as unknown as TicketRow).created_at) },
+            { key: 'reason', header: 'Alasan', sortKey: 'reason', render: (r) => <span className="text-xs uppercase">{(r as unknown as TicketRow).reason}</span> },
+            { key: 'status', header: 'Status', sortKey: 'status', render: (r) => <StatusBadge variant="ticket" status={(r as unknown as TicketRow).status} />, align: 'center' },
+            { key: 'created_at', header: 'Dibuat', sortKey: 'created_at', render: (r) => formatDateTime((r as unknown as TicketRow).created_at) },
           ]}
         />
 

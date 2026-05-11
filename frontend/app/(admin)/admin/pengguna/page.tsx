@@ -20,7 +20,14 @@ type ListResponse = {
   pagination: { page: number; limit: number; total: number }
 }
 
-type Props = { searchParams: Promise<{ search?: string; page?: string }> }
+type Props = {
+  searchParams: Promise<{
+    search?: string
+    page?: string
+    sort_by?: string
+    sort_dir?: 'asc' | 'desc'
+  }>
+}
 
 export const metadata = { title: 'Admin — Pengguna' }
 
@@ -31,11 +38,19 @@ export default async function AdminPenggunaPage({ searchParams }: Props) {
   if (sp.search) params.set('search', sp.search)
   params.set('page', String(page))
   params.set('limit', '10')
+  if (sp.sort_by) params.set('sort_by', sp.sort_by)
+  if (sp.sort_dir) params.set('sort_dir', sp.sort_dir)
   const data = await adminFetch<ListResponse>(`/admin/users?${params.toString()}`)
 
-  const filterParams = new URLSearchParams()
-  if (sp.search) filterParams.set('search', sp.search)
-  const basePath = `/admin/pengguna${filterParams.toString() ? `?${filterParams.toString()}` : ''}`
+  const pagBaseParams = new URLSearchParams()
+  if (sp.search) pagBaseParams.set('search', sp.search)
+  if (sp.sort_by) pagBaseParams.set('sort_by', sp.sort_by)
+  if (sp.sort_dir) pagBaseParams.set('sort_dir', sp.sort_dir)
+  const basePath = `/admin/pengguna${pagBaseParams.toString() ? `?${pagBaseParams.toString()}` : ''}`
+
+  const sortBaseParams = new URLSearchParams()
+  if (sp.search) sortBaseParams.set('search', sp.search)
+  const sortBasePath = `/admin/pengguna${sortBaseParams.toString() ? `?${sortBaseParams.toString()}` : ''}`
 
   return (
     <div className="px-6 md:px-8 py-8">
@@ -44,14 +59,18 @@ export default async function AdminPenggunaPage({ searchParams }: Props) {
       <div className="mt-4">
         <DataTable
           rows={(data?.users ?? []) as unknown as Record<string, unknown>[]}
+          sortBy={sp.sort_by ?? null}
+          sortDir={sp.sort_dir ?? 'desc'}
+          sortBasePath={sortBasePath}
           columns={[
-            { key: 'full_name', header: 'Nama', render: (r) => (r as unknown as UserRow).full_name ?? '—' },
-            { key: 'phone_wa', header: 'WhatsApp', render: (r) => (r as unknown as UserRow).phone_wa ?? '—' },
-            { key: 'credits', header: 'Kredit', render: (r) => formatRupiah((r as unknown as UserRow).credits), align: 'right' },
-            { key: 'role', header: 'Role', render: (r) => <span className="text-xs uppercase">{(r as unknown as UserRow).role}</span> },
+            { key: 'full_name', header: 'Nama', sortKey: 'full_name', render: (r) => (r as unknown as UserRow).full_name ?? '—' },
+            { key: 'phone_wa', header: 'WhatsApp', sortKey: 'phone_wa', render: (r) => (r as unknown as UserRow).phone_wa ?? '—' },
+            { key: 'credits', header: 'Kredit', sortKey: 'credits', render: (r) => formatRupiah((r as unknown as UserRow).credits), align: 'right' },
+            { key: 'role', header: 'Role', sortKey: 'role', render: (r) => <span className="text-xs uppercase">{(r as unknown as UserRow).role}</span> },
             {
               key: 'status',
               header: 'Status',
+              sortKey: 'status',
               render: (r) => {
                 const s = (r as unknown as UserRow).status
                 const cls =
@@ -61,7 +80,7 @@ export default async function AdminPenggunaPage({ searchParams }: Props) {
               },
               align: 'center',
             },
-            { key: 'joined_at', header: 'Bergabung', render: (r) => formatDate((r as unknown as UserRow).joined_at) },
+            { key: 'joined_at', header: 'Bergabung', sortKey: 'joined_at', render: (r) => formatDate((r as unknown as UserRow).joined_at) },
           ]}
         />
 

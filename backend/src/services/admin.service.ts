@@ -21,9 +21,20 @@ function extractBucketPath(url: string, bucket: string): string | null {
 }
 
 export class AdminProductsService {
-  static async list(q: { status?: string; category_slug?: string; page: number; limit: number }) {
+  static async list(q: {
+    status?: string
+    category_slug?: string
+    page: number
+    limit: number
+    sort_by?: string
+    sort_dir?: 'asc' | 'desc'
+  }) {
     const supabase = createAdminClient()
     const offset = (q.page - 1) * q.limit
+    // Default sort: created_at desc (terbaru first). Override kalau client kirim sort_by.
+    const sortColumn = q.sort_by ?? 'created_at'
+    const sortAsc = q.sort_dir === 'asc'
+
     let query = supabase
       .from('products')
       .select(
@@ -32,7 +43,7 @@ export class AdminProductsService {
          categories!inner ( name, slug )`,
         { count: 'exact' },
       )
-      .order('created_at', { ascending: false })
+      .order(sortColumn, { ascending: sortAsc })
       .range(offset, offset + q.limit - 1)
 
     if (q.status === 'active') query = query.eq('is_active', true)
@@ -200,9 +211,19 @@ function parseCsvRow(line: string): string[] {
 }
 
 export class AdminOrdersService {
-  static async list(q: { status?: string; search?: string; page: number; limit: number }) {
+  static async list(q: {
+    status?: string
+    search?: string
+    page: number
+    limit: number
+    sort_by?: string
+    sort_dir?: 'asc' | 'desc'
+  }) {
     const supabase = createAdminClient()
     const offset = (q.page - 1) * q.limit
+    const sortColumn = q.sort_by ?? 'created_at'
+    const sortAsc = q.sort_dir === 'asc'
+
     let query = supabase
       .from('orders')
       .select(
@@ -212,7 +233,7 @@ export class AdminOrdersService {
          user_id`,
         { count: 'exact' },
       )
-      .order('created_at', { ascending: false })
+      .order(sortColumn, { ascending: sortAsc })
       .range(offset, offset + q.limit - 1)
 
     if (q.status) query = query.eq('status', q.status)
@@ -288,9 +309,18 @@ export class AdminOrdersService {
 }
 
 export class AdminTicketsService {
-  static async list(q: { status?: string; page: number; limit: number }) {
+  static async list(q: {
+    status?: string
+    page: number
+    limit: number
+    sort_by?: string
+    sort_dir?: 'asc' | 'desc'
+  }) {
     const supabase = createAdminClient()
     const offset = (q.page - 1) * q.limit
+    const sortColumn = q.sort_by ?? 'created_at'
+    const sortAsc = q.sort_dir === 'asc'
+
     let query = supabase
       .from('support_tickets')
       .select(
@@ -299,7 +329,7 @@ export class AdminTicketsService {
          user_id`,
         { count: 'exact' },
       )
-      .order('created_at', { ascending: false })
+      .order(sortColumn, { ascending: sortAsc })
       .range(offset, offset + q.limit - 1)
     if (q.status) query = query.eq('status', q.status)
     const { data, error, count } = await query
@@ -461,13 +491,22 @@ export class AdminDashboardService {
 }
 
 export class AdminUsersService {
-  static async list(q: { search?: string; page: number; limit: number }) {
+  static async list(q: {
+    search?: string
+    page: number
+    limit: number
+    sort_by?: string
+    sort_dir?: 'asc' | 'desc'
+  }) {
     const supabase = createAdminClient()
     const offset = (q.page - 1) * q.limit
+    const sortColumn = q.sort_by ?? 'joined_at'
+    const sortAsc = q.sort_dir === 'asc'
+
     let query = supabase
       .from('profiles')
       .select('id, full_name, phone_wa, role, status, credits, joined_at', { count: 'exact' })
-      .order('joined_at', { ascending: false })
+      .order(sortColumn, { ascending: sortAsc })
       .range(offset, offset + q.limit - 1)
     if (q.search) query = query.or(`full_name.ilike.%${q.search}%,phone_wa.ilike.%${q.search}%`)
     const { data, error, count } = await query
@@ -484,13 +523,23 @@ export class AdminUsersService {
 }
 
 export class AdminNotificationsService {
-  static async list(q: { channel?: 'wa' | 'email'; status?: string; page: number; limit: number }) {
+  static async list(q: {
+    channel?: 'wa' | 'email'
+    status?: string
+    page: number
+    limit: number
+    sort_by?: string
+    sort_dir?: 'asc' | 'desc'
+  }) {
     const supabase = createAdminClient()
     const offset = (q.page - 1) * q.limit
+    const sortColumn = q.sort_by ?? 'created_at'
+    const sortAsc = q.sort_dir === 'asc'
+
     let query = supabase
       .from('notifications_log')
       .select('*', { count: 'exact' })
-      .order('created_at', { ascending: false })
+      .order(sortColumn, { ascending: sortAsc })
       .range(offset, offset + q.limit - 1)
     if (q.channel) query = query.eq('channel', q.channel)
     if (q.status) query = query.eq('status', q.status)

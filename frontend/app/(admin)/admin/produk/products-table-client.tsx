@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { DataTable } from '@/components/admin/data-table'
+import { DataTable, type SortDir } from '@/components/admin/data-table'
 import { StockBadge } from '@/components/admin/stock-badge'
 import { EditProductModal } from './edit-product-modal'
 import { formatRupiah } from '@/lib/utils'
@@ -24,13 +24,23 @@ type Props = {
   products: ProductRow[]
   categories: Category[]
   rowOffset: number
+  sortBy: string | null
+  sortDir: SortDir
+  sortBasePath: string
 }
 
 /**
  * Client wrapper untuk DataTable produk + EditProductModal.
  * Row click → buka modal edit untuk produk tersebut.
  */
-export function ProductsTableClient({ products, categories, rowOffset }: Props) {
+export function ProductsTableClient({
+  products,
+  categories,
+  rowOffset,
+  sortBy,
+  sortDir,
+  sortBasePath,
+}: Props) {
   const [editingId, setEditingId] = useState<string | null>(null)
 
   return (
@@ -38,6 +48,9 @@ export function ProductsTableClient({ products, categories, rowOffset }: Props) 
       <DataTable
         rows={products as unknown as Record<string, unknown>[]}
         rowClassName={() => 'cursor-pointer'}
+        sortBy={sortBy}
+        sortDir={sortDir}
+        sortBasePath={sortBasePath}
         columns={[
           {
             key: 'no',
@@ -53,6 +66,7 @@ export function ProductsTableClient({ products, categories, rowOffset }: Props) 
           {
             key: 'name',
             header: 'Produk',
+            sortKey: 'name',
             render: (r) => {
               const row = r as unknown as ProductRow
               const cat = Array.isArray(row.categories) ? row.categories[0] : row.categories
@@ -73,6 +87,7 @@ export function ProductsTableClient({ products, categories, rowOffset }: Props) 
           {
             key: 'sku',
             header: 'SKU',
+            sortKey: 'slug',
             render: (r) => {
               const row = r as unknown as ProductRow
               return (
@@ -89,24 +104,28 @@ export function ProductsTableClient({ products, categories, rowOffset }: Props) 
           {
             key: 'price',
             header: 'Harga',
+            sortKey: 'price',
             render: (r) => formatRupiah((r as unknown as ProductRow).price),
             align: 'right',
           },
           {
             key: 'stock_count',
             header: 'Stok',
+            sortKey: 'stock_count',
             render: (r) => <StockBadge count={(r as unknown as ProductRow).stock_count} />,
             align: 'center',
           },
           {
             key: 'sold_count',
             header: 'Terjual',
+            sortKey: 'sold_count',
             render: (r) => (r as unknown as ProductRow).sold_count.toLocaleString('id-ID'),
             align: 'right',
           },
           {
             key: 'is_active',
             header: 'Status',
+            sortKey: 'is_active',
             render: (r) => {
               const active = (r as unknown as ProductRow).is_active
               return (

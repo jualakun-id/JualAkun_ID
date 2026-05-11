@@ -1,3 +1,5 @@
+import Link from 'next/link'
+import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 type Column<T> = {
@@ -6,13 +8,37 @@ type Column<T> = {
   render?: (row: T, index: number) => React.ReactNode
   className?: string
   align?: 'left' | 'right' | 'center'
+  /** Set untuk membuat kolom sortable. Value = nama field di backend (mis. 'price', 'created_at') */
+  sortKey?: string
 }
+
+export type SortDir = 'asc' | 'desc'
 
 type Props<T> = {
   rows: T[]
   columns: Column<T>[]
   emptyMessage?: string
   rowClassName?: (row: T) => string
+  /** Untuk sortable: nama field yang sedang aktif sort (match column.sortKey) */
+  sortBy?: string | null
+  /** Arah sort sekarang */
+  sortDir?: SortDir
+  /**
+   * Base path untuk build href tiap sortable header.
+   * Path harus include semua filter params kecuali sort_by, sort_dir, page.
+   * (DataTable akan append sort_by, sort_dir, dan reset page=1.)
+   */
+  sortBasePath?: string
+}
+
+/**
+ * Build href untuk sortable column: keep filter params, set sort_by + sort_dir,
+ * reset page ke 1. Toggle dir kalau klik kolom yang sama.
+ */
+function buildSortHref(basePath: string, sortKey: string, currentBy: string | null | undefined, currentDir: SortDir | undefined): string {
+  const nextDir: SortDir = currentBy === sortKey && currentDir === 'asc' ? 'desc' : 'asc'
+  const sep = basePath.includes('?') ? '&' : '?'
+  return `${basePath}${sep}sort_by=${sortKey}&sort_dir=${nextDir}&page=1`
 }
 
 export function DataTable<T extends Record<string, unknown>>({
@@ -20,24 +46,79 @@ export function DataTable<T extends Record<string, unknown>>({
   columns,
   emptyMessage = 'Tidak ada data.',
   rowClassName,
+  sortBy,
+  sortDir,
+  sortBasePath,
 }: Props<T>) {
   return (
     <div className="overflow-x-auto rounded-2xl border-2 border-black bg-white shadow-[0_3px_0_rgba(0,0,0,0.9)]">
       <table className="w-full text-sm">
         <thead className="bg-brand-50 text-ink border-b-2 border-black/10">
           <tr>
-            {columns.map((col) => (
-              <th
-                key={col.key}
-                className={cn(
-                  'px-4 py-3 text-xs uppercase tracking-wider font-extrabold whitespace-nowrap',
-                  col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left',
-                  col.className,
-                )}
-              >
-                {col.header}
-              </th>
-            ))}
+            {columns.map((col) => {
+              const isActive = col.sortKey && sortBy === col.sortKey
+              const Icon = !col.sortKey
+                ? null
+                : isActive
+                  ? sortDir === 'asc'
+                    ? ArrowUp
+                    : ArrowDown
+                  : ArrowUpDown
+              const headerContent = (
+                <span
+                  className={cn(
+                    'inline-flex items-center gap-1',
+                    col.align === 'right' ? 'justify-end w-full' : col.align === 'center' ? 'justify-center w-full' : '',
+                  )}
+                >
+                  {col.header}
+                  {Icon ? (
+                    <Icon
+                      size={12}
+                      strokeWidth={2.5}
+                      className={isActive ? 'text-brand-700' : 'text-ink-muted/60'}
+                      aria-hidden="true"
+                    />
+                  ) : null}
+                </span>
+              )
+
+              return (
+                <th
+                  key={col.key}
+                  scope="col"
+                  className={cn(
+                    'px-4 py-3 text-xs uppercase tracking-wider font-extrabold whitespace-nowrap',
+                    col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left',
+                    col.className,
+                  )}
+                  aria-sort={
+                    isActive
+                      ? sortDir === 'asc'
+                        ? 'ascending'
+                        : 'descending'
+                      : col.sortKey
+                        ? 'none'
+                        : undefined
+                  }
+                >
+                  {col.sortKey && sortBasePath ? (
+                    <Link
+                      href={buildSortHref(sortBasePath, col.sortKey, sortBy ?? null, sortDir)}
+                      className={cn(
+                        'inline-flex hover:text-brand-700 transition-colors cursor-pointer',
+                        isActive && 'text-brand-700',
+                      )}
+                      scroll={false}
+                    >
+                      {headerContent}
+                    </Link>
+                  ) : (
+                    headerContent
+                  )}
+                </th>
+              )
+            })}
           </tr>
         </thead>
         <tbody>
