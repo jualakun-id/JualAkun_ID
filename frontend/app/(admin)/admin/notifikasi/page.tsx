@@ -6,12 +6,15 @@ import { adminFetch } from '@/lib/admin-fetch'
 
 type EventType =
   | 'user_registered'
-  | 'order_created'
-  | 'order_paid'
-  | 'order_delivered'
-  | 'order_refunded'
-  | 'ticket_created'
-  | 'ticket_resolved'
+  | 'order_created' | 'order_paid' | 'order_delivered' | 'order_refunded' | 'order_expired'
+  | 'ticket_created' | 'ticket_resolved'
+  | 'coupon_used' | 'coupon_created' | 'coupon_deactivated'
+  | 'review_submitted'
+  | 'stock_critical' | 'stock_out'
+  | 'supplier_purchase' | 'supplier_low_balance'
+  | 'referral_credited' | 'referral_redeemed'
+  | 'notification_failed'
+  | 'product_created'
 
 type ActivityRow = {
   id: string
@@ -88,10 +91,18 @@ export default async function AdminNotifikasiPage({ searchParams }: Props) {
         pills={[
           { label: 'Semua', value: 'all', href: buildPill('') },
           { label: 'User Baru', value: 'user_registered', href: buildPill('user_registered') },
+          { label: 'Order Baru', value: 'order_created', href: buildPill('order_created') },
           { label: 'Pembayaran', value: 'order_paid', href: buildPill('order_paid') },
           { label: 'Pengiriman', value: 'order_delivered', href: buildPill('order_delivered') },
           { label: 'Refund', value: 'order_refunded', href: buildPill('order_refunded') },
+          { label: 'Expired', value: 'order_expired', href: buildPill('order_expired') },
           { label: 'Tiket', value: 'ticket_created', href: buildPill('ticket_created') },
+          { label: 'Kupon', value: 'coupon_used', href: buildPill('coupon_used') },
+          { label: 'Review', value: 'review_submitted', href: buildPill('review_submitted') },
+          { label: 'Stok Habis', value: 'stock_out', href: buildPill('stock_out') },
+          { label: 'Stok Kritis', value: 'stock_critical', href: buildPill('stock_critical') },
+          { label: 'Beli Supplier', value: 'supplier_purchase', href: buildPill('supplier_purchase') },
+          { label: 'Notif Gagal', value: 'notification_failed', href: buildPill('notification_failed') },
         ]}
       />
 

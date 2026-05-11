@@ -8,7 +8,18 @@ export const adminActivityLogRoute = new Hono<AppEnv>()
 
 const listSchema = z.object({
   event_type: z
-    .enum(['user_registered', 'order_created', 'order_paid', 'order_delivered', 'order_refunded', 'ticket_created', 'ticket_resolved'])
+    .enum([
+      'user_registered',
+      'order_created', 'order_paid', 'order_delivered', 'order_refunded', 'order_expired',
+      'ticket_created', 'ticket_resolved',
+      'coupon_used', 'coupon_created', 'coupon_deactivated',
+      'review_submitted',
+      'stock_critical', 'stock_out',
+      'supplier_purchase', 'supplier_low_balance',
+      'referral_credited', 'referral_redeemed',
+      'notification_failed',
+      'product_created',
+    ])
     .optional(),
   is_read: z
     .union([z.literal('true'), z.literal('false')])

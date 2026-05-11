@@ -99,6 +99,14 @@ export class AdminProductsService {
       if (error.code === '23514') throw new ApiError('VALIDATION_ERROR', 'Harga diskon harus lebih kecil dari harga asli', 400)
       throw new ApiError('INTERNAL_ERROR', error.message, 500)
     }
+    await ActivityLogService.log({
+      event_type: 'product_created',
+      ref_id: data.id,
+      ref_table: 'products',
+      title: `Produk baru: ${data.name}`,
+      description: `Slug ${data.slug} · Rp ${data.price.toLocaleString('id-ID')} · ${data.is_active ? 'Aktif' : 'Draft'}`,
+      metadata: { product_id: data.id, slug: data.slug, price: data.price, is_active: data.is_active },
+    })
     return data
   }
 
@@ -546,7 +554,23 @@ export class AdminOrdersService {
       )
     }
 
-    return SupplierCanbosoService.purchase(product.supplier_product_id)
+    const result = await SupplierCanbosoService.purchase(product.supplier_product_id)
+
+    await ActivityLogService.log({
+      event_type: 'supplier_purchase',
+      ref_id: order.id,
+      ref_table: 'orders',
+      title: `Beli ke supplier untuk order`,
+      description: `${product.name}${result.cost_usd ? ` · $${result.cost_usd}` : ''}${result.cost_idr ? ` (Rp ${result.cost_idr.toLocaleString('id-ID')})` : ''}`,
+      metadata: {
+        order_id: order.id,
+        supplier_product_id: product.supplier_product_id,
+        cost_usd: result.cost_usd,
+        cost_idr: result.cost_idr,
+      },
+    })
+
+    return result
   }
 }
 
@@ -685,6 +709,14 @@ export class AdminCouponsService {
       if (error.code === '23505') throw new ApiError('VALIDATION_ERROR', 'Kode kupon sudah dipakai', 409)
       throw new ApiError('INTERNAL_ERROR', error.message, 500)
     }
+    await ActivityLogService.log({
+      event_type: 'coupon_created',
+      ref_id: data.id,
+      ref_table: 'coupons',
+      title: `Kupon baru: ${data.code}`,
+      description: `${data.discount_type === 'percent' ? data.discount_value + '%' : 'Rp ' + data.discount_value.toLocaleString('id-ID')} off`,
+      metadata: { code: data.code, discount_type: data.discount_type, discount_value: data.discount_value },
+    })
     return data
   }
 
@@ -697,8 +729,18 @@ export class AdminCouponsService {
 
   static async deactivate(id: string) {
     const supabase = createAdminClient()
+    const { data: existing } = await supabase.from('coupons').select('code').eq('id', id).maybeSingle()
     const { error } = await supabase.from('coupons').update({ is_active: false }).eq('id', id)
     if (error) throw new ApiError('INTERNAL_ERROR', error.message, 500)
+    if (existing) {
+      await ActivityLogService.log({
+        event_type: 'coupon_deactivated',
+        ref_id: id,
+        ref_table: 'coupons',
+        title: `Kupon di-deactivate: ${(existing as { code: string }).code}`,
+        metadata: existing,
+      })
+    }
     return { ok: true }
   }
 }

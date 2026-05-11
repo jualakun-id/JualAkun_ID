@@ -1,6 +1,7 @@
 import { createAdminClient } from '@/lib/supabase'
 import { ApiError } from '@/types/errors'
 import { PaymentService } from './payment.service'
+import { ActivityLogService } from './activity-log.service'
 
 type CreateOrderInput = {
   product_id: string
@@ -174,6 +175,36 @@ export class CheckoutService {
 
     // 8. Create Duitku transaction (writes reference + payment_url back to the order)
     const tx = await PaymentService.createTransactionForOrder(insertedOrder.id)
+
+    // 9. Activity log emit
+    await ActivityLogService.log({
+      event_type: 'order_created',
+      ref_id: insertedOrder.id,
+      ref_table: 'orders',
+      title: `Order baru: ${insertedOrder.order_number}`,
+      description: `${product.name} · Rp ${totalIdr.toLocaleString('id-ID')} · menunggu pembayaran`,
+      metadata: { product_id: product.id, user_id: userId, amount_idr: amountIdr, total_idr: totalIdr },
+    })
+    if (appliedCouponCode) {
+      await ActivityLogService.log({
+        event_type: 'coupon_used',
+        ref_id: insertedOrder.id,
+        ref_table: 'orders',
+        title: `Kupon dipakai: ${appliedCouponCode}`,
+        description: `Order ${insertedOrder.order_number} · diskon Rp ${discountIdr.toLocaleString('id-ID')}`,
+        metadata: { coupon_code: appliedCouponCode, discount_idr: discountIdr, order_id: insertedOrder.id },
+      })
+    }
+    if (creditUsedIdr > 0) {
+      await ActivityLogService.log({
+        event_type: 'referral_redeemed',
+        ref_id: insertedOrder.id,
+        ref_table: 'orders',
+        title: `Kredit referral dipakai`,
+        description: `Order ${insertedOrder.order_number} · kredit Rp ${creditUsedIdr.toLocaleString('id-ID')}`,
+        metadata: { credit_used_idr: creditUsedIdr, user_id: userId, order_id: insertedOrder.id },
+      })
+    }
 
     return {
       order_id: insertedOrder.id,

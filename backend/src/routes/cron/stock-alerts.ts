@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import { cronMiddleware } from '@/middleware/cron'
 import { createAdminClient } from '@/lib/supabase'
 import { NotificationService } from '@/services/notification.service'
+import { ActivityLogService } from '@/services/activity-log.service'
 import { templates } from '@/templates/messages'
 import type { AppEnv } from '@/types/bindings'
 
@@ -11,12 +12,13 @@ stockAlertsCron.use('*', cronMiddleware)
 
 stockAlertsCron.post('/', async (c) => {
   const supabase = createAdminClient()
+  // Pakai display_stock (admin-managed) untuk monitoring publik
   const { data: lowStock, error } = await supabase
     .from('products')
-    .select('id, name, stock_count')
+    .select('id, name, display_stock')
     .eq('is_active', true)
-    .lte('stock_count', 5)
-    .order('stock_count', { ascending: true })
+    .lte('display_stock', 5)
+    .order('display_stock', { ascending: true })
     .limit(20)
 
   if (error) {
@@ -26,10 +28,23 @@ stockAlertsCron.post('/', async (c) => {
     return c.json({ data: { ok: true, alerted: 0 } })
   }
 
-  const adminWa = process.env.ADMIN_WHATSAPP_NUMBER
-  if (!adminWa) return c.json({ data: { ok: true, alerted: 0, reason: 'no_admin_wa' } })
+  // Activity log per produk — bedakan critical vs out supaya admin bisa filter
+  for (const p of lowStock as { id: string; name: string; display_stock: number }[]) {
+    const isOut = p.display_stock === 0
+    await ActivityLogService.log({
+      event_type: isOut ? 'stock_out' : 'stock_critical',
+      ref_id: p.id,
+      ref_table: 'products',
+      title: `${isOut ? 'Stok habis' : 'Stok kritis'}: ${p.name}`,
+      description: `Tersisa ${p.display_stock} unit${isOut ? ' — perlu refill segera' : ''}`,
+      metadata: { product_id: p.id, name: p.name, display_stock: p.display_stock },
+    })
+  }
 
-  const tpl = templates.adminLowStock({ products: lowStock as { name: string; stock_count: number }[] })
+  const adminWa = process.env.ADMIN_WHATSAPP_NUMBER
+  if (!adminWa) return c.json({ data: { ok: true, alerted: lowStock.length, reason: 'no_admin_wa_only_logged' } })
+
+  const tpl = templates.adminLowStock({ products: lowStock.map((p) => ({ name: p.name, stock_count: p.display_stock })) })
   await NotificationService.sendWhatsApp({
     target: adminWa,
     message: tpl.waText,

@@ -7,8 +7,21 @@ export type ActivityEventType =
   | 'order_paid'
   | 'order_delivered'
   | 'order_refunded'
+  | 'order_expired'
   | 'ticket_created'
   | 'ticket_resolved'
+  | 'coupon_used'
+  | 'coupon_created'
+  | 'coupon_deactivated'
+  | 'review_submitted'
+  | 'stock_critical'
+  | 'stock_out'
+  | 'supplier_purchase'
+  | 'supplier_low_balance'
+  | 'referral_credited'
+  | 'referral_redeemed'
+  | 'notification_failed'
+  | 'product_created'
 
 export type ActivityLog = {
   id: string

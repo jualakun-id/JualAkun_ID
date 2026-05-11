@@ -6,6 +6,7 @@ import Link from 'next/link'
 import {
   UserPlus, Wallet, Package, RotateCcw, LifeBuoy, CheckCircle2,
   Activity, Eye, Circle, Loader2,
+  Clock, Tag, Star, AlertTriangle, ShoppingCart, AlertCircle, Coins, MailWarning, PackagePlus,
 } from 'lucide-react'
 import { Modal } from '@/components/ui/modal'
 import { DataTable, type SortDir } from '@/components/admin/data-table'
@@ -15,12 +16,15 @@ import { formatDateTime, formatRupiah } from '@/lib/utils'
 
 type EventType =
   | 'user_registered'
-  | 'order_created'
-  | 'order_paid'
-  | 'order_delivered'
-  | 'order_refunded'
-  | 'ticket_created'
-  | 'ticket_resolved'
+  | 'order_created' | 'order_paid' | 'order_delivered' | 'order_refunded' | 'order_expired'
+  | 'ticket_created' | 'ticket_resolved'
+  | 'coupon_used' | 'coupon_created' | 'coupon_deactivated'
+  | 'review_submitted'
+  | 'stock_critical' | 'stock_out'
+  | 'supplier_purchase' | 'supplier_low_balance'
+  | 'referral_credited' | 'referral_redeemed'
+  | 'notification_failed'
+  | 'product_created'
 
 type ActivityRow = {
   id: string
@@ -38,12 +42,25 @@ type DetailResponse = ActivityRow & { ref_data: Record<string, unknown> | null }
 
 const EVENT_CONFIG: Record<EventType, { icon: typeof UserPlus; label: string; tone: string }> = {
   user_registered: { icon: UserPlus, label: 'User Baru', tone: 'bg-success/10 text-success border-success/40' },
-  order_created: { icon: Package, label: 'Order Dibuat', tone: 'bg-brand-50 text-brand-700 border-brand-200' },
+  order_created: { icon: ShoppingCart, label: 'Order Baru', tone: 'bg-brand-50 text-brand-700 border-brand-200' },
   order_paid: { icon: Wallet, label: 'Pembayaran', tone: 'bg-warning/10 text-warning border-warning/40' },
   order_delivered: { icon: CheckCircle2, label: 'Pengiriman', tone: 'bg-success/10 text-success border-success/40' },
   order_refunded: { icon: RotateCcw, label: 'Refund', tone: 'bg-danger/10 text-danger border-danger/40' },
+  order_expired: { icon: Clock, label: 'Expired', tone: 'bg-gray-100 text-ink-muted border-gray-200' },
   ticket_created: { icon: LifeBuoy, label: 'Tiket Baru', tone: 'bg-warning/10 text-warning border-warning/40' },
   ticket_resolved: { icon: CheckCircle2, label: 'Tiket Resolved', tone: 'bg-success/10 text-success border-success/40' },
+  coupon_used: { icon: Tag, label: 'Kupon Dipakai', tone: 'bg-brand-50 text-brand-700 border-brand-200' },
+  coupon_created: { icon: Tag, label: 'Kupon Dibuat', tone: 'bg-success/10 text-success border-success/40' },
+  coupon_deactivated: { icon: Tag, label: 'Kupon Disable', tone: 'bg-gray-100 text-ink-muted border-gray-200' },
+  review_submitted: { icon: Star, label: 'Review', tone: 'bg-warning/10 text-warning border-warning/40' },
+  stock_critical: { icon: AlertTriangle, label: 'Stok Kritis', tone: 'bg-warning/10 text-warning border-warning/40' },
+  stock_out: { icon: AlertCircle, label: 'Stok Habis', tone: 'bg-danger/10 text-danger border-danger/40' },
+  supplier_purchase: { icon: ShoppingCart, label: 'Beli Supplier', tone: 'bg-brand-50 text-brand-700 border-brand-200' },
+  supplier_low_balance: { icon: AlertTriangle, label: 'Saldo Supplier', tone: 'bg-danger/10 text-danger border-danger/40' },
+  referral_credited: { icon: Coins, label: 'Kredit Referral', tone: 'bg-success/10 text-success border-success/40' },
+  referral_redeemed: { icon: Coins, label: 'Kredit Dipakai', tone: 'bg-brand-50 text-brand-700 border-brand-200' },
+  notification_failed: { icon: MailWarning, label: 'Notif Gagal', tone: 'bg-danger/10 text-danger border-danger/40' },
+  product_created: { icon: PackagePlus, label: 'Produk Baru', tone: 'bg-success/10 text-success border-success/40' },
 }
 
 type Props = {

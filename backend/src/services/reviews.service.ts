@@ -1,5 +1,6 @@
 import { createAdminClient } from '@/lib/supabase'
 import { ApiError } from '@/types/errors'
+import { ActivityLogService } from './activity-log.service'
 
 type CreateReviewInput = { order_id: string; rating: number; comment?: string }
 
@@ -8,7 +9,7 @@ export class ReviewsService {
     const supabase = createAdminClient()
     const { data: order } = await supabase
       .from('orders')
-      .select('id, product_id, status')
+      .select('id, product_id, status, order_number, products!inner(name)')
       .eq('id', input.order_id)
       .eq('user_id', userId)
       .maybeSingle()
@@ -31,6 +32,18 @@ export class ReviewsService {
       }
       throw new ApiError('INTERNAL_ERROR', error.message, 500)
     }
+
+    const productRel = (order as { products: { name: string } | { name: string }[] }).products
+    const product = Array.isArray(productRel) ? productRel[0] : productRel
+    await ActivityLogService.log({
+      event_type: 'review_submitted',
+      ref_id: order.id,
+      ref_table: 'orders',
+      title: `Review baru: ${input.rating}⭐ untuk ${product?.name ?? 'produk'}`,
+      description: input.comment?.slice(0, 200) ?? null,
+      metadata: { order_number: (order as { order_number: string }).order_number, rating: input.rating, product_id: order.product_id, user_id: userId },
+    })
+
     return { ok: true }
   }
 }
