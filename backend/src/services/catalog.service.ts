@@ -6,25 +6,76 @@ type CatalogQuery = {
   min_price?: number
   max_price?: number
   duration_days?: number
+  search?: string
   sort?: 'sold_count' | 'price_asc' | 'price_desc' | 'newest'
   page: number
   limit: number
 }
 
 export class CatalogService {
+  /**
+   * Direct Supabase query (sebelumnya pakai RPC get_catalog_listing).
+   * Switch ke direct query supaya gampang extend dgn search param tanpa
+   * butuh migration RPC. Performance setara karena Postgres tetap optimize
+   * sama-sama via planner.
+   */
   static async list(q: CatalogQuery) {
     const supabase = createAdminClient()
-    const { data, error } = await supabase.rpc('get_catalog_listing', {
-      p_category_slug: q.category_slug ?? null,
-      p_min_price: q.min_price ?? null,
-      p_max_price: q.max_price ?? null,
-      p_duration_days: q.duration_days ?? null,
-      p_sort: q.sort ?? 'sold_count',
-      p_page: q.page,
-      p_limit: q.limit,
+    const offset = (q.page - 1) * q.limit
+
+    // Sort mapping
+    const sortColumn =
+      q.sort === 'price_asc' || q.sort === 'price_desc'
+        ? 'price'
+        : q.sort === 'newest'
+          ? 'created_at'
+          : 'sold_count'
+    const sortAsc = q.sort === 'price_asc'
+
+    let query = supabase
+      .from('products')
+      .select(
+        `id, name, slug, thumbnail_url, price, original_price,
+         discount_starts_at, discount_ends_at,
+         duration_days, guarantee_days, stock_count, sold_count,
+         rating_avg, rating_count,
+         categories!inner ( name, slug )`,
+        { count: 'exact' },
+      )
+      .eq('is_active', true)
+      .order(sortColumn, { ascending: sortAsc, nullsFirst: false })
+      .range(offset, offset + q.limit - 1)
+
+    if (q.category_slug) query = query.eq('categories.slug', q.category_slug)
+    if (q.min_price !== undefined) query = query.gte('price', q.min_price)
+    if (q.max_price !== undefined) query = query.lte('price', q.max_price)
+    if (q.duration_days !== undefined) query = query.eq('duration_days', q.duration_days)
+    if (q.search) {
+      // ILIKE search di name OR slug — escape karakter spesial PostgREST
+      const safe = q.search.replace(/[%,()]/g, '')
+      query = query.or(`name.ilike.%${safe}%,slug.ilike.%${safe}%`)
+    }
+
+    const { data, error, count } = await query
+    if (error) throw new ApiError('INTERNAL_ERROR', `catalog list: ${error.message}`, 500)
+
+    // Normalize categories field (Supabase returns array atau object depending)
+    const products = (data ?? []).map((p) => {
+      const cats = (p as { categories: { name: string; slug: string } | { name: string; slug: string }[] }).categories
+      const category = Array.isArray(cats) ? cats[0] : cats
+      return { ...p, category }
     })
-    if (error) throw new ApiError('INTERNAL_ERROR', `catalog rpc: ${error.message}`, 500)
-    return data
+
+    const total = count ?? 0
+    return {
+      products,
+      pagination: {
+        page: q.page,
+        limit: q.limit,
+        total,
+        total_pages: Math.max(1, Math.ceil(total / q.limit)),
+      },
+    }
   }
 
   static async listCategories() {

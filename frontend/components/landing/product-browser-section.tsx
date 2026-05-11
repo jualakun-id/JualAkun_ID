@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { ChevronDown, ChevronLeft, ChevronRight, Loader2, Package } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { ChevronDown, ChevronLeft, ChevronRight, Loader2, Package, Search, X } from 'lucide-react'
 import { LandingProductCard } from './landing-product-card'
 import type { Product } from '@/types'
 
@@ -43,20 +43,26 @@ export function ProductBrowserSection({ categories, initialData }: Props) {
   )
   const [sort, setSort] = useState<SortValue>('sold_count')
   const [categorySlug, setCategorySlug] = useState<string>('')
+  const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(false)
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Auto-filter berdasarkan hash URL (#ai → kategori ai) untuk backward compat
   useEffect(() => {
     const hash = window.location.hash.replace('#', '')
     if (hash && hash !== 'produk' && categories.some((c) => c.slug === hash)) {
       setCategorySlug(hash)
-      // Skip immediate fetch — set state akan trigger fetchPage via dependency
-      fetchPage(1, sort, hash)
+      fetchPage(1, sort, hash, '')
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  async function fetchPage(nextPage: number, nextSort: SortValue, nextCategory: string) {
+  async function fetchPage(
+    nextPage: number,
+    nextSort: SortValue,
+    nextCategory: string,
+    nextSearch: string,
+  ) {
     setLoading(true)
     try {
       const params = new URLSearchParams({
@@ -65,6 +71,7 @@ export function ProductBrowserSection({ categories, initialData }: Props) {
         limit: String(PAGE_SIZE),
       })
       if (nextCategory) params.set('category_slug', nextCategory)
+      if (nextSearch.trim()) params.set('search', nextSearch.trim())
       const res = await fetch(`${API_URL}/catalog?${params.toString()}`, { cache: 'no-store' })
       const json = (await res.json()) as { data: CatalogResponse }
       if (json.data) {
@@ -79,13 +86,28 @@ export function ProductBrowserSection({ categories, initialData }: Props) {
   function handleSortChange(newSort: SortValue) {
     if (newSort === sort) return
     setSort(newSort)
-    fetchPage(1, newSort, categorySlug)
+    fetchPage(1, newSort, categorySlug, search)
   }
 
   function handleCategoryChange(newSlug: string) {
     if (newSlug === categorySlug) return
     setCategorySlug(newSlug)
-    fetchPage(1, sort, newSlug)
+    fetchPage(1, sort, newSlug, search)
+  }
+
+  // Debounced search: trigger fetch 400ms after user berhenti ngetik
+  function handleSearchChange(value: string) {
+    setSearch(value)
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      fetchPage(1, sort, categorySlug, value)
+    }, 400)
+  }
+
+  function handleClearSearch() {
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    setSearch('')
+    fetchPage(1, sort, categorySlug, '')
   }
 
   const totalPages = Math.max(
@@ -109,10 +131,10 @@ export function ProductBrowserSection({ categories, initialData }: Props) {
           </p>
         </div>
 
-        {/* Filter row: Category dropdown + Sort pills */}
-        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        {/* Filter row: Category dropdown + Search bar + Sort pills */}
+        <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           {/* Category dropdown */}
-          <div className="relative max-w-xs">
+          <div className="relative w-full max-w-xs shrink-0">
             <label htmlFor="category-filter" className="sr-only">
               Pilih kategori
             </label>
@@ -138,11 +160,43 @@ export function ProductBrowserSection({ categories, initialData }: Props) {
             />
           </div>
 
+          {/* Search bar — di tengah, antara kategori dan sort pills */}
+          <div className="relative flex-1 max-w-md mx-0 lg:mx-4">
+            <label htmlFor="product-search" className="sr-only">
+              Cari produk
+            </label>
+            <Search
+              size={16}
+              strokeWidth={2.25}
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-subtle"
+              aria-hidden="true"
+            />
+            <input
+              id="product-search"
+              type="search"
+              value={search}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              disabled={loading}
+              placeholder="Cari produk... (mis. claude, adobe)"
+              className="w-full rounded-lg border-2 border-black bg-white pl-10 pr-9 py-2.5 text-sm font-medium text-ink placeholder:text-ink-subtle placeholder:font-normal shadow-[0_2px_0_rgba(0,0,0,0.9)] focus:outline-none focus:ring-2 focus:ring-brand-500/40 disabled:opacity-50"
+            />
+            {search ? (
+              <button
+                type="button"
+                onClick={handleClearSearch}
+                aria-label="Hapus pencarian"
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-ink-muted hover:bg-gray-100 hover:text-ink"
+              >
+                <X size={14} strokeWidth={2.5} />
+              </button>
+            ) : null}
+          </div>
+
           {/* Sort pills */}
           <div
             role="radiogroup"
             aria-label="Urutkan produk"
-            className="flex flex-wrap items-center gap-2"
+            className="flex flex-wrap items-center gap-2 shrink-0"
           >
             {SORT_OPTIONS.map((opt) => {
               const active = sort === opt.value
@@ -222,7 +276,7 @@ export function ProductBrowserSection({ categories, initialData }: Props) {
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={() => fetchPage(pagination.page - 1, sort, categorySlug)}
+                onClick={() => fetchPage(pagination.page - 1, sort, categorySlug, search)}
                 disabled={!hasPrev || loading}
                 className="inline-flex items-center gap-1 bg-white hover:bg-brand-50 text-ink font-extrabold px-4 py-2 rounded-lg border-2 border-black shadow-[0_2px_0_rgba(0,0,0,0.9)] hover:shadow-[0_3px_0_rgba(0,0,0,0.9)] hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-[0_1px_0_rgba(0,0,0,0.9)] transition-all duration-150 text-sm disabled:opacity-40 disabled:pointer-events-none"
               >
@@ -231,7 +285,7 @@ export function ProductBrowserSection({ categories, initialData }: Props) {
               </button>
               <button
                 type="button"
-                onClick={() => fetchPage(pagination.page + 1, sort, categorySlug)}
+                onClick={() => fetchPage(pagination.page + 1, sort, categorySlug, search)}
                 disabled={!hasNext || loading}
                 className="inline-flex items-center gap-1 bg-white hover:bg-brand-50 text-ink font-extrabold px-4 py-2 rounded-lg border-2 border-black shadow-[0_2px_0_rgba(0,0,0,0.9)] hover:shadow-[0_3px_0_rgba(0,0,0,0.9)] hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-[0_1px_0_rgba(0,0,0,0.9)] transition-all duration-150 text-sm disabled:opacity-40 disabled:pointer-events-none"
               >
