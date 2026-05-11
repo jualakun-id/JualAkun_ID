@@ -34,6 +34,7 @@ export default async function AdminProdukPage({ searchParams }: Props) {
   const params = new URLSearchParams()
   if (sp.status) params.set('status', sp.status)
   params.set('page', String(page))
+  params.set('limit', '10')
 
   const [data, categories] = await Promise.all([
     adminFetch<ListResponse>(`/admin/products?${params.toString()}`),

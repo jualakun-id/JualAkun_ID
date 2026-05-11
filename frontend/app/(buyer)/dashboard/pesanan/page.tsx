@@ -3,6 +3,7 @@ import Image from 'next/image'
 import { Package } from 'lucide-react'
 import { DashboardTabs } from '@/components/dashboard-tabs'
 import { OrderStatusBadge } from '@/components/order-status-badge'
+import { Pagination } from '@/components/admin/pagination'
 import { createServerClient } from '@/lib/supabase-server'
 import { serverFetch } from '@/lib/server-fetch'
 import { formatRupiah, formatDateTime } from '@/lib/utils'
@@ -13,12 +14,20 @@ type OrdersResponse = {
   pagination: { page: number; limit: number; total: number; total_pages: number }
 }
 
+type Props = { searchParams: Promise<{ page?: string }> }
+
 export const metadata = { title: 'Pesanan Saya' }
 
-export default async function DashboardPesananPage() {
+export default async function DashboardPesananPage({ searchParams }: Props) {
+  const sp = await searchParams
+  const page = Math.max(1, parseInt(sp.page ?? '1', 10) || 1)
+
   const supabase = await createServerClient()
   const { data: { session } } = await supabase.auth.getSession()
-  const data = await serverFetch<OrdersResponse>('/orders?limit=50', { jwt: session?.access_token, cache: 'no-store' })
+  const data = await serverFetch<OrdersResponse>(
+    `/orders?page=${page}&limit=10`,
+    { jwt: session?.access_token, cache: 'no-store' },
+  )
 
   return (
     <section className="container mx-auto max-w-6xl px-4 py-8 md:py-10">
@@ -72,6 +81,15 @@ export default async function DashboardPesananPage() {
           </div>
         ) : null}
       </div>
+
+      {data?.pagination ? (
+        <Pagination
+          page={data.pagination.page}
+          limit={data.pagination.limit}
+          total={data.pagination.total}
+          basePath="/dashboard/pesanan"
+        />
+      ) : null}
     </section>
   )
 }

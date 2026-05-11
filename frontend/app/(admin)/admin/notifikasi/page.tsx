@@ -32,6 +32,7 @@ export default async function AdminNotifikasiPage({ searchParams }: Props) {
   if (sp.status) params.set('status', sp.status)
   if (sp.channel) params.set('channel', sp.channel)
   params.set('page', String(page))
+  params.set('limit', '10')
   const data = await adminFetch<ListResponse>(`/admin/notifications?${params.toString()}`)
 
   const filterParams = new URLSearchParams()

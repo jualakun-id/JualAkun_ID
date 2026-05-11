@@ -33,6 +33,7 @@ export default async function AdminPesananPage({ searchParams }: Props) {
   if (sp.status) params.set('status', sp.status)
   if (sp.search) params.set('search', sp.search)
   params.set('page', String(page))
+  params.set('limit', '10')
   const data = await adminFetch<ListResponse>(`/admin/orders?${params.toString()}`)
 
   // Build basePath untuk pagination (preserve other filters)

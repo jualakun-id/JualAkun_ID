@@ -30,6 +30,7 @@ export default async function AdminTiketPage({ searchParams }: Props) {
   const params = new URLSearchParams()
   if (sp.status) params.set('status', sp.status)
   params.set('page', String(page))
+  params.set('limit', '10')
   const data = await adminFetch<ListResponse>(`/admin/tickets?${params.toString()}`)
 
   const filterParams = new URLSearchParams()

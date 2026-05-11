@@ -30,6 +30,7 @@ export default async function AdminPenggunaPage({ searchParams }: Props) {
   const params = new URLSearchParams()
   if (sp.search) params.set('search', sp.search)
   params.set('page', String(page))
+  params.set('limit', '10')
   const data = await adminFetch<ListResponse>(`/admin/users?${params.toString()}`)
 
   const filterParams = new URLSearchParams()
