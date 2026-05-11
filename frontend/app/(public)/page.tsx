@@ -192,19 +192,19 @@ export default async function HomePage() {
 
       {/* ── HOW IT WORKS ───────────────────────────────────── */}
       <section id="cara-pesan" className="bg-white py-16 md:py-20 scroll-mt-24">
-        <div className="container mx-auto px-4 max-w-6xl text-center">
+        <div className="container mx-auto px-4 max-w-7xl text-center">
           <h2 className="font-heading text-3xl md:text-4xl font-extrabold text-ink tracking-tight">Cara Berlangganan</h2>
           <p className="text-ink-muted text-base md:text-lg font-medium mt-4">
             5 langkah mudah untuk mendapatkan akun digital favorit kamu.
           </p>
-          <div className="mt-12 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6 md:gap-4 max-w-3xl md:max-w-none mx-auto">
+          {/* flex-wrap centered — biar cards bisa naik signifikan tanpa kena
+              constraint 5-col yang max ~220px per card */}
+          <div className="mt-12 flex flex-wrap items-start justify-center gap-6 sm:gap-8 mx-auto">
             <StepCard num={1} label="Pilih Produk"     imageSrc="/landing/step-1-pilih-produk.webp" />
             <StepCard num={2} label="Checkout"         imageSrc="/landing/step-2-checkout.webp" />
             <StepCard num={3} label="Bayar"            imageSrc="/landing/step-3-bayar.webp" />
             <StepCard num={4} label="Pesanan Diterima" imageSrc="/landing/step-4-pesanan-diterima.webp" />
-            <div className="col-span-2 sm:col-span-3 md:col-span-1 flex justify-center">
-              <StepCard num={5} label="Nikmati Akun" imageSrc="/landing/step-5-nikmati-akun.webp" />
-            </div>
+            <StepCard num={5} label="Nikmati Akun"     imageSrc="/landing/step-5-nikmati-akun.webp" />
           </div>
         </div>
       </section>

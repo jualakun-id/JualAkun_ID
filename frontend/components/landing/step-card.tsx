@@ -21,13 +21,13 @@ export function StepCard(props: Props) {
 
   return (
     <div className="flex flex-col items-center gap-3 group">
-      <div className="relative w-44 h-44 sm:w-52 sm:h-52 md:w-44 md:h-44 lg:w-52 lg:h-52 rounded-3xl bg-brand-50 border-2 border-black overflow-hidden shadow-[0_3px_0_rgba(0,0,0,0.9)] flex items-center justify-center transition-all duration-150 group-hover:-translate-y-1 group-hover:shadow-[0_5px_0_rgba(0,0,0,0.9)]">
+      <div className="relative w-40 h-40 sm:w-56 sm:h-56 md:w-64 md:h-64 lg:w-64 lg:h-64 xl:w-72 xl:h-72 rounded-3xl bg-brand-50 border-2 border-black overflow-hidden shadow-[0_3px_0_rgba(0,0,0,0.9)] flex items-center justify-center transition-all duration-150 group-hover:-translate-y-1 group-hover:shadow-[0_5px_0_rgba(0,0,0,0.9)]">
         {isImage ? (
           <Image
             src={(props as WithImage).imageSrc}
             alt={(props as WithImage).imageAlt ?? props.label}
             fill
-            sizes="(min-width: 1024px) 208px, (min-width: 768px) 176px, (min-width: 640px) 208px, 176px"
+            sizes="(min-width: 1280px) 288px, (min-width: 768px) 256px, (min-width: 640px) 224px, 160px"
             className="object-cover"
           />
         ) : (
