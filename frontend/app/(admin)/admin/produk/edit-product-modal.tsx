@@ -32,6 +32,8 @@ type Props = {
   productId: string | null
   categories: Category[]
   onClose: () => void
+  /** Tab yang dibuka saat modal mount. Default 'detail'. */
+  initialTab?: Tab
 }
 
 type Tab = 'detail' | 'stok'
@@ -43,16 +45,16 @@ type Tab = 'detail' | 'stok'
  * Fetch detail produk on-mount via api.get(/admin/products/:id) — kasih full
  * data ke form (includes discount fields, original_price, dll).
  */
-export function EditProductModal({ open, productId, categories, onClose }: Props) {
+export function EditProductModal({ open, productId, categories, onClose, initialTab = 'detail' }: Props) {
   const toast = useToast()
   const [product, setProduct] = useState<ProductDetail | null>(null)
   const [loading, setLoading] = useState(false)
-  const [tab, setTab] = useState<Tab>('detail')
+  const [tab, setTab] = useState<Tab>(initialTab)
 
   useEffect(() => {
     if (!open || !productId) {
       setProduct(null)
-      setTab('detail')
+      setTab(initialTab)
       return
     }
 

@@ -164,7 +164,7 @@ export class AdminProductsService {
     const supabase = createAdminClient()
     const { data, error } = await supabase
       .from('products')
-      .select('id, category_id, name, slug, description, thumbnail_url, duration_days, price, guarantee_days, is_active, stock_count, sold_count')
+      .select('id, category_id, name, slug, description, thumbnail_url, duration_days, price, guarantee_days, is_active, stock_count, sold_count, original_price, discount_starts_at, discount_ends_at')
       .eq('id', id)
       .maybeSingle()
     if (error) throw new ApiError('INTERNAL_ERROR', error.message, 500)
@@ -591,17 +591,74 @@ export class AdminNotificationsService {
 }
 
 export class AdminStockMonitorService {
-  static async list(filter: 'all' | 'critical' | 'out') {
+  static async list(q: {
+    filter: 'all' | 'critical' | 'out'
+    category_slug?: string
+    search?: string
+    page: number
+    limit: number
+    sort_by?: string
+    sort_dir?: 'asc' | 'desc'
+  }) {
     const supabase = createAdminClient()
+    const offset = (q.page - 1) * q.limit
+    // Default sort: stock_count ASC (habis di atas). Override kalau client kirim sort_by.
+    const sortColumn = q.sort_by ?? 'stock_count'
+    const sortAsc = q.sort_by ? q.sort_dir === 'asc' : true
+
     let query = supabase
       .from('products')
-      .select('id, name, slug, stock_count, sold_count, thumbnail_url, categories!inner(name, slug)')
+      .select(
+        `id, name, slug, price, duration_days, stock_count, sold_count,
+         is_active, thumbnail_url,
+         categories!inner ( name, slug )`,
+        { count: 'exact' },
+      )
       .eq('is_active', true)
-      .order('stock_count', { ascending: true })
-    if (filter === 'critical') query = query.lte('stock_count', 5)
-    if (filter === 'out') query = query.eq('stock_count', 0)
-    const { data, error } = await query
+      .order(sortColumn, { ascending: sortAsc })
+      .range(offset, offset + q.limit - 1)
+
+    if (q.filter === 'critical') query = query.lte('stock_count', 5).gt('stock_count', 0)
+    if (q.filter === 'out') query = query.eq('stock_count', 0)
+    if (q.category_slug) query = query.eq('categories.slug', q.category_slug)
+    if (q.search) {
+      const safe = q.search.replace(/[%,()]/g, '')
+      query = query.or(`name.ilike.%${safe}%,slug.ilike.%${safe}%`)
+    }
+
+    const { data, error, count } = await query
     if (error) throw new ApiError('INTERNAL_ERROR', error.message, 500)
-    return data ?? []
+    return {
+      products: data ?? [],
+      pagination: { page: q.page, limit: q.limit, total: count ?? 0 },
+    }
+  }
+
+  /**
+   * Aggregate counts untuk subtitle stok monitor (out vs critical) — independent
+   * dari pagination/filter, supaya angka di header tetap akurat.
+   * Optional category_slug untuk scope counts ke kategori tertentu.
+   */
+  static async counts(category_slug?: string) {
+    const supabase = createAdminClient()
+    let outQ = supabase
+      .from('products')
+      .select('id, categories!inner(slug)', { count: 'exact', head: true })
+      .eq('is_active', true)
+      .eq('stock_count', 0)
+    let critQ = supabase
+      .from('products')
+      .select('id, categories!inner(slug)', { count: 'exact', head: true })
+      .eq('is_active', true)
+      .lte('stock_count', 5)
+      .gt('stock_count', 0)
+    if (category_slug) {
+      outQ = outQ.eq('categories.slug', category_slug)
+      critQ = critQ.eq('categories.slug', category_slug)
+    }
+    const [outRes, critRes] = await Promise.all([outQ, critQ])
+    if (outRes.error) throw new ApiError('INTERNAL_ERROR', outRes.error.message, 500)
+    if (critRes.error) throw new ApiError('INTERNAL_ERROR', critRes.error.message, 500)
+    return { out: outRes.count ?? 0, critical: critRes.count ?? 0 }
   }
 }
