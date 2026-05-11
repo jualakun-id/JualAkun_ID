@@ -61,8 +61,7 @@ export class PaymentService {
       .from('orders')
       .select(
         `id, user_id, order_number, total_idr, status,
-         products!inner ( name ),
-         profiles!orders_user_id_fkey ( full_name, phone_wa )`,
+         products!inner ( name )`,
       )
       .eq('id', orderId)
       .maybeSingle()
@@ -74,13 +73,17 @@ export class PaymentService {
       throw new ApiError('PAYMENT_INVALID', 'Order tidak dalam status menunggu pembayaran', 400)
     }
 
+    // orders.user_id REFERENCES auth.users (bukan profiles), jadi gak bisa
+    // langsung embed profiles via FK. Pakai separate query.
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('full_name, phone_wa')
+      .eq('id', (order as { user_id: string }).user_id)
+      .maybeSingle()
+
     // Supabase joined relations come back as arrays in TS — unwrap.
     const productRel = (order as unknown as { products: { name: string } | { name: string }[] }).products
     const product = Array.isArray(productRel) ? productRel[0] : productRel
-    const profileRel = (order as unknown as {
-      profiles: { full_name?: string; phone_wa?: string } | { full_name?: string; phone_wa?: string }[] | null
-    }).profiles
-    const profile = Array.isArray(profileRel) ? profileRel[0] : profileRel
 
     const { data: authUser } = await supabase.auth.admin.getUserById(order.user_id)
     const email = authUser.user?.email ?? `${order.order_number.toLowerCase()}@no-reply.jualakun.id`
@@ -262,13 +265,17 @@ export class PaymentService {
     const supabase = createAdminClient()
     const { data } = await supabase
       .from('orders')
-      .select(`profiles!orders_user_id_fkey(full_name, phone_wa), products!inner(name)`)
+      .select(`products!inner(name)`)
       .eq('id', order.id)
       .maybeSingle()
-    const profileRel = (data as { profiles?: { full_name?: string; phone_wa?: string } | { full_name?: string; phone_wa?: string }[] } | null)?.profiles
-    const profile = Array.isArray(profileRel) ? profileRel[0] : profileRel
-    const productRel = (data as { products: { name: string } | { name: string }[] }).products
+    const productRel = (data as { products: { name: string } | { name: string }[] } | null)?.products
     const product = Array.isArray(productRel) ? productRel[0] : productRel
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('full_name, phone_wa')
+      .eq('id', order.user_id)
+      .maybeSingle()
 
     const { data: authUser } = await supabase.auth.admin.getUserById(order.user_id)
     const email = authUser.user?.email
@@ -331,7 +338,6 @@ export class PaymentService {
       .select(
         `guarantee_expires_at,
          account_stock(credentials_enc, note),
-         profiles!orders_user_id_fkey(full_name, phone_wa),
          products!inner(name)`,
       )
       .eq('id', order.id)
@@ -342,11 +348,15 @@ export class PaymentService {
     const credentialsEnc = stockObj?.credentials_enc
     if (!credentialsEnc) return
 
-    const profileRel = (data as { profiles?: { full_name?: string; phone_wa?: string } | { full_name?: string; phone_wa?: string }[] } | null)?.profiles
-    const profile = Array.isArray(profileRel) ? profileRel[0] : profileRel
-    const productRel = (data as { products: { name: string } | { name: string }[] }).products
+    const productRel = (data as { products: { name: string } | { name: string }[] } | null)?.products
     const product = Array.isArray(productRel) ? productRel[0] : productRel
-    const guaranteeExpiresAt = (data as { guarantee_expires_at: string }).guarantee_expires_at
+    const guaranteeExpiresAt = (data as { guarantee_expires_at: string } | null)?.guarantee_expires_at ?? ''
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('full_name, phone_wa')
+      .eq('id', order.user_id)
+      .maybeSingle()
 
     const credsPlain = await CryptoService.decrypt(credentialsEnc)
     const { data: authUser } = await supabase.auth.admin.getUserById(order.user_id)

@@ -321,10 +321,8 @@ export class AdminOrdersService {
       .from('orders')
       .select(
         `id, order_number, total_idr, cost_idr, status, payment_method, payment_status,
-         created_at, paid_at, delivered_at, expires_at,
-         products!inner ( name, slug, supplier_product_id ),
-         profiles!orders_user_id_fkey ( full_name, phone_wa ),
-         user_id`,
+         created_at, paid_at, delivered_at, expires_at, user_id,
+         products!inner ( name, slug, supplier_product_id )`,
         { count: 'exact' },
       )
       .order(sortColumn, { ascending: sortAsc })
@@ -335,8 +333,28 @@ export class AdminOrdersService {
 
     const { data, error, count } = await query
     if (error) throw new ApiError('INTERNAL_ERROR', error.message, 500)
+
+    // Batch fetch profiles untuk buyer info (orders.user_id → auth.users, jadi
+    // gak bisa langsung embed profiles via FK. Pakai separate query).
+    const userIds = Array.from(new Set((data ?? []).map((o) => (o as { user_id: string }).user_id).filter(Boolean)))
+    const profileMap = new Map<string, { full_name: string | null; phone_wa: string | null }>()
+    if (userIds.length > 0) {
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, full_name, phone_wa')
+        .in('id', userIds)
+      for (const p of (profiles ?? []) as Array<{ id: string; full_name: string | null; phone_wa: string | null }>) {
+        profileMap.set(p.id, { full_name: p.full_name, phone_wa: p.phone_wa })
+      }
+    }
+
+    const enriched = (data ?? []).map((o) => ({
+      ...o,
+      profiles: profileMap.get((o as { user_id: string }).user_id) ?? null,
+    }))
+
     return {
-      orders: data ?? [],
+      orders: enriched,
       pagination: { page: q.page, limit: q.limit, total: count ?? 0 },
     }
   }
@@ -1096,21 +1114,25 @@ export class AdminUsersService {
     if (profErr) throw new ApiError('INTERNAL_ERROR', profErr.message, 500)
     if (!profile) throw new ApiError('NOT_FOUND', 'User tidak ditemukan', 404)
 
-    // Cari referred_by dari referrals table (kalau ada)
+    // Cari referrer_user_id dari referrals table (kalau ada), lalu fetch
+    // profile referrer-nya separately. FK referrals.referrer_user_id ke
+    // auth.users (bukan profiles), jadi gak bisa embed langsung.
     const { data: referredByRow } = await supabase
       .from('referrals')
-      .select('referrer_user_id, profiles!referrals_referrer_user_id_fkey(full_name, referral_code)')
+      .select('referrer_user_id')
       .eq('referred_user_id', userId)
       .maybeSingle()
-    const referredByData = referredByRow as null | {
-      referrer_user_id: string
-      profiles: { full_name: string | null; referral_code: string } | { full_name: string | null; referral_code: string }[]
+    const referrerUserId = (referredByRow as { referrer_user_id: string } | null)?.referrer_user_id ?? null
+    type RefProfile = { full_name: string | null; referral_code: string }
+    let referrerProfile: RefProfile | null = null
+    if (referrerUserId) {
+      const { data: rp } = await supabase
+        .from('profiles')
+        .select('full_name, referral_code')
+        .eq('id', referrerUserId)
+        .maybeSingle()
+      referrerProfile = (rp as RefProfile | null) ?? null
     }
-    const referrerProfile = referredByData
-      ? Array.isArray(referredByData.profiles)
-        ? referredByData.profiles[0]
-        : referredByData.profiles
-      : null
 
     // Email dari auth.users
     const { data: authUser } = await supabase.auth.admin.getUserById(userId)

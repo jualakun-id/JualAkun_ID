@@ -19,16 +19,21 @@ export class ReferralService {
       .maybeSingle()
     if (profileErr || !profile) throw new ApiError('NOT_FOUND', 'Profil tidak ditemukan', 404)
 
+    // FK referrals.referred_user_id ke auth.users (bukan profiles), jadi
+    // gak bisa embed via FK. Ambil user_id langsung lalu fetch email per id.
     const { data: refs } = await supabase
       .from('referrals')
-      .select(
-        `status, credit_amount, credited_at, created_at,
-         referred:profiles!referrals_referred_user_id_fkey (id)`,
-      )
+      .select('referred_user_id, status, credit_amount, credited_at, created_at')
       .eq('referrer_user_id', userId)
       .order('created_at', { ascending: false })
 
-    const list = refs ?? []
+    const list = (refs ?? []) as Array<{
+      referred_user_id: string
+      status: string
+      credit_amount: number
+      credited_at: string | null
+      created_at: string
+    }>
     const stats = {
       total_referrals: list.length,
       credited: list.filter((r) => r.status === 'credited').length,
@@ -40,11 +45,9 @@ export class ReferralService {
 
     const history = await Promise.all(
       list.slice(0, 20).map(async (r) => {
-        const referredId = (r.referred as { id?: string } | { id?: string }[] | null)
-        const id = Array.isArray(referredId) ? referredId[0]?.id : referredId?.id
         let email = ''
-        if (id) {
-          const { data: user } = await supabase.auth.admin.getUserById(id)
+        if (r.referred_user_id) {
+          const { data: user } = await supabase.auth.admin.getUserById(r.referred_user_id)
           email = user.user?.email ?? ''
         }
         return {
