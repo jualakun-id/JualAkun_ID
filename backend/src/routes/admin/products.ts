@@ -33,6 +33,10 @@ const createSchema = z.object({
   price: z.coerce.number().int().positive(),
   guarantee_days: z.coerce.number().int().nonnegative().optional(),
   is_active: z.boolean().optional(),
+  // Diskon — original_price > price (validasi DB constraint juga handle)
+  original_price: z.coerce.number().int().positive().nullable().optional(),
+  discount_starts_at: z.string().datetime().nullable().optional(),
+  discount_ends_at: z.string().datetime().nullable().optional(),
 })
 
 adminProductsRoute.post('/', zValidator('json', createSchema), async (c) => {

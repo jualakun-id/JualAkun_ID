@@ -2,8 +2,10 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { Tag } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { ThumbnailUpload } from '@/components/ui/thumbnail-upload'
 import { useToast } from '@/components/toast'
 import { api } from '@/lib/api'
 import type { Category } from '@/types'
@@ -21,11 +23,23 @@ type Props = {
     price: number
     guarantee_days: number
     is_active: boolean
+    original_price: number | null
+    discount_starts_at: string | null
+    discount_ends_at: string | null
   }>
   /** Set true kalau ProductForm di-render di dalam Modal — drop card wrapper (border + padding + shadow). */
   embedded?: boolean
   /** Callback setelah submit success — pakai untuk close modal. Default: router.push ke detail. */
   onSuccess?: (id: string) => void
+}
+
+// Convert ISO datetime → "YYYY-MM-DDTHH:mm" untuk <input type="datetime-local">
+function isoToLocal(iso: string | null | undefined): string {
+  if (!iso) return ''
+  const d = new Date(iso)
+  if (isNaN(d.getTime())) return ''
+  const off = d.getTimezoneOffset() * 60_000
+  return new Date(d.getTime() - off).toISOString().slice(0, 16)
 }
 
 export function ProductForm({ categories, initial, embedded, onSuccess }: Props) {
@@ -42,8 +56,14 @@ export function ProductForm({ categories, initial, embedded, onSuccess }: Props)
     price: initial?.price ?? 0,
     guarantee_days: initial?.guarantee_days ?? 30,
     is_active: initial?.is_active ?? false,
+    original_price: initial?.original_price ?? '',
+    discount_starts_at: isoToLocal(initial?.discount_starts_at),
+    discount_ends_at: isoToLocal(initial?.discount_ends_at),
   })
   const [loading, setLoading] = useState(false)
+  const [showDiscount, setShowDiscount] = useState(
+    !!initial?.original_price || !!initial?.discount_starts_at || !!initial?.discount_ends_at,
+  )
 
   function update<K extends keyof typeof form>(key: K, value: typeof form[K]) {
     setForm((f) => ({ ...f, [key]: value }))
@@ -65,14 +85,45 @@ export function ProductForm({ categories, initial, embedded, onSuccess }: Props)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+
+    // Validasi diskon kalau showDiscount: original_price harus > price
+    if (showDiscount && form.original_price !== '') {
+      const orig = Number(form.original_price)
+      if (orig <= Number(form.price)) {
+        toast.error('Harga asli (sebelum diskon) harus lebih besar dari harga jual')
+        return
+      }
+      if (form.discount_starts_at && form.discount_ends_at) {
+        const s = new Date(form.discount_starts_at).getTime()
+        const e2 = new Date(form.discount_ends_at).getTime()
+        if (e2 <= s) {
+          toast.error('Tanggal selesai diskon harus setelah tanggal mulai')
+          return
+        }
+      }
+    }
+
     setLoading(true)
     const body = {
-      ...form,
+      category_id: form.category_id,
+      name: form.name,
+      slug: form.slug,
+      description: form.description || undefined,
+      thumbnail_url: form.thumbnail_url || undefined,
       duration_days: Number(form.duration_days),
       price: Number(form.price),
       guarantee_days: Number(form.guarantee_days),
-      thumbnail_url: form.thumbnail_url || undefined,
-      description: form.description || undefined,
+      is_active: form.is_active,
+      original_price:
+        showDiscount && form.original_price !== '' ? Number(form.original_price) : null,
+      discount_starts_at:
+        showDiscount && form.discount_starts_at
+          ? new Date(form.discount_starts_at).toISOString()
+          : null,
+      discount_ends_at:
+        showDiscount && form.discount_ends_at
+          ? new Date(form.discount_ends_at).toISOString()
+          : null,
     }
     const result = isEdit
       ? await api.patch<{ id: string }>(`/admin/products/${initial!.id}`, body)
@@ -110,14 +161,17 @@ export function ProductForm({ categories, initial, embedded, onSuccess }: Props)
           ))}
         </select>
       </Field>
-      <Field label="Nama produk" hint="Akan dipakai sebagai display name di marketplace">
+      <Field
+        label="Nama produk"
+        hint='Hindari kata "Garansi" — sudah ditampilkan otomatis sebagai badge di card produk. Contoh OK: "Claude Pro", "ChatGPT Plus 1 Bulan"'
+      >
         <Input
           required
           minLength={2}
           maxLength={100}
           value={form.name}
           onChange={(e) => handleNameChange(e.target.value)}
-          placeholder="Contoh: Claude Pro Full Garansi"
+          placeholder="Contoh: Claude Pro"
         />
       </Field>
       {!isEdit ? (
@@ -174,14 +228,67 @@ export function ProductForm({ categories, initial, embedded, onSuccess }: Props)
           />
         </Field>
       </div>
-      <Field label="Thumbnail URL" hint="URL gambar produk (Supabase Storage / CDN). Optional — tampil di card marketplace">
-        <Input
-          type="url"
+      <Field label="Thumbnail produk" hint="Tampil di card marketplace. Auto-upload ke storage saat dipilih.">
+        <ThumbnailUpload
           value={form.thumbnail_url}
-          onChange={(e) => update('thumbnail_url', e.target.value)}
-          placeholder="https://..."
+          onChange={(url) => update('thumbnail_url', url)}
+          slug={form.slug}
         />
       </Field>
+
+      {/* ── DISKON SECTION ──────────────────────────────────────── */}
+      <div className="rounded-xl border-2 border-black/15 bg-brand-50/30 p-4">
+        <label className="flex items-center gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={showDiscount}
+            onChange={(e) => setShowDiscount(e.target.checked)}
+            className="h-4 w-4 accent-brand-500 cursor-pointer"
+          />
+          <span className="flex items-center gap-1.5 text-sm font-bold text-ink">
+            <Tag size={14} className="text-brand-600" strokeWidth={2.5} />
+            Aktifkan Diskon
+          </span>
+        </label>
+        {showDiscount ? (
+          <div className="mt-4 space-y-4">
+            <Field
+              label="Harga asli (sebelum diskon)"
+              hint="Harga coret yang akan tampil di samping harga jual. Harus lebih besar dari harga jual."
+            >
+              <Input
+                type="number"
+                min={1000}
+                step={1000}
+                value={form.original_price}
+                onChange={(e) => update('original_price', e.target.value as never)}
+                placeholder="200000"
+              />
+            </Field>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Diskon mulai" hint="Kosong = berlaku sekarang">
+                <Input
+                  type="datetime-local"
+                  value={form.discount_starts_at}
+                  onChange={(e) => update('discount_starts_at', e.target.value)}
+                />
+              </Field>
+              <Field label="Diskon berakhir" hint="Kosong = no expire">
+                <Input
+                  type="datetime-local"
+                  value={form.discount_ends_at}
+                  onChange={(e) => update('discount_ends_at', e.target.value)}
+                />
+              </Field>
+            </div>
+          </div>
+        ) : (
+          <p className="mt-2 text-xs text-ink-subtle font-medium">
+            Centang untuk set harga asli & periode promo. Customer akan lihat harga coret + harga jual.
+          </p>
+        )}
+      </div>
+
       <label className="flex items-start gap-3 rounded-lg border-2 border-black/15 bg-brand-50/40 p-3.5 cursor-pointer hover:border-brand-400 transition-colors">
         <input
           type="checkbox"

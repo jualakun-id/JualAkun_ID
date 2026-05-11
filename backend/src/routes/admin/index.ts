@@ -9,6 +9,7 @@ import { adminUsersRoute } from './users'
 import { adminAnalyticsRoute } from './analytics'
 import { adminNotificationsRoute } from './notifications'
 import { adminStockMonitorRoute } from './stock-monitor'
+import { adminUploadRoute } from './upload'
 import type { AppEnv } from '@/types/bindings'
 
 export const adminRoute = new Hono<AppEnv>()
@@ -23,3 +24,4 @@ adminRoute.route('/users', adminUsersRoute)
 adminRoute.route('/analytics', adminAnalyticsRoute)
 adminRoute.route('/notifications', adminNotificationsRoute)
 adminRoute.route('/stock-monitor', adminStockMonitorRoute)
+adminRoute.route('/upload', adminUploadRoute)

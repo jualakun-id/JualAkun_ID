@@ -42,6 +42,9 @@ export class AdminProductsService {
     price: number
     guarantee_days?: number
     is_active?: boolean
+    original_price?: number | null
+    discount_starts_at?: string | null
+    discount_ends_at?: string | null
   }) {
     const supabase = createAdminClient()
     const { data, error } = await supabase
@@ -55,12 +58,13 @@ export class AdminProductsService {
       .single()
     if (error) {
       if (error.code === '23505') throw new ApiError('VALIDATION_ERROR', 'Slug sudah dipakai', 409)
+      if (error.code === '23514') throw new ApiError('VALIDATION_ERROR', 'Harga diskon harus lebih kecil dari harga asli', 400)
       throw new ApiError('INTERNAL_ERROR', error.message, 500)
     }
     return data
   }
 
-  static async update(id: string, input: Partial<{ name: string; description: string; thumbnail_url: string; duration_days: number; price: number; guarantee_days: number; is_active: boolean; category_id: string }>) {
+  static async update(id: string, input: Partial<{ name: string; description: string; thumbnail_url: string; duration_days: number; price: number; guarantee_days: number; is_active: boolean; category_id: string; original_price: number | null; discount_starts_at: string | null; discount_ends_at: string | null }>) {
     const supabase = createAdminClient()
     const { data, error } = await supabase.from('products').update(input).eq('id', id).select('*').single()
     if (error) throw new ApiError('INTERNAL_ERROR', error.message, 500)

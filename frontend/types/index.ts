@@ -38,17 +38,20 @@ export type Product = {
   category_slug?: string
   price: number
   original_price: number | null
+  discount_starts_at: string | null
+  discount_ends_at: string | null
   thumbnail_url: string | null
-  images: string[]
-  duration_label: string | null
-  warranty_label: string | null
+  duration_days: number
+  guarantee_days: number
   stock_count: number
   sold_count: number
   rating_avg: number
   rating_count: number
-  is_featured: boolean
   is_active: boolean
   created_at: string
+  // Legacy/optional fields untuk backward compat
+  duration_label?: string | null
+  warranty_label?: string | null
 }
 
 export type Order = {

@@ -4,6 +4,25 @@ import { Shield } from 'lucide-react'
 import type { Product } from '@/types'
 import { detectBrand, BrandLogo } from './brand-logo'
 
+/**
+ * Cek apakah diskon aktif sekarang berdasarkan original_price + window dates.
+ * Diskon aktif kalau: original_price > price
+ *   AND (starts_at null OR now >= starts_at)
+ *   AND (ends_at null OR now <= ends_at)
+ */
+function isDiscountActive(p: {
+  price: number
+  original_price: number | null
+  discount_starts_at: string | null
+  discount_ends_at: string | null
+}): boolean {
+  if (p.original_price === null || p.original_price <= p.price) return false
+  const now = Date.now()
+  if (p.discount_starts_at && new Date(p.discount_starts_at).getTime() > now) return false
+  if (p.discount_ends_at && new Date(p.discount_ends_at).getTime() < now) return false
+  return true
+}
+
 export function LandingProductCard({
   product,
 }: {
@@ -11,13 +30,17 @@ export function LandingProductCard({
 }) {
   const isOutOfStock = product.stock_count === 0
   const brand = detectBrand(product.name)
-  const hasDiscount =
-    product.original_price !== null && product.original_price > product.price
+  const hasDiscount = isDiscountActive(product)
   const discountPct = hasDiscount
     ? Math.round(
         ((product.original_price! - product.price) / product.original_price!) * 100,
       )
     : 0
+  // Garansi sebagai badge di card (admin hanya set guarantee_days, jangan tulis di nama)
+  const durationLabel = product.duration_label ?? `${product.duration_days} hari`
+  const warrantyLabel =
+    product.warranty_label ??
+    (product.guarantee_days > 0 ? `Garansi ${product.guarantee_days} hari` : null)
 
   return (
     <div
@@ -83,17 +106,17 @@ export function LandingProductCard({
             )}
           </div>
 
-          {(product.duration_label || product.warranty_label) && (
+          {(durationLabel || warrantyLabel) && (
             <div className="mt-1.5 flex flex-wrap items-center justify-center gap-1.5 text-[13px] text-ink-muted font-medium">
-              {product.duration_label && (
+              {durationLabel && (
                 <span className="inline-flex items-center gap-1 bg-brand-50 text-brand-700 px-2 py-0.5 rounded-full font-semibold">
-                  {product.duration_label}
+                  {durationLabel}
                 </span>
               )}
-              {product.warranty_label && (
+              {warrantyLabel && (
                 <span className="inline-flex items-center gap-1">
                   <Shield size={12} className="text-stat-green" aria-hidden="true" />
-                  <span>{product.warranty_label}</span>
+                  <span>{warrantyLabel}</span>
                 </span>
               )}
             </div>

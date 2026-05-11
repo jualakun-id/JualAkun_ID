@@ -50,7 +50,9 @@ export class CatalogService {
     const { data: product, error } = await supabase
       .from('products')
       .select(
-        `id, name, slug, description, thumbnail_url, price, duration_days, guarantee_days,
+        `id, name, slug, description, thumbnail_url, price, original_price,
+         discount_starts_at, discount_ends_at,
+         duration_days, guarantee_days,
          stock_count, sold_count, rating_avg, rating_count, is_active,
          categories ( name, slug )`,
       )
