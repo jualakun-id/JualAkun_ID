@@ -80,7 +80,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       <div
         aria-live="polite"
         aria-atomic="false"
-        className="fixed bottom-4 left-4 z-[60] flex flex-col-reverse gap-2 pointer-events-none"
+        className="fixed bottom-8 right-4 sm:bottom-10 sm:right-6 z-[60] flex flex-col-reverse gap-2 pointer-events-none"
       >
         {toasts.map((t) => (
           <ToastItem key={t.id} toast={t} onDismiss={() => dismiss(t.id)} />
@@ -105,7 +105,7 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }
     <div
       role="status"
       className={`pointer-events-auto flex items-start gap-3 rounded-xl border-2 ${cfg.className} px-4 py-3 shadow-[0_4px_0_rgba(0,0,0,0.9)] min-w-[300px] max-w-md transition-all duration-200 ${
-        exiting ? 'opacity-0 -translate-x-2' : 'opacity-100 translate-x-0 animate-pop-in'
+        exiting ? 'opacity-0 translate-x-2' : 'opacity-100 translate-x-0 animate-pop-in'
       }`}
     >
       <Icon size={20} className={`shrink-0 mt-0.5 ${cfg.iconClassName}`} strokeWidth={2.75} />
