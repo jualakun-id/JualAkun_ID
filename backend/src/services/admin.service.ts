@@ -652,6 +652,7 @@ export class AdminOrdersService {
 export class AdminTicketsService {
   static async list(q: {
     status?: string
+    reason?: string
     search?: string
     page: number
     limit: number
@@ -673,14 +674,63 @@ export class AdminTicketsService {
       )
       .order(sortColumn, { ascending: sortAsc })
       .range(offset, offset + q.limit - 1)
-    if (q.status) query = query.eq('status', q.status)
+    // Status filter: support 'resolved' shortcut untuk semua variants
+    if (q.status === 'resolved') {
+      query = query.like('status', 'resolved%')
+    } else if (q.status) {
+      query = query.eq('status', q.status)
+    }
+    if (q.reason) query = query.eq('reason', q.reason)
     if (q.search) {
       const safe = q.search.replace(/[%,()]/g, '')
-      query = query.ilike('description', `%${safe}%`)
+      // Search di description ATAU order_number (via inner join filter)
+      query = query.or(`description.ilike.%${safe}%,orders.order_number.ilike.%${safe}%`)
     }
     const { data, error, count } = await query
     if (error) throw new ApiError('INTERNAL_ERROR', error.message, 500)
-    return { tickets: data ?? [], pagination: { page: q.page, limit: q.limit, total: count ?? 0 } }
+
+    // Enrich dengan buyer info (FK user_id ke auth.users — fetch profiles separately)
+    const tickets = (data ?? []) as Array<{ user_id: string; [k: string]: unknown }>
+    const userIds = Array.from(new Set(tickets.map((t) => t.user_id).filter(Boolean)))
+    const profileMap = new Map<string, { full_name: string | null; phone_wa: string | null }>()
+    if (userIds.length > 0) {
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, full_name, phone_wa')
+        .in('id', userIds)
+      for (const p of (profiles ?? []) as Array<{ id: string; full_name: string | null; phone_wa: string | null }>) {
+        profileMap.set(p.id, { full_name: p.full_name, phone_wa: p.phone_wa })
+      }
+    }
+    const enriched = tickets.map((t) => ({ ...t, buyer: profileMap.get(t.user_id) ?? null }))
+
+    // Metrics aggregate (independent dari filter) untuk subtitle
+    const { count: openCount } = await supabase
+      .from('support_tickets')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'open')
+    const { count: inReviewCount } = await supabase
+      .from('support_tickets')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'in_review')
+
+    // SLA breach: open > 24 jam
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+    const { count: slaBreachCount } = await supabase
+      .from('support_tickets')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'open')
+      .lt('created_at', twentyFourHoursAgo)
+
+    return {
+      tickets: enriched,
+      pagination: { page: q.page, limit: q.limit, total: count ?? 0 },
+      metrics: {
+        open_count: openCount ?? 0,
+        in_review_count: inReviewCount ?? 0,
+        sla_breach_count: slaBreachCount ?? 0,
+      },
+    }
   }
 
   static async getOne(ticketId: string) {
@@ -689,35 +739,87 @@ export class AdminTicketsService {
       .from('support_tickets')
       .select(
         `id, reason, description, screenshot_url, status, resolution, resolved_at, created_at, user_id,
-         orders!inner ( id, order_number, product_id, products ( name ) )`,
+         orders!inner ( id, order_number, product_id, total_idr, paid_at, delivered_at, status,
+           products ( name, slug, thumbnail_url ) )`,
       )
       .eq('id', ticketId)
       .maybeSingle()
     if (error) throw new ApiError('INTERNAL_ERROR', error.message, 500)
     if (!data) throw new ApiError('NOT_FOUND', 'Tiket tidak ditemukan', 404)
 
-    const orderRel = (data as { orders: { id: string; order_number: string; product_id: string; products: { name: string } | { name: string }[] } | { id: string; order_number: string; product_id: string; products: { name: string } | { name: string }[] }[] }).orders
+    const orderRel = (data as { orders: Record<string, unknown> | Record<string, unknown>[] }).orders
     const order = Array.isArray(orderRel) ? orderRel[0] : orderRel
-    const productRel = order.products
+    const productRel = (order as { products: unknown }).products
     const product = Array.isArray(productRel) ? productRel[0] : productRel
 
+    const userId = (data as { user_id: string }).user_id
+
+    // Available stock (untuk replacement)
     const { data: availableStock } = await supabase
       .from('account_stock')
       .select('id, created_at')
-      .eq('product_id', order.product_id)
+      .eq('product_id', (order as { product_id: string }).product_id)
       .eq('is_used', false)
       .order('created_at')
       .limit(20)
 
-    const { data: authUser } = await supabase.auth.admin.getUserById((data as { user_id: string }).user_id)
+    // Buyer info: email + profile
+    const { data: authUser } = await supabase.auth.admin.getUserById(userId)
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('full_name, phone_wa')
+      .eq('id', userId)
+      .maybeSingle()
+
+    // Riwayat tiket buyer ini (selain tiket sekarang)
+    const { data: previousTickets } = await supabase
+      .from('support_tickets')
+      .select('id, reason, status, created_at')
+      .eq('user_id', userId)
+      .neq('id', ticketId)
+      .order('created_at', { ascending: false })
+      .limit(10)
+
+    // Notifikasi log untuk order ini
+    const { data: notifications } = await supabase
+      .from('notifications_log')
+      .select('id, channel, template, status, created_at')
+      .eq('order_id', (order as { id: string }).id)
+      .order('created_at', { ascending: false })
+      .limit(10)
 
     return {
       ...data,
       orders: undefined,
-      order: { id: order.id, order_number: order.order_number, product },
+      order: {
+        id: (order as { id: string }).id,
+        order_number: (order as { order_number: string }).order_number,
+        total_idr: (order as { total_idr: number }).total_idr,
+        paid_at: (order as { paid_at: string | null }).paid_at,
+        delivered_at: (order as { delivered_at: string | null }).delivered_at,
+        status: (order as { status: string }).status,
+        product,
+      },
       buyer_email: authUser.user?.email ?? null,
+      buyer: profile ?? null,
+      previous_tickets: previousTickets ?? [],
+      notifications: notifications ?? [],
       available_stock_ids: (availableStock ?? []).map((s: { id: string }) => s.id),
     }
+  }
+
+  /**
+   * Update status tiket (mis. open → in_review) tanpa resolve.
+   * Pakai untuk admin quick-action "Mark In Review".
+   */
+  static async updateStatus(ticketId: string, status: string) {
+    const supabase = createAdminClient()
+    const { error } = await supabase
+      .from('support_tickets')
+      .update({ status })
+      .eq('id', ticketId)
+    if (error) throw new ApiError('INTERNAL_ERROR', error.message, 500)
+    return { ok: true }
   }
 
   static async resolve(

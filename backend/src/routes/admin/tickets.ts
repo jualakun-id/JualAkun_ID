@@ -7,7 +7,8 @@ import type { AppEnv } from '@/types/bindings'
 export const adminTicketsRoute = new Hono<AppEnv>()
 
 const listSchema = z.object({
-  status: z.enum(['open', 'in_review', 'resolved_replaced', 'resolved_refunded', 'rejected', 'closed']).optional(),
+  status: z.enum(['open', 'in_review', 'resolved', 'resolved_replaced', 'resolved_refunded', 'rejected', 'closed']).optional(),
+  reason: z.string().trim().optional(),
   search: z.string().optional(),
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().max(100).default(20),
@@ -34,5 +35,14 @@ const resolveSchema = z.object({
 adminTicketsRoute.patch('/:id', zValidator('json', resolveSchema), async (c) => {
   const adminId = c.get('userId')
   const data = await AdminTicketsService.resolve(adminId, c.req.param('id'), c.req.valid('json'))
+  return c.json({ data })
+})
+
+const statusOnlySchema = z.object({
+  status: z.enum(['open', 'in_review']),
+})
+
+adminTicketsRoute.patch('/:id/status', zValidator('json', statusOnlySchema), async (c) => {
+  const data = await AdminTicketsService.updateStatus(c.req.param('id'), c.req.valid('json').status)
   return c.json({ data })
 })
