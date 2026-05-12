@@ -172,19 +172,17 @@ export class SupplierCanbosoService {
     const { products: supplierList } = await this.listProducts()
     const supplierMap = new Map(supplierList.map((p) => [p.id, p.available]))
 
-    // Filter exclude NULL AND empty string '' — defensive untuk legacy data
-    // dari sebelum schema normalize "" → null.
-    //
-    // Select supplier_orphan_at juga supaya bisa distinguish:
-    //   - Produk baru jadi orphan (orphan_at NULL → set sekarang + emit log)
-    //   - Produk sudah lama orphan (orphan_at NOT NULL → skip log, masih
-    //     tampil di toast/banner)
-    //   - Produk recovered (orphan_at NOT NULL tapi found di supplier →
-    //     clear orphan_at + log "supplier_recovered" optional)
+    // 2-stage orphan detection (migration 026):
+    //   Stage 1 (detected):   miss pertama → set supplier_orphan_at = now
+    //   Stage 2 (confirmed):  miss persistent ≥30 menit → set
+    //                         supplier_orphan_confirmed_at = now
+    // Banner & Auto-fix hanya proses CONFIRMED. Young orphan (detected
+    // tapi belum confirmed) di-hide untuk avoid false positive dari
+    // supplier API glitch sementara.
     const supabase = createAdminClient()
     const { data: jualakunProducts, error } = await supabase
       .from('products')
-      .select('id, name, supplier_product_id, display_stock, supplier_orphan_at')
+      .select('id, name, supplier_product_id, display_stock, supplier_orphan_at, supplier_orphan_confirmed_at')
       .not('supplier_product_id', 'is', null)
       .neq('supplier_product_id', '')
     if (error) throw new ApiError('INTERNAL_ERROR', error.message, 500)
@@ -194,45 +192,65 @@ export class SupplierCanbosoService {
       product_name: string
       supplier_product_id: string
       first_orphan_at: string
+      confirmed_at: string | null
     }
     const orphans: OrphanInfo[] = []
-    const newlyOrphanedIds: { id: string; name: string; supId: string }[] = []
+    const newlyConfirmedIds: { id: string; name: string; supId: string }[] = []
     const now = new Date().toISOString()
+    const CONFIRMATION_THRESHOLD_MS = 30 * 60 * 1000 // 30 menit
 
     // Parallel update — jauh lebih cepat dari sequential await loop.
     const updatePromises = (jualakunProducts ?? []).map(async (p) => {
       const supId = p.supplier_product_id as string
       const available = supplierMap.get(supId)
-      const wasOrphan = p.supplier_orphan_at !== null
+      const orphanAt = p.supplier_orphan_at as string | null
+      const confirmedAt = p.supplier_orphan_confirmed_at as string | null
+      const wasOrphan = orphanAt !== null
 
       if (available === undefined) {
-        // Tidak ketemu di supplier API — mark orphan
-        const firstOrphanAt = (p.supplier_orphan_at as string | null) ?? now
+        // === Tidak ketemu di supplier API ===
+        const firstOrphanAt = orphanAt ?? now
+        const fields: Record<string, unknown> = { supplier_synced_at: now }
+
         if (!wasOrphan) {
-          // Baru pertama kali detect orphan untuk produk ini
-          newlyOrphanedIds.push({ id: p.id as string, name: p.name as string, supId })
+          // Stage 1: first miss — set detection timestamp, observation window
+          fields.supplier_orphan_at = now
+        } else if (!confirmedAt) {
+          // Already detected, check if observation window passed
+          const detectedAge = Date.now() - new Date(firstOrphanAt).getTime()
+          if (detectedAge >= CONFIRMATION_THRESHOLD_MS) {
+            // Stage 2: confirm orphan
+            fields.supplier_orphan_confirmed_at = now
+            newlyConfirmedIds.push({ id: p.id as string, name: p.name as string, supId })
+          }
         }
+
+        const { error: orphErr } = await supabase
+          .from('products')
+          .update(fields)
+          .eq('id', p.id)
+        if (orphErr) console.warn('[supplier.syncStock] set orphan fail', p.id, orphErr.message)
+
+        // Include di response orphans (untuk debugging API consumer). Banner
+        // di stok-monitor pakai listOrphans() yang filter confirmed.
         orphans.push({
           product_id: p.id as string,
           product_name: p.name as string,
           supplier_product_id: supId,
           first_orphan_at: firstOrphanAt,
+          confirmed_at: (fields.supplier_orphan_confirmed_at as string | undefined) ?? confirmedAt,
         })
-        // Set orphan_at kalau belum
-        if (!wasOrphan) {
-          const { error: orphErr } = await supabase
-            .from('products')
-            .update({ supplier_orphan_at: now, supplier_synced_at: now })
-            .eq('id', p.id)
-          if (orphErr) console.warn('[supplier.syncStock] set orphan fail', p.id, orphErr.message)
-        }
         return { updated: false }
       }
 
-      // Found di supplier — healthy. Clear orphan flag kalau sebelumnya orphan.
+      // === Found di supplier — healthy ===
+      // Clear orphan flag kalau sebelumnya orphan (recovery).
       const fields: Record<string, unknown> = { supplier_synced_at: now }
       if (p.display_stock !== available) fields.display_stock = available
-      if (wasOrphan) fields.supplier_orphan_at = null
+      if (wasOrphan) {
+        fields.supplier_orphan_at = null
+        fields.supplier_orphan_confirmed_at = null
+      }
       const { error: updErr } = await supabase.from('products').update(fields).eq('id', p.id)
       if (updErr) {
         console.warn('[supplier.syncStock] update fail', p.id, updErr.message)
@@ -243,34 +261,42 @@ export class SupplierCanbosoService {
     const results = await Promise.all(updatePromises)
     const updated = results.filter((r) => r.updated).length
 
-    // Emit activity log SEKALI per orphan baru — bukan tiap sync run.
-    // Mencegah spam activity feed kalau supplier hilang permanen.
-    for (const o of newlyOrphanedIds) {
+    // Emit activity log SEKALI per CONFIRMED orphan (transisi detected→confirmed).
+    // Detected-only (young) tidak emit log — silent observation window untuk
+    // hindari spam kalau supplier API cuma glitch sementara.
+    for (const o of newlyConfirmedIds) {
       await ActivityLogService.log({
         event_type: 'supplier_orphan_detected',
         ref_id: o.id,
         ref_table: 'products',
         title: `Supplier link rusak: ${o.name}`,
-        description: `supplier_product_id ${o.supId.slice(0, 8)}... tidak ada lagi di Canboso. Auto-fix tersedia di /admin/stok-monitor`,
+        description: `Confirmed setelah 30 menit observation. supplier_product_id ${o.supId.slice(0, 8)}... tidak ada di Canboso. Auto-fix tersedia di /admin/stok-monitor`,
         metadata: { product_id: o.id, supplier_product_id: o.supId },
       })
     }
 
+    const confirmedCount = orphans.filter((o) => o.confirmed_at !== null).length
+    const youngCount = orphans.length - confirmedCount
+
     return {
       total_mapped: (jualakunProducts ?? []).length,
       updated,
-      orphans,
-      newly_detected: newlyOrphanedIds.length,
+      orphans, // include semua (confirmed + young) untuk transparansi API
+      confirmed_orphans: confirmedCount,
+      young_orphans: youngCount, // dalam observation window, belum confirmed
+      newly_confirmed: newlyConfirmedIds.length,
       synced_at: now,
     }
   }
 
   /**
    * Bulk-unmap orphan products. Set supplier_product_id = NULL + clear
-   * supplier_orphan_at. Per produk emit activity log `supplier_unmapped`.
+   * supplier_orphan_at + supplier_orphan_confirmed_at. Per produk emit
+   * activity log `supplier_unmapped`.
    *
-   * Aman dipanggil dari admin button — validasi: cuma terima product_id
-   * yang current state-nya orphan (supplier_orphan_at IS NOT NULL).
+   * Defense: cuma proses produk yang CONFIRMED orphan (confirmed_at NOT
+   * NULL). Young orphan (masih dalam 30-menit observation window) tidak
+   * boleh di-unmap supaya tidak premature kalau supplier cuma glitch.
    */
   static async unmapOrphans(productIds: string[]): Promise<{
     unmapped: { id: string; name: string }[]
@@ -279,23 +305,25 @@ export class SupplierCanbosoService {
     if (productIds.length === 0) return { unmapped: [], skipped: [] }
 
     const supabase = createAdminClient()
-    // Fetch products yang valid orphan (defense: tidak unmap produk yang
-    // sebenarnya healthy / sudah unmapped)
     const { data: candidates } = await supabase
       .from('products')
-      .select('id, name, supplier_product_id, supplier_orphan_at')
+      .select('id, name, supplier_product_id, supplier_orphan_at, supplier_orphan_confirmed_at')
       .in('id', productIds)
-      .not('supplier_orphan_at', 'is', null)
+      .not('supplier_orphan_confirmed_at', 'is', null)
 
     const unmapped: { id: string; name: string }[] = []
     const skippedSet = new Set(productIds)
 
     for (const p of (candidates ?? []) as {
-      id: string; name: string; supplier_product_id: string; supplier_orphan_at: string
+      id: string; name: string; supplier_product_id: string; supplier_orphan_at: string; supplier_orphan_confirmed_at: string
     }[]) {
       const { error: updErr } = await supabase
         .from('products')
-        .update({ supplier_product_id: null, supplier_orphan_at: null })
+        .update({
+          supplier_product_id: null,
+          supplier_orphan_at: null,
+          supplier_orphan_confirmed_at: null,
+        })
         .eq('id', p.id)
       if (updErr) {
         console.warn('[supplier.unmapOrphans] update fail', p.id, updErr.message)
@@ -318,26 +346,30 @@ export class SupplierCanbosoService {
   }
 
   /**
-   * List produk yang currently orphan — dipakai stok-monitor page untuk
-   * surface banner alert.
+   * List produk yang CONFIRMED orphan (sudah melewati 30-menit observation
+   * window). Dipakai stok-monitor page untuk surface banner alert. Young
+   * orphan (masih dalam observation) tidak ditampilkan supaya admin tidak
+   * panic karena supplier API glitch sementara.
    */
   static async listOrphans(): Promise<{
     product_id: string
     product_name: string
     supplier_product_id: string
     first_orphan_at: string
+    confirmed_at: string
   }[]> {
     const supabase = createAdminClient()
     const { data } = await supabase
       .from('products')
-      .select('id, name, supplier_product_id, supplier_orphan_at')
-      .not('supplier_orphan_at', 'is', null)
-      .order('supplier_orphan_at', { ascending: true })
+      .select('id, name, supplier_product_id, supplier_orphan_at, supplier_orphan_confirmed_at')
+      .not('supplier_orphan_confirmed_at', 'is', null)
+      .order('supplier_orphan_confirmed_at', { ascending: true })
     return (data ?? []).map((p) => ({
       product_id: p.id as string,
       product_name: p.name as string,
       supplier_product_id: p.supplier_product_id as string,
       first_orphan_at: p.supplier_orphan_at as string,
+      confirmed_at: p.supplier_orphan_confirmed_at as string,
     }))
   }
 

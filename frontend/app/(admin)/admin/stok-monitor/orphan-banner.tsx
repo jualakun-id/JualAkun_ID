@@ -11,6 +11,7 @@ type Orphan = {
   product_name: string
   supplier_product_id: string
   first_orphan_at: string
+  confirmed_at: string
 }
 
 type UnmapResult = {
@@ -19,12 +20,12 @@ type UnmapResult = {
 }
 
 /**
- * Banner alert untuk produk dengan supplier link rusak (auto-detected oleh
- * sync). Muncul kalau ada >0 orphan, dengan tombol Auto-fix yang bulk-unmap
- * semua orphan dalam 1 klik.
+ * Banner alert untuk CONFIRMED orphan (supplier link rusak, sudah melewati
+ * 30-menit observation window). Young orphan (masih dalam observation)
+ * di-hide dari banner — backend listOrphans() filter by confirmed_at.
  *
- * State orphan persisted di kolom products.supplier_orphan_at — jadi banner
- * tetap visible setelah refresh page tanpa harus sync ulang.
+ * State persisted di kolom products.supplier_orphan_confirmed_at, jadi
+ * banner tetap visible setelah refresh tanpa harus sync ulang.
  */
 export function OrphanBanner({ orphans }: { orphans: Orphan[] }) {
   const router = useRouter()
@@ -33,8 +34,24 @@ export function OrphanBanner({ orphans }: { orphans: Orphan[] }) {
 
   if (orphans.length === 0) return null
 
+  // Hitung "umur" orphan terlama untuk confirm dialog. Pakai first_orphan_at
+  // (lebih meaningful dari confirmed_at — "saya tau ini orphan sejak X jam").
+  const oldestFirstOrphanAt = orphans
+    .map((o) => new Date(o.first_orphan_at).getTime())
+    .reduce((min, t) => Math.min(min, t), Date.now())
+  const oldestAgeText = formatRelative(new Date(oldestFirstOrphanAt).toISOString())
+
   async function handleAutoFix() {
-    if (!confirm(`Unmap ${orphans.length} produk dari supplier yang sudah hilang? Produk tetap ada — cuma supplier link-nya yang dihapus.`)) return
+    const msg = [
+      `Auto-fix ${orphans.length} produk?`,
+      '',
+      `Pastikan supplier benar-benar delisted (bukan cuma maintenance).`,
+      `Produk akan kehilangan link supplier — perlu re-link manual kalau`,
+      `ternyata supplier balik dengan ID berbeda.`,
+      '',
+      `Orphan terlama: ${oldestAgeText}`,
+    ].join('\n')
+    if (!confirm(msg)) return
     setLoading(true)
     const result = await api.post<UnmapResult>('/admin/supplier/unmap-orphans', {
       product_ids: orphans.map((o) => o.product_id),
@@ -45,9 +62,9 @@ export function OrphanBanner({ orphans }: { orphans: Orphan[] }) {
       return
     }
     const { unmapped, skipped } = result.data
-    let msg = `${unmapped.length} produk berhasil di-unmap dari supplier.`
-    if (skipped.length > 0) msg += `\n${skipped.length} di-skip (mungkin sudah ter-fix).`
-    toast.success(msg)
+    let toastMsg = `${unmapped.length} produk berhasil di-unmap dari supplier.`
+    if (skipped.length > 0) toastMsg += `\n${skipped.length} di-skip (mungkin sudah ter-fix).`
+    toast.success(toastMsg)
     router.refresh()
   }
 
@@ -77,6 +94,9 @@ export function OrphanBanner({ orphans }: { orphans: Orphan[] }) {
               </li>
             )}
           </ul>
+          <p className="mt-3 text-[11px] text-ink-subtle leading-relaxed italic">
+            💡 Sistem hanya tampilkan orphan yang sudah ter-confirm ≥30 menit untuk hindari false alarm dari supplier glitch sementara. Aman untuk Auto-fix kalau yakin supplier benar-benar delisted.
+          </p>
         </div>
         <button
           type="button"

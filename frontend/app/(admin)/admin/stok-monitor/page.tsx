@@ -13,6 +13,7 @@ type Orphan = {
   product_name: string
   supplier_product_id: string
   first_orphan_at: string
+  confirmed_at: string
 }
 
 type StockRow = {
