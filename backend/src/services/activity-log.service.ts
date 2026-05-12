@@ -18,6 +18,8 @@ export type ActivityEventType =
   | 'stock_out'
   | 'supplier_purchase'
   | 'supplier_low_balance'
+  | 'supplier_orphan_detected'
+  | 'supplier_unmapped'
   | 'referral_credited'
   | 'referral_redeemed'
   | 'notification_failed'
