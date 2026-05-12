@@ -125,11 +125,14 @@ export class SupplierCanbosoService {
     // Fetch mapping supplier_product_id → jualakun product.id supaya frontend
     // tahu mana yang sudah di-claim. 1 supplier product = 1 jualakun product
     // (no double-link) — supaya admin tidak bingung "kok stok di-mirror ke 2".
+    // Filter exclude both NULL AND empty string '' (legacy data dari sebelum
+    // Zod schema transform "" → null).
     const supabase = createAdminClient()
     const { data: mapped } = await supabase
       .from('products')
       .select('id, supplier_product_id')
       .not('supplier_product_id', 'is', null)
+      .neq('supplier_product_id', '')
     const takenMap = new Map<string, string>()
     for (const p of (mapped ?? []) as { id: string; supplier_product_id: string }[]) {
       takenMap.set(p.supplier_product_id, p.id)
@@ -168,11 +171,16 @@ export class SupplierCanbosoService {
     const { products: supplierList } = await this.listProducts()
     const supplierMap = new Map(supplierList.map((p) => [p.id, p.available]))
 
+    // Filter exclude NULL AND empty string '' — defensive untuk legacy data
+    // dari sebelum schema normalize "" → null. Tanpa neq(''), produk yang
+    // pernah di-unset (dropdown ke "Tidak pakai supplier") tapi tersimpan
+    // sebagai "" akan muncul orphan walaupun admin sudah uncheck.
     const supabase = createAdminClient()
     const { data: jualakunProducts, error } = await supabase
       .from('products')
       .select('id, name, supplier_product_id, display_stock')
       .not('supplier_product_id', 'is', null)
+      .neq('supplier_product_id', '')
     if (error) throw new ApiError('INTERNAL_ERROR', error.message, 500)
 
     type OrphanInfo = { product_id: string; product_name: string; supplier_product_id: string }

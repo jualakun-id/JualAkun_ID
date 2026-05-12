@@ -46,7 +46,14 @@ const createSchema = z.object({
   // Display stock — angka tampilan publik, admin-controlled
   display_stock: z.coerce.number().int().nonnegative().optional(),
   // Supplier mapping (Canboso Telegram Buyer). NULL = produk full manual.
-  supplier_product_id: z.string().trim().nullable().optional(),
+  // Transform empty/whitespace string → null supaya tidak ada legacy ""
+  // tersisa di DB yang lolos query `.not('supplier_product_id', 'is', null)`.
+  supplier_product_id: z
+    .string()
+    .trim()
+    .nullable()
+    .optional()
+    .transform((v) => (v && v.length > 0 ? v : null)),
 })
 
 adminProductsRoute.post('/', zValidator('json', createSchema), async (c) => {
