@@ -64,9 +64,48 @@ app.onError((err, c) => {
       err.status as 400 | 401 | 403 | 404 | 409 | 429 | 500 | 502,
     )
   }
-  console.error('Unhandled:', err)
+  // Unhandled error: log + fire-and-forget admin WA alert (async, don't block response)
+  const errorInfo = {
+    path: c.req.path,
+    method: c.req.method,
+    message: err instanceof Error ? err.message : String(err),
+    stack: err instanceof Error ? err.stack?.split('\n').slice(0, 5).join(' | ') : undefined,
+  }
+  console.error('[unhandled]', errorInfo)
+  c.executionCtx.waitUntil(notifyAdminCriticalError(errorInfo))
   return c.json({ ok: false, code: 'INTERNAL_ERROR', message: 'Internal server error' }, 500)
 })
+
+/**
+ * Fire-and-forget WA alert ke admin untuk unhandled error. Dedup per
+ * (path + message) dengan window 15 menit supaya gak spam saat satu bug
+ * trigger berulang.
+ */
+const recentErrorCache = new Map<string, number>()
+async function notifyAdminCriticalError(info: { path: string; method: string; message: string; stack?: string }) {
+  try {
+    const adminWa = process.env.ADMIN_WHATSAPP_NUMBER
+    if (!adminWa) return
+    const key = `${info.path}|${info.message.slice(0, 80)}`
+    const lastSent = recentErrorCache.get(key) ?? 0
+    if (Date.now() - lastSent < 15 * 60 * 1000) return // dedup 15 menit
+    recentErrorCache.set(key, Date.now())
+    // Cleanup cache kalau > 50 entry biar tidak unbounded
+    if (recentErrorCache.size > 50) {
+      const oldest = Array.from(recentErrorCache.entries()).sort((a, b) => a[1] - b[1])[0]
+      if (oldest) recentErrorCache.delete(oldest[0])
+    }
+    const { NotificationService } = await import('@/services/notification.service')
+    await NotificationService.sendWhatsApp({
+      target: adminWa,
+      template: 'admin_critical_error',
+      message: `[CRITICAL] Unhandled error di backend:\n\n${info.method} ${info.path}\n${info.message}\n\nDedup 15 menit untuk error sama.`,
+    })
+  } catch (e) {
+    // Diam — jangan crash request handler kalau alert gagal
+    console.warn('[notify-admin-error] failed:', e)
+  }
+}
 
 // 1 cron schedule bisa trigger multiple endpoint — disusun array untuk
 // piggyback supplier-sync ke slot retry-notifications (Workers free tier
