@@ -40,6 +40,9 @@ retryNotificationsCron.post('/', async (c) => {
     .lt('created_at', exhaustedSince)
     .order('created_at', { ascending: false })
     .limit(20)
+
+  // Track newly-logged exhausted untuk admin WA alert
+  const newlyExhausted: Array<{ channel: string; template: string; order_id: string | null }> = []
   for (const log of (exhausted ?? []) as { id: string; channel: string; template: string; error: string | null; order_id: string | null }[]) {
     // Dedup: skip kalau sudah ada activity log untuk notif ini
     const { count } = await supabase
@@ -56,6 +59,24 @@ retryNotificationsCron.post('/', async (c) => {
       description: log.error?.slice(0, 200) ?? 'Retry exhausted setelah 6 jam',
       metadata: { channel: log.channel, template: log.template, order_id: log.order_id, error: log.error },
     })
+    newlyExhausted.push({ channel: log.channel, template: log.template, order_id: log.order_id })
+  }
+
+  // Admin WA alert untuk newly-exhausted batch (kalau ada >0)
+  // Single WA per cron run dengan summary list, hindari spam.
+  if (newlyExhausted.length > 0) {
+    const adminWa = process.env.ADMIN_WHATSAPP_NUMBER
+    if (adminWa) {
+      const lines = newlyExhausted
+        .slice(0, 10)
+        .map((n) => `- ${n.channel.toUpperCase()} ${n.template}${n.order_id ? ` (order ${n.order_id.slice(0, 8)})` : ''}`)
+      const more = newlyExhausted.length > 10 ? `\n+${newlyExhausted.length - 10} notif lain` : ''
+      await NotificationService.sendWhatsApp({
+        target: adminWa,
+        message: `[ALERT] ${newlyExhausted.length} notif buyer gagal permanen (retry >6 jam):\n\n${lines.join('\n')}${more}\n\nCek admin: jualakun.id/admin/notifikasi?event_type=notification_failed`,
+        template: 'admin_notif_exhausted',
+      })
+    }
   }
 
   let retried = 0

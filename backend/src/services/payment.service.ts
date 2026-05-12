@@ -222,6 +222,10 @@ export class PaymentService {
     const supabase = createAdminClient()
 
     // Mark order as paid (only if still pending_payment).
+    // Atomic update + .eq('status', 'pending_payment') = idempotency guard:
+    // kalau Duitku retry callback (mereka kadang lakukan), update kedua tidak
+    // match karena status sudah 'paid'. Updated null → exit early sebelum
+    // emit activity log / notif (mencegah duplicate event).
     const { data: updated, error: updateErr } = await supabase
       .from('orders')
       .update({ status: 'paid', paid_at: new Date().toISOString() })
@@ -231,7 +235,7 @@ export class PaymentService {
       .maybeSingle()
 
     if (updateErr || !updated) {
-      console.warn('[duitku] paid update skipped (already advanced?)', { order_id: order.id })
+      console.info('[duitku] callback idempotent — order sudah paid sebelumnya', { order_id: order.id })
       return
     }
 

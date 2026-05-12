@@ -30,6 +30,24 @@ stockAlertsCron.post('/', async (c) => {
     // Don't fail the rest of the cron
   }
 
+  // Piggyback: cleanup old activity_log + notifications_log (retention 90d)
+  // Batch 1000 per run — kalau ada > 1000 row tua, akan di-cleanup bertahap
+  // dalam runs berikutnya.
+  try {
+    const supabaseCleanup = createAdminClient()
+    const [actLogResult, notifLogResult] = await Promise.all([
+      supabaseCleanup.rpc('cleanup_old_activity_log', { p_retention_days: 90, p_batch_size: 1000 }),
+      supabaseCleanup.rpc('cleanup_old_notifications_log', { p_retention_days: 90, p_batch_size: 1000 }),
+    ])
+    const actDeleted = (actLogResult.data as number | null) ?? 0
+    const notifDeleted = (notifLogResult.data as number | null) ?? 0
+    if (actDeleted > 0 || notifDeleted > 0) {
+      console.info('[cron/cleanup]', { activity_log_deleted: actDeleted, notif_log_deleted: notifDeleted })
+    }
+  } catch (err) {
+    console.warn('[cron/stock-alerts] cleanup failed:', err)
+  }
+
   const supabase = createAdminClient()
   // Pakai display_stock (admin-managed) untuk monitoring publik
   const { data: lowStock, error } = await supabase
