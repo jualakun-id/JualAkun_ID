@@ -1,5 +1,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
+import { NavLink } from '@/components/ui/nav-link'
 import { notFound } from 'next/navigation'
 import { Star, Shield, Zap, Clock } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
@@ -325,17 +326,24 @@ export default async function ProductDetailPage({ params }: Props) {
 }
 
 function BuyButton({ productId, disabled }: { productId: string; disabled: boolean }) {
+  if (disabled) {
+    return (
+      <div
+        aria-disabled="true"
+        className="mt-5 inline-flex w-full items-center justify-center rounded-lg px-6 py-3.5 text-base font-extrabold border-2 border-gray-300 bg-gray-100 text-gray-400 cursor-not-allowed"
+      >
+        Stok Habis
+      </div>
+    )
+  }
   return (
-    <Link
+    <NavLink
       href={`/checkout?product=${productId}`}
-      aria-disabled={disabled}
-      className={`mt-5 inline-flex w-full items-center justify-center rounded-lg px-6 py-3.5 text-base font-extrabold border-2 border-black transition-all duration-150 ${
-        disabled
-          ? 'pointer-events-none bg-gray-100 text-gray-400 border-gray-300 cursor-not-allowed'
-          : 'bg-brand-500 text-ink hover:bg-brand-400 shadow-[0_4px_0_rgba(0,0,0,0.9)] hover:shadow-[0_6px_0_rgba(0,0,0,0.9)] hover:-translate-y-0.5 active:translate-y-1 active:shadow-[0_2px_0_rgba(0,0,0,0.9)]'
-      }`}
+      className="mt-5 inline-flex w-full items-center justify-center gap-1.5 rounded-lg px-6 py-3.5 text-base font-extrabold border-2 border-black transition-all duration-150 bg-brand-500 text-ink hover:bg-brand-400 shadow-[0_4px_0_rgba(0,0,0,0.9)] hover:shadow-[0_6px_0_rgba(0,0,0,0.9)] hover:-translate-y-0.5 active:translate-y-1 active:shadow-[0_2px_0_rgba(0,0,0,0.9)] data-[pending=true]:opacity-70 data-[pending=true]:pointer-events-none"
+      spinnerPosition="leading"
+      loadingLabel={<span>Memproses...</span>}
     >
-      {disabled ? 'Stok Habis' : 'Beli Sekarang →'}
-    </Link>
+      Beli Sekarang →
+    </NavLink>
   )
 }

@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
+import { NavLink } from '@/components/ui/nav-link'
 import {
   Zap, Shield, Headphones, Percent, Lock, MessageCircle,
   CheckCircle, CreditCard,
@@ -298,12 +299,13 @@ export default async function HomePage() {
                 Daftar gratis dan langsung akses koleksi akun langka kami.
               </p>
             </div>
-            <Link
+            <NavLink
               href="/daftar"
-              className="bg-white text-brand-700 hover:text-brand-800 font-extrabold px-8 py-3.5 rounded-lg border-2 border-black shadow-[0_4px_0_rgba(0,0,0,0.9)] hover:shadow-[0_6px_0_rgba(0,0,0,0.9)] hover:-translate-y-0.5 active:translate-y-1 active:shadow-[0_2px_0_rgba(0,0,0,0.9)] transition-all duration-150 shrink-0 inline-flex items-center gap-2"
+              className="bg-white text-brand-700 hover:text-brand-800 font-extrabold px-8 py-3.5 rounded-lg border-2 border-black shadow-[0_4px_0_rgba(0,0,0,0.9)] hover:shadow-[0_6px_0_rgba(0,0,0,0.9)] hover:-translate-y-0.5 active:translate-y-1 active:shadow-[0_2px_0_rgba(0,0,0,0.9)] transition-all duration-150 shrink-0 inline-flex items-center gap-2 data-[pending=true]:opacity-70 data-[pending=true]:pointer-events-none"
+              spinnerPosition="leading"
             >
               Daftar Sekarang →
-            </Link>
+            </NavLink>
           </div>
         </div>
       </section>

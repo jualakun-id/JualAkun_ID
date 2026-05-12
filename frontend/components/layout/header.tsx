@@ -3,8 +3,9 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
-import { Menu, X, LogOut, LayoutDashboard } from 'lucide-react'
+import { Menu, X, LogOut, LayoutDashboard, Loader2 } from 'lucide-react'
 import { Logo } from '@/components/branding/logo'
+import { NavLink } from '@/components/ui/nav-link'
 import { createBrowserClient } from '@/lib/supabase'
 
 const NAV_ITEMS = [
@@ -93,37 +94,40 @@ export function Header() {
             <div className="h-10 w-44 rounded-lg bg-gray-100 animate-pulse" aria-hidden="true" />
           ) : authed ? (
             <>
-              <Link
+              <NavLink
                 href="/dashboard"
-                className="inline-flex items-center gap-1.5 text-[15px] font-extrabold px-4 sm:px-5 py-2 rounded-lg border-2 border-black bg-brand-500 text-ink hover:bg-brand-400 shadow-[0_3px_0_rgba(0,0,0,0.9)] hover:shadow-[0_5px_0_rgba(0,0,0,0.9)] hover:-translate-y-0.5 active:translate-y-1 active:shadow-[0_1px_0_rgba(0,0,0,0.9)] transition-all duration-150"
+                className="inline-flex items-center gap-1.5 text-[15px] font-extrabold px-4 sm:px-5 py-2 rounded-lg border-2 border-black bg-brand-500 text-ink hover:bg-brand-400 shadow-[0_3px_0_rgba(0,0,0,0.9)] hover:shadow-[0_5px_0_rgba(0,0,0,0.9)] hover:-translate-y-0.5 active:translate-y-1 active:shadow-[0_1px_0_rgba(0,0,0,0.9)] transition-all duration-150 data-[pending=true]:opacity-70 data-[pending=true]:pointer-events-none"
+                spinnerPosition="leading"
               >
-                <LayoutDashboard size={16} strokeWidth={2.5} />
+                <LayoutDashboard size={16} strokeWidth={2.5} className="data-[pending]:hidden" />
                 Dashboard
-              </Link>
+              </NavLink>
               <button
                 type="button"
                 onClick={handleLogout}
                 disabled={loggingOut}
                 className="inline-flex items-center gap-1.5 bg-white hover:bg-brand-50 text-ink font-extrabold px-4 sm:px-5 py-2 rounded-lg border-2 border-black shadow-[0_3px_0_rgba(0,0,0,0.9)] hover:shadow-[0_5px_0_rgba(0,0,0,0.9)] hover:-translate-y-0.5 active:translate-y-1 active:shadow-[0_1px_0_rgba(0,0,0,0.9)] transition-all duration-150 text-sm disabled:opacity-60 disabled:pointer-events-none"
               >
-                <LogOut size={16} strokeWidth={2.5} />
+                {loggingOut ? <Loader2 size={16} className="animate-spin" strokeWidth={2.5} /> : <LogOut size={16} strokeWidth={2.5} />}
                 {loggingOut ? 'Keluar...' : 'Logout'}
               </button>
             </>
           ) : (
             <>
-              <Link
+              <NavLink
                 href="/masuk"
-                className="text-[15px] font-bold px-4 py-2 rounded-lg text-ink hover:text-brand-700 hover:bg-brand-50 transition-all duration-150"
+                className="text-[15px] font-bold px-4 py-2 rounded-lg text-ink hover:text-brand-700 hover:bg-brand-50 transition-all duration-150 inline-flex items-center gap-1.5 data-[pending=true]:opacity-70 data-[pending=true]:pointer-events-none"
+                spinnerPosition="leading"
               >
                 Masuk
-              </Link>
-              <Link
+              </NavLink>
+              <NavLink
                 href="/daftar"
-                className="text-[15px] font-extrabold px-5 py-2 rounded-lg border-2 border-black bg-brand-500 text-ink hover:bg-brand-400 shadow-[0_3px_0_rgba(0,0,0,0.9)] hover:shadow-[0_5px_0_rgba(0,0,0,0.9)] hover:-translate-y-0.5 active:translate-y-1 active:shadow-[0_1px_0_rgba(0,0,0,0.9)] transition-all duration-150"
+                className="text-[15px] font-extrabold px-5 py-2 rounded-lg border-2 border-black bg-brand-500 text-ink hover:bg-brand-400 shadow-[0_3px_0_rgba(0,0,0,0.9)] hover:shadow-[0_5px_0_rgba(0,0,0,0.9)] hover:-translate-y-0.5 active:translate-y-1 active:shadow-[0_1px_0_rgba(0,0,0,0.9)] transition-all duration-150 inline-flex items-center gap-1.5 data-[pending=true]:opacity-70 data-[pending=true]:pointer-events-none"
+                spinnerPosition="leading"
               >
                 Daftar
-              </Link>
+              </NavLink>
             </>
           )}
         </div>
@@ -162,40 +166,43 @@ export function Header() {
             <hr className="border-gray-200 my-3 border-dashed" />
             {authed === null ? null : authed ? (
               <>
-                <Link
+                <NavLink
                   href="/dashboard"
                   onClick={() => setMenuOpen(false)}
-                  className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg border-2 border-black bg-brand-500 text-ink text-center font-extrabold shadow-[0_3px_0_rgba(0,0,0,0.9)] active:translate-y-1 active:shadow-[0_1px_0_rgba(0,0,0,0.9)]"
+                  className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg border-2 border-black bg-brand-500 text-ink text-center font-extrabold shadow-[0_3px_0_rgba(0,0,0,0.9)] active:translate-y-1 active:shadow-[0_1px_0_rgba(0,0,0,0.9)] data-[pending=true]:opacity-70 data-[pending=true]:pointer-events-none"
+                  spinnerPosition="leading"
                 >
                   <LayoutDashboard size={18} strokeWidth={2.5} />
                   Dashboard
-                </Link>
+                </NavLink>
                 <button
                   type="button"
                   onClick={handleLogout}
                   disabled={loggingOut}
                   className="mt-2 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg border-2 border-black bg-white text-ink font-extrabold shadow-[0_3px_0_rgba(0,0,0,0.9)] active:translate-y-1 active:shadow-[0_1px_0_rgba(0,0,0,0.9)] disabled:opacity-60 disabled:pointer-events-none"
                 >
-                  <LogOut size={18} strokeWidth={2.5} />
+                  {loggingOut ? <Loader2 size={18} className="animate-spin" strokeWidth={2.5} /> : <LogOut size={18} strokeWidth={2.5} />}
                   {loggingOut ? 'Keluar...' : 'Logout'}
                 </button>
               </>
             ) : (
               <>
-                <Link
+                <NavLink
                   href="/masuk"
                   onClick={() => setMenuOpen(false)}
-                  className="px-3 py-3 rounded-lg text-ink font-bold hover:bg-gray-50"
+                  className="px-3 py-3 rounded-lg text-ink font-bold hover:bg-gray-50 inline-flex items-center gap-2 data-[pending=true]:opacity-70 data-[pending=true]:pointer-events-none"
+                  spinnerPosition="leading"
                 >
                   Masuk
-                </Link>
-                <Link
+                </NavLink>
+                <NavLink
                   href="/daftar"
                   onClick={() => setMenuOpen(false)}
-                  className="mt-2 px-5 py-3 rounded-lg border-2 border-black bg-brand-500 text-ink text-center font-extrabold shadow-[0_3px_0_rgba(0,0,0,0.9)] active:translate-y-1 active:shadow-[0_1px_0_rgba(0,0,0,0.9)]"
+                  className="mt-2 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg border-2 border-black bg-brand-500 text-ink text-center font-extrabold shadow-[0_3px_0_rgba(0,0,0,0.9)] active:translate-y-1 active:shadow-[0_1px_0_rgba(0,0,0,0.9)] data-[pending=true]:opacity-70 data-[pending=true]:pointer-events-none"
+                  spinnerPosition="leading"
                 >
                   Daftar Sekarang
-                </Link>
+                </NavLink>
               </>
             )}
           </nav>

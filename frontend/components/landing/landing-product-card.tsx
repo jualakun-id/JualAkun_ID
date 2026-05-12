@@ -1,8 +1,8 @@
-import Link from 'next/link'
 import Image from 'next/image'
 import { Shield } from 'lucide-react'
 import type { Product } from '@/types'
 import { detectBrand, BrandLogo } from './brand-logo'
+import { NavLink } from '@/components/ui/nav-link'
 
 /**
  * Cek apakah diskon aktif sekarang berdasarkan original_price + window dates.
@@ -130,12 +130,13 @@ export function LandingProductCard({
               Stok Habis
             </div>
           ) : (
-            <Link
+            <NavLink
               href={`/produk/${product.slug}`}
-              className="block w-full bg-brand-500 hover:bg-brand-400 text-ink font-extrabold py-2.5 rounded-lg text-center text-sm border-2 border-black shadow-[0_3px_0_rgba(0,0,0,0.9)] hover:shadow-[0_4px_0_rgba(0,0,0,0.9)] hover:-translate-y-0.5 active:translate-y-1 active:shadow-[0_1px_0_rgba(0,0,0,0.9)] transition-all duration-150"
+              className="w-full bg-brand-500 hover:bg-brand-400 text-ink font-extrabold py-2.5 rounded-lg text-center text-sm border-2 border-black shadow-[0_3px_0_rgba(0,0,0,0.9)] hover:shadow-[0_4px_0_rgba(0,0,0,0.9)] hover:-translate-y-0.5 active:translate-y-1 active:shadow-[0_1px_0_rgba(0,0,0,0.9)] transition-all duration-150 inline-flex items-center justify-center gap-1.5 data-[pending=true]:opacity-70 data-[pending=true]:pointer-events-none"
+              spinnerPosition="leading"
             >
               Pesan Sekarang
-            </Link>
+            </NavLink>
           )}
         </div>
       </div>
