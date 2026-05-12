@@ -1,6 +1,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import { TrendingUp, TrendingDown, Minus, ShoppingBag, Wallet, Target, DollarSign } from 'lucide-react'
+import { TrendingUp, TrendingDown, Minus, ShoppingBag, Wallet, Target, DollarSign, Trophy, Timer, MailCheck } from 'lucide-react'
 import { AdminHeader } from '@/components/admin/admin-header'
 import { AutoRefreshControl } from './auto-refresh-control'
 import { adminFetch } from '@/lib/admin-fetch'
@@ -22,6 +22,16 @@ type DailyPoint = { date: string; revenue: number; profit: number; orders: numbe
 type StatusBreakdown = Record<string, number>
 type CategorySlice = { name: string; slug: string; revenue: number; orders: number; share_pct: number }
 type TopProduct = { id: string; name: string; sold_count: number; price: number; thumbnail_url: string | null }
+type TopByProfit = {
+  id: string; name: string; thumbnail_url: string | null
+  revenue: number; cost: number; profit: number; orders: number; margin_pct: number
+}
+type SLAMetrics = {
+  total: number; avg_minutes: number; median_minutes: number
+  buckets: { under_1h: number; '1_to_6h': number; '6_to_24h': number; over_24h: number }
+  bucket_pct: { under_1h: number; '1_to_6h': number; '6_to_24h': number; over_24h: number }
+}
+type NotifHealth = Record<string, { sent: number; failed: number; pending: number; total: number; success_pct: number }>
 
 type Props = {
   searchParams: Promise<{ days?: string }>
@@ -40,12 +50,15 @@ export default async function AdminAnalyticsPage({ searchParams }: Props) {
   const sp = await searchParams
   const days = Math.min(365, Math.max(1, parseInt(sp.days ?? '30', 10) || 30))
 
-  const [overview, profitTrend, statusBreakdown, categoryBreakdown, top] = await Promise.all([
+  const [overview, profitTrend, statusBreakdown, categoryBreakdown, top, topByProfit, sla, notif] = await Promise.all([
     adminFetch<Overview>(`/admin/analytics/overview?days=${days}`),
     adminFetch<DailyPoint[]>(`/admin/analytics/profit-trend?days=${days}`),
     adminFetch<StatusBreakdown>(`/admin/analytics/status-breakdown?days=${days}`),
     adminFetch<CategorySlice[]>(`/admin/analytics/category-breakdown?days=${days}`),
     adminFetch<TopProduct[]>(`/admin/analytics/top-products?limit=10`),
+    adminFetch<TopByProfit[]>(`/admin/analytics/top-products-by-profit?days=${days}&limit=5`),
+    adminFetch<SLAMetrics>(`/admin/analytics/sla?days=${days}`),
+    adminFetch<NotifHealth>(`/admin/analytics/notification-health?days=${days}`),
   ])
 
   const trend = profitTrend ?? []
@@ -151,11 +164,186 @@ export default async function AdminAnalyticsPage({ searchParams }: Props) {
       {/* Category share — full width */}
       <CategoryShareSection categories={categoryBreakdown ?? []} />
 
-      {/* Funnel + Top products */}
+      {/* SLA + Notif Health */}
+      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+        <SLASection sla={sla ?? { total: 0, avg_minutes: 0, median_minutes: 0, buckets: { under_1h: 0, '1_to_6h': 0, '6_to_24h': 0, over_24h: 0 }, bucket_pct: { under_1h: 0, '1_to_6h': 0, '6_to_24h': 0, over_24h: 0 } }} />
+        <NotifHealthSection notif={notif ?? {}} />
+      </div>
+
+      {/* Top by Profit — full width, lebih impactful daripada Top by Sold */}
+      <TopByProfitSection products={topByProfit ?? []} />
+
+      {/* Funnel + Top by Sold */}
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_1fr]">
         <FunnelBreakdown breakdown={statusBreakdown ?? {}} />
         <TopProductsList products={top ?? []} />
       </div>
+    </div>
+  )
+}
+
+function formatDuration(minutes: number): string {
+  if (minutes < 1) return '< 1 mnt'
+  if (minutes < 60) return `${minutes} mnt`
+  if (minutes < 1440) return `${Math.floor(minutes / 60)}j ${minutes % 60}m`
+  return `${Math.floor(minutes / 1440)}h ${Math.floor((minutes % 1440) / 60)}j`
+}
+
+function SLASection({ sla }: { sla: SLAMetrics }) {
+  const BUCKETS = [
+    { key: 'under_1h', label: '< 1 jam', tone: 'bg-success text-white', desc: 'Excellent' },
+    { key: '1_to_6h', label: '1-6 jam', tone: 'bg-brand-500 text-ink', desc: 'Good' },
+    { key: '6_to_24h', label: '6-24 jam', tone: 'bg-warning text-ink', desc: 'Slow' },
+    { key: 'over_24h', label: '> 24 jam', tone: 'bg-danger text-white', desc: 'Critical' },
+  ] as const
+
+  return (
+    <div className="rounded-2xl border-2 border-black bg-white p-6 shadow-[0_3px_0_rgba(0,0,0,0.9)]">
+      <div className="flex items-center gap-2 mb-1">
+        <Timer size={18} strokeWidth={2.25} className="text-brand-600" />
+        <h2 className="font-heading text-xl font-extrabold tracking-tight">SLA Performance</h2>
+      </div>
+      <p className="text-xs text-ink-muted">Waktu paid → delivered (fulfillment speed).</p>
+
+      {sla.total === 0 ? (
+        <p className="mt-6 text-sm text-ink-muted text-center py-6">Belum ada order delivered di periode ini.</p>
+      ) : (
+        <>
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            <div className="rounded-lg border-2 border-black/10 bg-brand-50/40 p-3">
+              <div className="text-[10px] font-bold text-ink-muted uppercase tracking-wider">Rata-Rata</div>
+              <div className="mt-0.5 font-heading text-2xl font-extrabold text-ink tabular-nums">{formatDuration(sla.avg_minutes)}</div>
+            </div>
+            <div className="rounded-lg border-2 border-black/10 bg-brand-50/40 p-3">
+              <div className="text-[10px] font-bold text-ink-muted uppercase tracking-wider">Median</div>
+              <div className="mt-0.5 font-heading text-2xl font-extrabold text-ink tabular-nums">{formatDuration(sla.median_minutes)}</div>
+            </div>
+          </div>
+
+          <div className="mt-4 space-y-1.5">
+            {BUCKETS.map((b) => {
+              const count = sla.buckets[b.key]
+              const pct = sla.bucket_pct[b.key]
+              return (
+                <div key={b.key} className="space-y-0.5">
+                  <div className="flex items-baseline justify-between text-xs">
+                    <span className="font-bold text-ink">{b.label} <span className="text-[10px] text-ink-subtle font-normal">({b.desc})</span></span>
+                    <span className="tabular-nums">
+                      <strong className="text-ink">{count}</strong>
+                      <span className="text-ink-muted ml-1">({pct}%)</span>
+                    </span>
+                  </div>
+                  <div className="h-5 rounded-md border-2 border-black overflow-hidden">
+                    <div className={`h-full ${b.tone}`} style={{ width: `${pct}%` }} />
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
+function NotifHealthSection({ notif }: { notif: NotifHealth }) {
+  const channels = ['email', 'wa'] as const
+  const grandTotal = Object.values(notif).reduce((s, ch) => s + ch.total, 0)
+
+  return (
+    <div className="rounded-2xl border-2 border-black bg-white p-6 shadow-[0_3px_0_rgba(0,0,0,0.9)]">
+      <div className="flex items-center gap-2 mb-1">
+        <MailCheck size={18} strokeWidth={2.25} className="text-brand-600" />
+        <h2 className="font-heading text-xl font-extrabold tracking-tight">Notification Health</h2>
+      </div>
+      <p className="text-xs text-ink-muted">Delivery rate email + WhatsApp di periode ini.</p>
+
+      {grandTotal === 0 ? (
+        <p className="mt-6 text-sm text-ink-muted text-center py-6">Belum ada notif terkirim di periode ini.</p>
+      ) : (
+        <div className="mt-4 space-y-3">
+          {channels.map((chKey) => {
+            const ch = notif[chKey]
+            if (!ch || ch.total === 0) return (
+              <div key={chKey} className="rounded-lg border-2 border-black/10 bg-brand-50/40 p-3 opacity-50">
+                <div className="text-xs font-bold uppercase text-ink-muted">{chKey === 'wa' ? 'WhatsApp' : 'Email'}</div>
+                <div className="mt-1 text-xs text-ink-subtle italic">Belum ada notif terkirim</div>
+              </div>
+            )
+            const successTone = ch.success_pct >= 95 ? 'text-success' : ch.success_pct >= 80 ? 'text-warning' : 'text-danger'
+            const sentPct = Math.round((ch.sent / ch.total) * 100)
+            const failedPct = Math.round((ch.failed / ch.total) * 100)
+            const pendingPct = 100 - sentPct - failedPct
+            return (
+              <div key={chKey} className="rounded-lg border-2 border-black/10 bg-brand-50/40 p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-bold uppercase text-ink-muted">{chKey === 'wa' ? 'WhatsApp' : 'Email'}</span>
+                  <span className={`text-sm font-extrabold tabular-nums ${successTone}`}>{ch.success_pct}% success</span>
+                </div>
+                <div className="flex h-3 rounded-md border-2 border-black overflow-hidden">
+                  <div className="bg-success" style={{ width: `${sentPct}%` }} title={`Sent ${ch.sent}`} />
+                  <div className="bg-warning" style={{ width: `${pendingPct}%` }} title={`Pending ${ch.pending}`} />
+                  <div className="bg-danger" style={{ width: `${failedPct}%` }} title={`Failed ${ch.failed}`} />
+                </div>
+                <div className="mt-1.5 flex justify-between text-[10px] text-ink-muted font-medium">
+                  <span>✓ {ch.sent} sent</span>
+                  <span>⏳ {ch.pending} pending</span>
+                  <span>✗ {ch.failed} failed</span>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function TopByProfitSection({ products }: { products: TopByProfit[] }) {
+  return (
+    <div className="mt-6 rounded-2xl border-2 border-black bg-white p-6 shadow-[0_3px_0_rgba(0,0,0,0.9)]">
+      <div className="flex items-center gap-2 mb-1">
+        <Trophy size={18} strokeWidth={2.25} className="text-brand-600" />
+        <h2 className="font-heading text-xl font-extrabold tracking-tight">Top 5 Produk by Profit</h2>
+      </div>
+      <p className="text-xs text-ink-muted">Produk yang paling cuan (revenue − modal) di periode ini. Beda dengan Top by Sold.</p>
+
+      {products.length === 0 ? (
+        <p className="mt-6 text-sm text-ink-muted text-center py-6">Belum ada produk delivered dengan modal tracked.</p>
+      ) : (
+        <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
+          {products.map((p, i) => {
+            const tone = p.margin_pct >= 30 ? 'text-success' : p.margin_pct >= 15 ? 'text-warning' : 'text-danger'
+            return (
+              <div key={p.id} className="rounded-lg border-2 border-black/10 bg-brand-50/30 p-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="font-mono text-[10px] font-extrabold text-ink-subtle">#{i + 1}</span>
+                  {p.thumbnail_url ? (
+                    <Image src={p.thumbnail_url} alt={p.name} width={32} height={32} className="rounded-md border-2 border-black/10 object-cover" unoptimized />
+                  ) : (
+                    <div className="w-8 h-8 rounded-md border-2 border-dashed border-black/15 bg-white" />
+                  )}
+                </div>
+                <div className="text-xs font-bold text-ink truncate" title={p.name}>{p.name}</div>
+                <div className="mt-1.5 text-[10px] space-y-0.5">
+                  <div className="flex justify-between">
+                    <span className="text-ink-muted">Profit</span>
+                    <span className="font-extrabold text-success tabular-nums">{formatRupiah(p.profit)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-ink-muted">Margin</span>
+                    <span className={`font-bold tabular-nums ${tone}`}>{p.margin_pct}%</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-ink-muted">Order</span>
+                    <span className="tabular-nums">{p.orders}</span>
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }

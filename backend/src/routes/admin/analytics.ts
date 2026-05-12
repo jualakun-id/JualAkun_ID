@@ -43,6 +43,27 @@ adminAnalyticsRoute.get('/category-breakdown', zValidator('query', periodSchema)
   return c.json({ data })
 })
 
+const topProfitSchema = z.object({
+  days: z.coerce.number().int().positive().max(365).default(30),
+  limit: z.coerce.number().int().positive().max(20).default(5),
+})
+
+adminAnalyticsRoute.get('/top-products-by-profit', zValidator('query', topProfitSchema), async (c) => {
+  const q = c.req.valid('query')
+  const data = await AdminDashboardService.getTopProductsByProfit(q.days, q.limit)
+  return c.json({ data })
+})
+
+adminAnalyticsRoute.get('/sla', zValidator('query', periodSchema), async (c) => {
+  const data = await AdminDashboardService.getSLAMetrics(c.req.valid('query').days)
+  return c.json({ data })
+})
+
+adminAnalyticsRoute.get('/notification-health', zValidator('query', periodSchema), async (c) => {
+  const data = await AdminDashboardService.getNotificationHealth(c.req.valid('query').days)
+  return c.json({ data })
+})
+
 const topSchema = z.object({ limit: z.coerce.number().int().positive().max(50).default(10) })
 
 adminAnalyticsRoute.get('/top-products', zValidator('query', topSchema), async (c) => {

@@ -1112,6 +1112,128 @@ export class AdminDashboardService {
   }
 
   /**
+   * Top produk by PROFIT (bukan revenue). Aggregate per produk: total
+   * revenue, cost, profit, margin %. Filter delivered orders dengan cost_idr.
+   * Untuk halaman analytics — beda kasus dengan top-products by sold_count.
+   */
+  static async getTopProductsByProfit(days: number, limit: number) {
+    const supabase = createAdminClient()
+    const since = new Date(Date.now() - days * 86400_000).toISOString()
+    const { data } = await supabase
+      .from('orders')
+      .select('product_id, total_idr, cost_idr, products!inner(name, thumbnail_url)')
+      .in('status', ['delivered', 'confirmed'])
+      .not('cost_idr', 'is', null)
+      .gte('created_at', since)
+
+    const buckets = new Map<string, {
+      id: string; name: string; thumbnail_url: string | null
+      revenue: number; cost: number; profit: number; orders: number
+    }>()
+    for (const r of (data ?? []) as Array<{
+      product_id: string; total_idr: number; cost_idr: number
+      products: { name: string; thumbnail_url: string | null } | { name: string; thumbnail_url: string | null }[]
+    }>) {
+      const prodRel = Array.isArray(r.products) ? r.products[0] : r.products
+      if (!prodRel) continue
+      const cur = buckets.get(r.product_id) ?? {
+        id: r.product_id, name: prodRel.name, thumbnail_url: prodRel.thumbnail_url,
+        revenue: 0, cost: 0, profit: 0, orders: 0,
+      }
+      cur.revenue += r.total_idr
+      cur.cost += r.cost_idr
+      cur.profit += r.total_idr - r.cost_idr
+      cur.orders += 1
+      buckets.set(r.product_id, cur)
+    }
+
+    return Array.from(buckets.values())
+      .map((b) => ({
+        ...b,
+        margin_pct: b.revenue > 0 ? Math.round((b.profit / b.revenue) * 100) : 0,
+      }))
+      .sort((a, b) => b.profit - a.profit)
+      .slice(0, limit)
+  }
+
+  /**
+   * SLA performance — distribusi waktu fulfillment (paid_at → delivered_at)
+   * untuk order delivered di periode. Pakai untuk monitor operasional admin.
+   */
+  static async getSLAMetrics(days: number) {
+    const supabase = createAdminClient()
+    const since = new Date(Date.now() - days * 86400_000).toISOString()
+    const { data } = await supabase
+      .from('orders')
+      .select('paid_at, delivered_at')
+      .in('status', ['delivered', 'confirmed'])
+      .not('paid_at', 'is', null)
+      .not('delivered_at', 'is', null)
+      .gte('paid_at', since)
+
+    const rows = (data ?? []) as Array<{ paid_at: string; delivered_at: string }>
+    if (rows.length === 0) {
+      return {
+        total: 0, avg_minutes: 0, median_minutes: 0,
+        buckets: { under_1h: 0, '1_to_6h': 0, '6_to_24h': 0, over_24h: 0 },
+        bucket_pct: { under_1h: 0, '1_to_6h': 0, '6_to_24h': 0, over_24h: 0 },
+      }
+    }
+
+    const durations = rows
+      .map((r) => (new Date(r.delivered_at).getTime() - new Date(r.paid_at).getTime()) / 60_000)
+      .filter((d) => d >= 0)
+      .sort((a, b) => a - b)
+
+    const total = durations.length
+    const sum = durations.reduce((s, d) => s + d, 0)
+    const avgMin = Math.round(sum / total)
+    const medianMin = Math.round(durations[Math.floor(total / 2)] ?? 0)
+
+    const buckets = {
+      under_1h: durations.filter((d) => d < 60).length,
+      '1_to_6h': durations.filter((d) => d >= 60 && d < 360).length,
+      '6_to_24h': durations.filter((d) => d >= 360 && d < 1440).length,
+      over_24h: durations.filter((d) => d >= 1440).length,
+    }
+    const bucket_pct = Object.fromEntries(
+      Object.entries(buckets).map(([k, v]) => [k, Math.round((v / total) * 100)]),
+    ) as { under_1h: number; '1_to_6h': number; '6_to_24h': number; over_24h: number }
+
+    return { total, avg_minutes: avgMin, median_minutes: medianMin, buckets, bucket_pct }
+  }
+
+  /**
+   * Notification health — success rate email + WA di periode. Pakai untuk
+   * monitor reliability notif channel (mis. WAHA down).
+   */
+  static async getNotificationHealth(days: number) {
+    const supabase = createAdminClient()
+    const since = new Date(Date.now() - days * 86400_000).toISOString()
+    const { data } = await supabase
+      .from('notifications_log')
+      .select('channel, status')
+      .gte('created_at', since)
+
+    const result: Record<string, { sent: number; failed: number; pending: number; total: number; success_pct: number }> = {
+      email: { sent: 0, failed: 0, pending: 0, total: 0, success_pct: 0 },
+      wa: { sent: 0, failed: 0, pending: 0, total: 0, success_pct: 0 },
+    }
+    for (const r of (data ?? []) as Array<{ channel: string; status: string }>) {
+      const ch = result[r.channel] ?? (result[r.channel] = { sent: 0, failed: 0, pending: 0, total: 0, success_pct: 0 })
+      ch.total += 1
+      if (r.status === 'sent') ch.sent += 1
+      else if (r.status === 'failed') ch.failed += 1
+      else ch.pending += 1
+    }
+    for (const k of Object.keys(result)) {
+      const ch = result[k]
+      ch.success_pct = ch.total > 0 ? Math.round((ch.sent / ch.total) * 100) : 0
+    }
+    return result
+  }
+
+  /**
    * Revenue + orders breakdown per kategori produk untuk periode tertentu.
    * Pakai untuk chart "Per-Category Share" — lihat AI vs Kreator share.
    */
