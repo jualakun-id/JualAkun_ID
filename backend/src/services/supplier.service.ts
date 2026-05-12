@@ -155,7 +155,14 @@ export class SupplierCanbosoService {
   /**
    * Sync display_stock = supplier.stats.available untuk semua produk JualAkun
    * yang sudah punya `supplier_product_id`. Run by admin button atau cron.
-   * Return: jumlah produk yang di-update + list mapping yang tidak ketemu.
+   *
+   * Return:
+   *   - total_mapped: jumlah produk JualAkun yang di-link ke supplier
+   *   - updated:      jumlah yang display_stock-nya berubah
+   *   - orphans:      list mapping yang supplier_product_id-nya tidak ketemu
+   *                   di list produk supplier (mungkin produk supplier
+   *                   sudah delisted / id berubah). Include nama + id supaya
+   *                   admin tau persis produk mana yang harus dicek.
    */
   static async syncStock() {
     const { products: supplierList } = await this.listProducts()
@@ -164,11 +171,12 @@ export class SupplierCanbosoService {
     const supabase = createAdminClient()
     const { data: jualakunProducts, error } = await supabase
       .from('products')
-      .select('id, supplier_product_id, display_stock')
+      .select('id, name, supplier_product_id, display_stock')
       .not('supplier_product_id', 'is', null)
     if (error) throw new ApiError('INTERNAL_ERROR', error.message, 500)
 
-    const orphans: string[] = []
+    type OrphanInfo = { product_id: string; product_name: string; supplier_product_id: string }
+    const orphans: OrphanInfo[] = []
     const now = new Date().toISOString()
 
     // Parallel update — jauh lebih cepat dari sequential await loop.
@@ -176,7 +184,11 @@ export class SupplierCanbosoService {
       const supId = p.supplier_product_id as string
       const available = supplierMap.get(supId)
       if (available === undefined) {
-        orphans.push(supId)
+        orphans.push({
+          product_id: p.id as string,
+          product_name: p.name as string,
+          supplier_product_id: supId,
+        })
         return { updated: false }
       }
       const fields: Record<string, unknown> = { supplier_synced_at: now }

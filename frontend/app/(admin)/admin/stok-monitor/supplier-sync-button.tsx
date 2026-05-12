@@ -6,10 +6,16 @@ import { RefreshCw, Loader2 } from 'lucide-react'
 import { useToast } from '@/components/toast'
 import { api } from '@/lib/api'
 
+type Orphan = {
+  product_id: string
+  product_name: string
+  supplier_product_id: string
+}
+
 type SyncResult = {
   total_mapped: number
   updated: number
-  orphans: string[]
+  orphans: Orphan[]
   synced_at: string
 }
 
@@ -17,6 +23,10 @@ type SyncResult = {
  * Tombol sync — call POST /admin/supplier/sync-stock supaya display_stock
  * di-update dengan stats.available dari Canboso untuk semua produk yang
  * sudah punya supplier_product_id.
+ *
+ * Kalau ada orphan (mapping tidak ketemu di supplier), tampilkan list nama
+ * produk yang bermasalah di toast — bukan cuma count — supaya admin tau
+ * persis produk mana yang harus di-cek supplier_product_id-nya.
  */
 export function SupplierSyncButton() {
   const router = useRouter()
@@ -36,8 +46,17 @@ export function SupplierSyncButton() {
       toast.error('Belum ada produk yang di-link ke supplier. Set "Supplier (Canboso)" di form produk dulu.')
       return
     }
-    let msg = `Sync selesai: ${updated} produk di-update dari ${total_mapped} produk ter-link.`
-    if (orphans.length > 0) msg += ` ⚠️ ${orphans.length} mapping tidak ketemu di supplier.`
+    let msg = `Sync selesai: ${updated} di-update dari ${total_mapped} produk ter-link.`
+    if (orphans.length > 0) {
+      // List max 5 nama (kalau lebih, summary "+N lain"). Pakai newline supaya
+      // di-render multi-baris di toast — toast.tsx pakai whitespace default
+      // jadi \n di-handle browser sebagai space, but we ensure via JSX or
+      // pre-line. Toast component perlu support multi-line — fallback: pakai
+      // separator " · " kalau pendek.
+      const names = orphans.slice(0, 5).map((o) => o.product_name).join(', ')
+      const more = orphans.length > 5 ? ` +${orphans.length - 5} lain` : ''
+      msg += `\n\n⚠️ ${orphans.length} produk tidak ketemu di supplier:\n${names}${more}`
+    }
     toast.success(msg)
     router.refresh()
   }

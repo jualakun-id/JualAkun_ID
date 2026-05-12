@@ -109,7 +109,7 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }
       }`}
     >
       <Icon size={20} className={`shrink-0 mt-0.5 ${cfg.iconClassName}`} strokeWidth={2.75} />
-      <p className="flex-1 text-sm font-extrabold leading-snug">{toast.message}</p>
+      <p className="flex-1 text-sm font-extrabold leading-snug whitespace-pre-line">{toast.message}</p>
       <button
         type="button"
         onClick={onDismiss}
