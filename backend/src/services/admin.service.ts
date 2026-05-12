@@ -155,9 +155,19 @@ export class AdminProductsService {
       }
     }
 
+    // Kalau admin update supplier_product_id (relink ke supplier baru atau
+    // unset), clear supplier_orphan_at sekaligus — supaya banner orphan
+    // di stok-monitor tidak nyangkut sampai sync next run. Kalau ID baru
+    // ternyata juga tidak ada di supplier, sync berikutnya akan re-set
+    // orphan_at lagi (self-correcting).
+    const payload: typeof input & { supplier_orphan_at?: null } = { ...input }
+    if ('supplier_product_id' in input) {
+      payload.supplier_orphan_at = null
+    }
+
     const { data, error } = await supabase
       .from('products')
-      .update(input)
+      .update(payload)
       .eq('id', id)
       .select('*')
       .single()
