@@ -84,8 +84,6 @@ app.onError((err, c) => {
 const recentErrorCache = new Map<string, number>()
 async function notifyAdminCriticalError(info: { path: string; method: string; message: string; stack?: string }) {
   try {
-    const adminWa = process.env.ADMIN_WHATSAPP_NUMBER
-    if (!adminWa) return
     const key = `${info.path}|${info.message.slice(0, 80)}`
     const lastSent = recentErrorCache.get(key) ?? 0
     if (Date.now() - lastSent < 15 * 60 * 1000) return // dedup 15 menit
@@ -96,10 +94,10 @@ async function notifyAdminCriticalError(info: { path: string; method: string; me
       if (oldest) recentErrorCache.delete(oldest[0])
     }
     const { NotificationService } = await import('@/services/notification.service')
-    await NotificationService.sendWhatsApp({
-      target: adminWa,
+    await NotificationService.sendAdminAlert({
       template: 'admin_critical_error',
-      message: `[CRITICAL] Unhandled error di backend:\n\n${info.method} ${info.path}\n${info.message}\n\nDedup 15 menit untuk error sama.`,
+      title: 'CRITICAL Unhandled Error',
+      message: `${info.method} ${info.path}\n${info.message}\n\nDedup 15 menit untuk error sama.`,
     })
   } catch (e) {
     // Diam — jangan crash request handler kalau alert gagal

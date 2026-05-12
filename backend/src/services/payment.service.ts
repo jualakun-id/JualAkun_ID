@@ -313,8 +313,6 @@ export class PaymentService {
   }
 
   private static async alertAdminPendingFulfillment(order: OrderForPayment): Promise<void> {
-    const adminWa = process.env.ADMIN_WHATSAPP_NUMBER
-    if (!adminWa) return
     const supabase = createAdminClient()
     const { data } = await supabase
       .from('orders')
@@ -327,11 +325,10 @@ export class PaymentService {
       orderNumber: order.order_number,
       productName: product?.name ?? 'Akun Digital',
     })
-    await NotificationService.sendWhatsApp({
-      target: adminWa,
-      message: tpl.waText,
+    await NotificationService.sendAdminAlert({
       template: tpl.template,
-      orderId: order.id,
+      title: 'Order Perlu Fulfillment',
+      message: tpl.waText.replace(/^\[[^\]]+\]\n\n/, ''),
     })
   }
 

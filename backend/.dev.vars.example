@@ -14,4 +14,5 @@ WAHA_SESSION=default
 RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 RESEND_FROM_EMAIL=noreply@jualakun.id
 ADMIN_WHATSAPP_NUMBER=628xxxxxxxxxxxxxxx
+ADMIN_EMAIL=admin@jualakun.id
 CRON_SECRET=ganti-dengan-random-32-char

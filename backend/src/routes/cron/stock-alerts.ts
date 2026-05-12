@@ -78,15 +78,12 @@ stockAlertsCron.post('/', async (c) => {
     })
   }
 
-  const adminWa = process.env.ADMIN_WHATSAPP_NUMBER
-  if (!adminWa) return c.json({ data: { ok: true, alerted: lowStock.length, reason: 'no_admin_wa_only_logged' } })
-
   const tpl = templates.adminLowStock({ products: lowStock.map((p) => ({ name: p.name, stock_count: p.display_stock })) })
-  await NotificationService.sendWhatsApp({
-    target: adminWa,
-    message: tpl.waText,
+  const result = await NotificationService.sendAdminAlert({
     template: tpl.template,
+    title: 'Stok Kritis',
+    message: tpl.waText.replace(/^\[[^\]]+\]\n\n/, ''),
   })
 
-  return c.json({ data: { ok: true, alerted: lowStock.length } })
+  return c.json({ data: { ok: true, alerted: lowStock.length, wa_sent: result.wa, email_fallback: result.email } })
 })

@@ -31,6 +31,14 @@ function toChatId(target: string): string {
   return `${intl}@c.us`
 }
 
+export type WahaSessionStatus =
+  | 'WORKING'
+  | 'SCAN_QR_CODE'
+  | 'STARTING'
+  | 'STOPPED'
+  | 'FAILED'
+  | 'UNKNOWN'
+
 export class NotificationService {
   static async sendWhatsApp(args: {
     target: string
@@ -38,7 +46,7 @@ export class NotificationService {
     template: string
     userId?: string | null
     orderId?: string | null
-  }): Promise<void> {
+  }): Promise<boolean> {
     const baseUrl = process.env.WAHA_BASE_URL!.replace(/\/$/, '')
     const apiKey = process.env.WAHA_API_KEY!
     const session = process.env.WAHA_SESSION || 'default'
@@ -58,7 +66,7 @@ export class NotificationService {
       })
       if (!res.ok) {
         status = 'failed'
-        error = await res.text()
+        error = `${res.status} ${await res.text()}`.slice(0, 500)
       }
     } catch (err) {
       status = 'failed'
@@ -72,6 +80,7 @@ export class NotificationService {
       status,
       error,
     })
+    return status === 'sent'
   }
 
   static async sendEmail(args: {
@@ -81,7 +90,7 @@ export class NotificationService {
     template: string
     userId?: string | null
     orderId?: string | null
-  }): Promise<void> {
+  }): Promise<boolean> {
     const apiKey = process.env.RESEND_API_KEY!
     const from = process.env.RESEND_FROM_EMAIL!
     let status: NotifStatus = 'sent'
@@ -102,7 +111,7 @@ export class NotificationService {
       })
       if (!res.ok) {
         status = 'failed'
-        error = await res.text()
+        error = `${res.status} ${await res.text()}`.slice(0, 500)
       }
     } catch (err) {
       status = 'failed'
@@ -116,5 +125,118 @@ export class NotificationService {
       status,
       error,
     })
+    return status === 'sent'
+  }
+
+  /**
+   * Kirim alert ke admin via WA. Kalau WA gagal (WAHA down, QR expired, dll),
+   * fallback ke email Resend supaya alert critical tidak hilang.
+   *
+   * Subject email auto-prefix [ALERT JualAkun]. Body WA & email plain text
+   * sama supaya konsisten — email di-wrap minimal HTML untuk readability.
+   */
+  static async sendAdminAlert(args: {
+    template: string
+    title: string
+    message: string
+  }): Promise<{ wa: boolean; email: boolean }> {
+    const adminWa = process.env.ADMIN_WHATSAPP_NUMBER
+    const adminEmail = process.env.ADMIN_EMAIL
+
+    let waOk = false
+    if (adminWa) {
+      waOk = await this.sendWhatsApp({
+        target: adminWa,
+        template: args.template,
+        message: `[${args.title}]\n\n${args.message}`,
+      })
+    }
+
+    // Fallback email kalau WA gagal atau admin WA tidak diset
+    let emailOk = false
+    if (!waOk && adminEmail) {
+      const html = `
+        <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1f2937;">
+          <div style="background: linear-gradient(135deg, #dc2626, #ef4444); padding: 24px; text-align: center; border-radius: 8px 8px 0 0;">
+            <h1 style="color: #fff; margin: 0; font-size: 20px;">[ALERT] JualAkun</h1>
+            <p style="color: #fee2e2; margin: 8px 0 0; font-size: 13px;">${args.title}</p>
+          </div>
+          <div style="padding: 24px; background: #fff; border: 1px solid #e5e7eb; border-top: 0; border-radius: 0 0 8px 8px;">
+            <pre style="white-space: pre-wrap; word-wrap: break-word; margin: 0; font-family: 'Segoe UI', Arial, sans-serif; color: #374151; font-size: 14px; line-height: 1.6;">${args.message}</pre>
+            <p style="margin: 24px 0 0; color: #9ca3af; font-size: 12px; border-top: 1px solid #e5e7eb; padding-top: 16px;">
+              Email ini dikirim karena WhatsApp admin (${adminWa ? 'configured' : 'tidak diset'}) ${adminWa ? 'tidak menerima alert (WAHA down/QR expired)' : ''}.
+            </p>
+          </div>
+        </div>
+      `
+      emailOk = await this.sendEmail({
+        to: adminEmail,
+        subject: `[ALERT JualAkun] ${args.title}`,
+        html,
+        template: `${args.template}_email_fallback`,
+      })
+    }
+
+    return { wa: waOk, email: emailOk }
+  }
+
+  /**
+   * Check status WAHA session via GET /api/sessions/{session}.
+   * Return null kalau env vars belum di-set atau WAHA unreachable.
+   *
+   * Dipakai oleh admin /system-health untuk visibility status WA real-time.
+   */
+  static async checkWahaHealth(): Promise<{
+    status: WahaSessionStatus
+    session: string
+    base_url_set: boolean
+    api_key_set: boolean
+    error?: string
+  }> {
+    const baseUrl = process.env.WAHA_BASE_URL?.replace(/\/$/, '')
+    const apiKey = process.env.WAHA_API_KEY
+    const session = process.env.WAHA_SESSION || 'default'
+
+    if (!baseUrl || !apiKey) {
+      return {
+        status: 'UNKNOWN',
+        session,
+        base_url_set: !!baseUrl,
+        api_key_set: !!apiKey,
+        error: 'WAHA env vars belum diset',
+      }
+    }
+
+    try {
+      const res = await fetch(`${baseUrl}/api/sessions/${session}`, {
+        method: 'GET',
+        headers: { 'X-Api-Key': apiKey, Accept: 'application/json' },
+      })
+      if (!res.ok) {
+        return {
+          status: 'UNKNOWN',
+          session,
+          base_url_set: true,
+          api_key_set: true,
+          error: `${res.status} ${(await res.text()).slice(0, 200)}`,
+        }
+      }
+      const body = (await res.json()) as { status?: string }
+      const status = (body.status ?? 'UNKNOWN') as WahaSessionStatus
+      return {
+        status,
+        session,
+        base_url_set: true,
+        api_key_set: true,
+      }
+    } catch (err) {
+      return {
+        status: 'UNKNOWN',
+        session,
+        base_url_set: true,
+        api_key_set: true,
+        error: err instanceof Error ? err.message : 'unknown',
+      }
+    }
   }
 }

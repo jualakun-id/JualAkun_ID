@@ -62,21 +62,18 @@ retryNotificationsCron.post('/', async (c) => {
     newlyExhausted.push({ channel: log.channel, template: log.template, order_id: log.order_id })
   }
 
-  // Admin WA alert untuk newly-exhausted batch (kalau ada >0)
-  // Single WA per cron run dengan summary list, hindari spam.
+  // Admin alert untuk newly-exhausted batch (kalau ada >0) — auto-fallback email kalau WA gagal.
+  // Single alert per cron run dengan summary list, hindari spam.
   if (newlyExhausted.length > 0) {
-    const adminWa = process.env.ADMIN_WHATSAPP_NUMBER
-    if (adminWa) {
-      const lines = newlyExhausted
-        .slice(0, 10)
-        .map((n) => `- ${n.channel.toUpperCase()} ${n.template}${n.order_id ? ` (order ${n.order_id.slice(0, 8)})` : ''}`)
-      const more = newlyExhausted.length > 10 ? `\n+${newlyExhausted.length - 10} notif lain` : ''
-      await NotificationService.sendWhatsApp({
-        target: adminWa,
-        message: `[ALERT] ${newlyExhausted.length} notif buyer gagal permanen (retry >6 jam):\n\n${lines.join('\n')}${more}\n\nCek admin: jualakun.id/admin/notifikasi?event_type=notification_failed`,
-        template: 'admin_notif_exhausted',
-      })
-    }
+    const lines = newlyExhausted
+      .slice(0, 10)
+      .map((n) => `- ${n.channel.toUpperCase()} ${n.template}${n.order_id ? ` (order ${n.order_id.slice(0, 8)})` : ''}`)
+    const more = newlyExhausted.length > 10 ? `\n+${newlyExhausted.length - 10} notif lain` : ''
+    await NotificationService.sendAdminAlert({
+      template: 'admin_notif_exhausted',
+      title: `${newlyExhausted.length} Notif Gagal Permanen`,
+      message: `Notif buyer gagal permanen (retry >6 jam):\n\n${lines.join('\n')}${more}\n\nCek admin: jualakun.id/admin/notifikasi?event_type=notification_failed`,
+    })
   }
 
   let retried = 0
