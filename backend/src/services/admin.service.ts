@@ -1066,6 +1066,56 @@ export class AdminDashboardService {
     return data
   }
 
+  /**
+   * Action Center aggregate untuk dashboard — semua hal yang butuh admin
+   * attention dengan breakdown by urgency (SLA). 1 endpoint untuk hindari
+   * banyak roundtrip.
+   */
+  static async getActionCenter() {
+    const supabase = createAdminClient()
+    const now = Date.now()
+    const twoHoursAgo = new Date(now - 2 * 60 * 60 * 1000).toISOString()
+    const twentyFourHoursAgo = new Date(now - 24 * 60 * 60 * 1000).toISOString()
+    const fortyEightHoursAgo = new Date(now - 48 * 60 * 60 * 1000).toISOString()
+
+    // Paid orders — perlu fulfill, breakdown by SLA
+    const [paidTotal, paidBreach2h, paidBreach24h] = await Promise.all([
+      supabase.from('orders').select('id', { count: 'exact', head: true }).eq('status', 'paid'),
+      supabase.from('orders').select('id', { count: 'exact', head: true }).eq('status', 'paid').lt('paid_at', twoHoursAgo),
+      supabase.from('orders').select('id', { count: 'exact', head: true }).eq('status', 'paid').lt('paid_at', twentyFourHoursAgo),
+    ])
+
+    // Open tickets — breakdown by age
+    const [ticketTotal, ticketBreach24h, ticketBreach48h] = await Promise.all([
+      supabase.from('support_tickets').select('id', { count: 'exact', head: true }).eq('status', 'open'),
+      supabase.from('support_tickets').select('id', { count: 'exact', head: true }).eq('status', 'open').lt('created_at', twentyFourHoursAgo),
+      supabase.from('support_tickets').select('id', { count: 'exact', head: true }).eq('status', 'open').lt('created_at', fortyEightHoursAgo),
+    ])
+
+    // Stock breakdown
+    const [stockOut, stockCritical] = await Promise.all([
+      supabase.from('products').select('id', { count: 'exact', head: true }).eq('is_active', true).eq('display_stock', 0),
+      supabase.from('products').select('id', { count: 'exact', head: true }).eq('is_active', true).gt('display_stock', 0).lte('display_stock', 5),
+    ])
+
+    return {
+      paid_orders: {
+        total: paidTotal.count ?? 0,
+        sla_breach_2h: paidBreach2h.count ?? 0,
+        sla_breach_24h: paidBreach24h.count ?? 0,
+      },
+      open_tickets: {
+        total: ticketTotal.count ?? 0,
+        sla_breach_24h: ticketBreach24h.count ?? 0,
+        sla_breach_48h: ticketBreach48h.count ?? 0,
+      },
+      stock: {
+        out: stockOut.count ?? 0,
+        critical: stockCritical.count ?? 0,
+      },
+    }
+  }
+
   static async revenueTrend(days: number) {
     const supabase = createAdminClient()
     const since = new Date(Date.now() - days * 86400_000).toISOString()
