@@ -1,6 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
 import { ApiError } from '@/types/errors'
 import { createAdminClient } from '@/lib/supabase'
+import { NotificationService } from './notification.service'
+import { templates } from '@/templates/messages'
 
 function publicClient() {
   return createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_ANON_KEY!, {
@@ -83,6 +85,25 @@ export class AuthService {
         credit_amount: 5000,
         status: 'pending',
       })
+    }
+
+    // Welcome email branded — dikirim setelah Supabase email verification.
+    // Tidak menggantikan email verifikasi (yang masih default Supabase) —
+    // ini email kedua untuk onboarding yang lebih branded.
+    try {
+      const tpl = templates.welcome({
+        fullName: input.full_name,
+        email: data.user.email!,
+      })
+      await NotificationService.sendEmail({
+        to: data.user.email!,
+        subject: tpl.emailSubject,
+        html: tpl.emailHtml,
+        template: tpl.template,
+        userId: data.user.id,
+      })
+    } catch (err) {
+      console.warn('[auth/register] welcome email failed (non-blocking):', err)
     }
 
     return {

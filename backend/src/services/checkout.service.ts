@@ -2,6 +2,8 @@ import { createAdminClient } from '@/lib/supabase'
 import { ApiError } from '@/types/errors'
 import { PaymentService } from './payment.service'
 import { ActivityLogService } from './activity-log.service'
+import { NotificationService } from './notification.service'
+import { templates } from '@/templates/messages'
 
 type CreateOrderInput = {
   product_id: string
@@ -204,6 +206,46 @@ export class CheckoutService {
         description: `Order ${insertedOrder.order_number} · kredit Rp ${creditUsedIdr.toLocaleString('id-ID')}`,
         metadata: { credit_used_idr: creditUsedIdr, user_id: userId, order_id: insertedOrder.id },
       })
+    }
+
+    // 10. Notif buyer order created — supaya kalau popup payment ke-close,
+    // buyer masih bisa lanjut bayar dari link di WA/email
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name, phone_wa')
+        .eq('id', userId)
+        .maybeSingle()
+      const { data: authUser } = await supabase.auth.admin.getUserById(userId)
+      const userEmail = authUser.user?.email
+      const tpl = templates.orderCreated({
+        fullName: profile?.full_name ?? 'Buyer',
+        orderNumber: insertedOrder.order_number,
+        productName: product.name,
+        totalIdr,
+        snapUrl: tx.payment_url,
+      })
+      if (profile?.phone_wa) {
+        await NotificationService.sendWhatsApp({
+          target: profile.phone_wa,
+          message: tpl.waText,
+          template: tpl.template,
+          userId,
+          orderId: insertedOrder.id,
+        })
+      }
+      if (userEmail) {
+        await NotificationService.sendEmail({
+          to: userEmail,
+          subject: tpl.emailSubject,
+          html: tpl.emailHtml,
+          template: tpl.template,
+          userId,
+          orderId: insertedOrder.id,
+        })
+      }
+    } catch (notifErr) {
+      console.warn('[checkout] notify order_created failed (non-blocking):', notifErr)
     }
 
     return {

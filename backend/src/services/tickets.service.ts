@@ -1,6 +1,8 @@
 import { createAdminClient } from '@/lib/supabase'
 import { ApiError } from '@/types/errors'
 import { ActivityLogService } from './activity-log.service'
+import { NotificationService } from './notification.service'
+import { templates } from '@/templates/messages'
 
 type CreateTicketInput = {
   order_id: string
@@ -63,6 +65,28 @@ export class TicketsService {
       description: input.description?.slice(0, 200) ?? null,
       metadata: { reason: input.reason, order_id: input.order_id, user_id: userId },
     })
+
+    // Admin alert WA+email fallback — supaya admin tidak perlu polling
+    // dashboard untuk lihat tiket masuk. SLA respon 1x24 jam.
+    try {
+      const { data: orderRow } = await supabase
+        .from('orders')
+        .select('order_number')
+        .eq('id', input.order_id)
+        .maybeSingle()
+      const tpl = templates.adminTicketCreated({
+        orderNumber: orderRow?.order_number ?? input.order_id.slice(0, 8),
+        reason: input.reason,
+        description: input.description ?? null,
+      })
+      await NotificationService.sendAdminAlert({
+        template: tpl.template,
+        title: 'Tiket Garansi Baru',
+        message: tpl.waText.replace(/^Tiket garansi baru.*?:\n\n/, ''),
+      })
+    } catch (err) {
+      console.warn('[ticket/create] admin alert failed (non-blocking):', err)
+    }
 
     return {
       ticket_id: data.id,

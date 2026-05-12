@@ -21,6 +21,7 @@ import { expireOrdersCron } from '@/routes/cron/expire-orders'
 import { stockAlertsCron } from '@/routes/cron/stock-alerts'
 import { retryNotificationsCron } from '@/routes/cron/retry-notifications'
 import { supplierSyncStockCron } from '@/routes/cron/supplier-sync-stock'
+import { customerRemindersCron } from '@/routes/cron/customer-reminders'
 
 const app = new Hono<AppEnv>()
 
@@ -54,6 +55,7 @@ app.route('/api/cron/expire-orders', expireOrdersCron)
 app.route('/api/cron/stock-alerts', stockAlertsCron)
 app.route('/api/cron/retry-notifications', retryNotificationsCron)
 app.route('/api/cron/supplier-sync-stock', supplierSyncStockCron)
+app.route('/api/cron/customer-reminders', customerRemindersCron)
 
 app.notFound((c) => c.json({ ok: false, code: 'NOT_FOUND', message: 'Route tidak ditemukan' }, 404))
 
@@ -110,7 +112,8 @@ async function notifyAdminCriticalError(info: { path: string; method: string; me
 // limit 3 cron triggers, jadi gak bisa add slot baru).
 const CRON_MAP: Record<string, string[]> = {
   '*/5 * * * *': ['/api/cron/expire-orders'],
-  '*/30 * * * *': ['/api/cron/stock-alerts'],
+  // 30 menit slot piggyback: stock alerts + customer reminders (guarantee H-3 + review D+3)
+  '*/30 * * * *': ['/api/cron/stock-alerts', '/api/cron/customer-reminders'],
   '*/10 * * * *': ['/api/cron/retry-notifications', '/api/cron/supplier-sync-stock'],
 }
 

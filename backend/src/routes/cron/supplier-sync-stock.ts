@@ -2,6 +2,8 @@ import { Hono } from 'hono'
 import { cronMiddleware } from '@/middleware/cron'
 import { SupplierCanbosoService } from '@/services/supplier.service'
 import { ActivityLogService } from '@/services/activity-log.service'
+import { NotificationService } from '@/services/notification.service'
+import { templates } from '@/templates/messages'
 import { createAdminClient } from '@/lib/supabase'
 import type { AppEnv } from '@/types/bindings'
 
@@ -9,7 +11,7 @@ export const supplierSyncStockCron = new Hono<AppEnv>()
 
 supplierSyncStockCron.use('*', cronMiddleware)
 
-const LOW_BALANCE_USD_THRESHOLD = 2
+const LOW_BALANCE_USD_THRESHOLD = 5
 
 /**
  * Periodic sync — di-fire dari Workers scheduled() setiap 10 menit (piggyback
@@ -39,6 +41,31 @@ supplierSyncStockCron.post('/', async (c) => {
           title: `Saldo Canboso menipis: ${balance.balance_text}`,
           description: `Saldo di bawah $${LOW_BALANCE_USD_THRESHOLD} — top-up via bot Canboso untuk avoid order stuck`,
           metadata: { balance_usd: balance.balance_usd, balance_idr: balance.balance_idr },
+        })
+
+        // Hitung perkiraan order tersisa dari avg cost 30 hari terakhir
+        const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+        const { data: recentCosts } = await supabase
+          .from('orders')
+          .select('cost_usd')
+          .eq('cost_source', 'supplier')
+          .gte('delivered_at', thirtyDaysAgo)
+          .not('cost_usd', 'is', null)
+        const avgCostUsd = recentCosts && recentCosts.length > 0
+          ? recentCosts.reduce((sum, r) => sum + (r.cost_usd as unknown as number), 0) / recentCosts.length
+          : 1
+        const estimatedOrdersLeft = Math.max(0, Math.floor(balance.balance_usd / avgCostUsd))
+
+        // WA + email fallback alert ke admin
+        const tpl = templates.adminSupplierLowBalance({
+          balanceUsd: balance.balance_usd,
+          thresholdUsd: LOW_BALANCE_USD_THRESHOLD,
+          estimatedOrdersLeft,
+        })
+        await NotificationService.sendAdminAlert({
+          template: tpl.template,
+          title: 'Saldo Supplier Menipis',
+          message: tpl.waText.replace(/^\[[^\]]+\]\s*/, ''),
         })
       }
     }

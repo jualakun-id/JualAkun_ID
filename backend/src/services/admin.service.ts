@@ -6,6 +6,7 @@ import { NotificationService } from './notification.service'
 import { PaymentService } from './payment.service'
 import { SupplierCanbosoService } from './supplier.service'
 import { ActivityLogService } from './activity-log.service'
+import { templates } from '@/templates/messages'
 
 /**
  * Extract path dalam bucket dari public URL Supabase Storage.
@@ -848,6 +849,69 @@ export class AdminTicketsService {
       description: input.resolution.slice(0, 200),
       metadata: { status: input.status, admin_id: adminId },
     })
+
+    // Notif buyer — kirim resolution + link dashboard. Kalau status "resolved" +
+    // ada new_account_stock_id, trigger ulang notifyBuyerDelivered supaya
+    // credential pengganti masuk WA/email juga.
+    try {
+      const { data: ticket } = await supabase
+        .from('support_tickets')
+        .select('user_id, order_id, orders!inner(order_number)')
+        .eq('id', ticketId)
+        .maybeSingle()
+      if (ticket?.user_id && ticket?.order_id) {
+        const orderRel = (ticket as { orders?: { order_number: string } | { order_number: string }[] }).orders
+        const orderObj = Array.isArray(orderRel) ? orderRel[0] : orderRel
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('full_name, phone_wa')
+          .eq('id', ticket.user_id)
+          .maybeSingle()
+        const { data: authUser } = await supabase.auth.admin.getUserById(ticket.user_id)
+        const userEmail = authUser.user?.email
+        const tpl = templates.ticketReplaced({
+          fullName: profile?.full_name ?? 'Buyer',
+          orderNumber: orderObj?.order_number ?? '',
+          resolution: input.resolution,
+        })
+        if (profile?.phone_wa) {
+          await NotificationService.sendWhatsApp({
+            target: profile.phone_wa,
+            message: tpl.waText,
+            template: tpl.template,
+            userId: ticket.user_id,
+            orderId: ticket.order_id,
+          })
+        }
+        if (userEmail) {
+          await NotificationService.sendEmail({
+            to: userEmail,
+            subject: tpl.emailSubject,
+            html: tpl.emailHtml,
+            template: tpl.template,
+            userId: ticket.user_id,
+            orderId: ticket.order_id,
+          })
+        }
+
+        // Kalau admin assign new_account_stock_id (akun pengganti),
+        // trigger notifyBuyerDelivered untuk kirim credential pengganti juga.
+        if (input.new_account_stock_id) {
+          const { data: order } = await supabase
+            .from('orders')
+            .select('id, user_id, product_id, order_number, total_idr, status')
+            .eq('id', ticket.order_id)
+            .maybeSingle()
+          if (order) {
+            await PaymentService.notifyBuyerDelivered(order as {
+              id: string; user_id: string; product_id: string; order_number: string; total_idr: number; status: string
+            })
+          }
+        }
+      }
+    } catch (notifErr) {
+      console.warn('[ticket/resolve] notify buyer failed (non-blocking):', notifErr)
+    }
 
     return { ok: true }
   }

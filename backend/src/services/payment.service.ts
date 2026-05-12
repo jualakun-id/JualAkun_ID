@@ -392,6 +392,91 @@ export class PaymentService {
         orderId: order.id,
       })
     }
+
+    // Trigger referral credit setelah delivered (kalau ini transaksi pertama
+    // referred user, referrer dapat kredit + notif). RPC handle eligibility:
+    //   - order status harus 'delivered' (sudah ✅ kalau sampai sini)
+    //   - referee belum pernah ada delivered order sebelumnya
+    //   - ada referrals row status 'pending' untuk referee
+    try {
+      await PaymentService.creditReferralAndNotify(order.id, order.user_id)
+    } catch (err) {
+      console.warn('[notify-delivered] credit_referral failed (non-blocking):', err)
+    }
   }
 
+  /**
+   * Trigger RPC credit_referral untuk eligibility check + grant kredit ke
+   * referrer. Kalau berhasil, kirim notif WA+email ke referrer.
+   *
+   * RPC return shape:
+   *   { ok: true, referrer_id, credit_amount } — kalau eligible
+   *   { ok: false, code: 'NOT_FIRST_ORDER' | 'NO_REFERRAL' | ... } — kalau skip
+   *
+   * Notif dikirim ke referrer (bukan referee) — referee identity tidak di-share
+   * untuk privacy.
+   */
+  private static async creditReferralAndNotify(orderId: string, refereeUserId: string): Promise<void> {
+    const supabase = createAdminClient()
+    const { data, error } = await supabase.rpc('credit_referral', { p_order_id: orderId })
+    if (error) {
+      console.warn('[credit_referral] RPC error:', error.message)
+      return
+    }
+    const result = data as { ok: boolean; code?: string; referrer_id?: string; credit_amount?: number } | null
+    if (!result?.ok || !result.referrer_id || !result.credit_amount) {
+      return // not eligible (not first order / no referral / etc) — silent skip
+    }
+
+    // Activity log untuk admin dashboard
+    await ActivityLogService.log({
+      event_type: 'referral_credited',
+      ref_id: orderId,
+      ref_table: 'orders',
+      title: `Kredit referral diberikan: Rp ${result.credit_amount.toLocaleString('id-ID')}`,
+      description: `Referrer ${result.referrer_id.slice(0, 8)}... dapat kredit dari pesanan pertama referee`,
+      metadata: {
+        referrer_id: result.referrer_id,
+        referee_id: refereeUserId,
+        credit_amount: result.credit_amount,
+        order_id: orderId,
+      },
+    })
+
+    // Notif ke referrer — fetch referrer profile + credits total
+    const { data: refProfile } = await supabase
+      .from('profiles')
+      .select('full_name, phone_wa, credits')
+      .eq('id', result.referrer_id)
+      .maybeSingle()
+    if (!refProfile) return
+    const { data: refAuth } = await supabase.auth.admin.getUserById(result.referrer_id)
+    const refEmail = refAuth.user?.email
+
+    const tpl = templates.referralCredited({
+      fullName: refProfile.full_name ?? 'Member',
+      creditAmount: result.credit_amount,
+      totalCredits: refProfile.credits ?? result.credit_amount,
+    })
+
+    if (refProfile.phone_wa) {
+      await NotificationService.sendWhatsApp({
+        target: refProfile.phone_wa,
+        message: tpl.waText,
+        template: tpl.template,
+        userId: result.referrer_id,
+        orderId,
+      })
+    }
+    if (refEmail) {
+      await NotificationService.sendEmail({
+        to: refEmail,
+        subject: tpl.emailSubject,
+        html: tpl.emailHtml,
+        template: tpl.template,
+        userId: result.referrer_id,
+        orderId,
+      })
+    }
+  }
 }
