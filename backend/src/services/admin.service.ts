@@ -400,6 +400,13 @@ export class AdminOrdersService {
       .eq('order_id', orderId)
       .order('created_at', { ascending: false })
 
+    // Fetch review kalau ada (untuk timeline step terakhir "review diberikan")
+    const { data: review } = await supabase
+      .from('product_reviews')
+      .select('id, rating, created_at')
+      .eq('order_id', orderId)
+      .maybeSingle()
+
     const productRel = (order as { products: { name: string; slug: string; supplier_product_id: string | null } | { name: string; slug: string; supplier_product_id: string | null }[] }).products
     const product = Array.isArray(productRel) ? productRel[0] : productRel
 
@@ -409,6 +416,7 @@ export class AdminOrdersService {
       product,
       buyer: { email: authUser.user?.email ?? null },
       notifications: notifications ?? [],
+      review: review ?? null,
     }
   }
 

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { CheckCircle2, AlertTriangle, KeyRound, Info, Copy, Check } from 'lucide-react'
+import { AlertTriangle, KeyRound, Info, Copy, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { api } from '@/lib/api'
 import type { OrderStatus } from '@/types'
@@ -27,7 +27,6 @@ export function OrderActions({ order }: Props) {
   const [creds, setCreds] = useState<Credentials | null>(null)
   const [loadingCreds, setLoadingCreds] = useState(false)
   const [credsError, setCredsError] = useState<string | null>(null)
-  const [confirming, setConfirming] = useState(false)
   const [copied, setCopied] = useState(false)
 
   const showCreds = ['delivered', 'confirmed'].includes(order.status)
@@ -39,24 +38,36 @@ export function OrderActions({ order }: Props) {
     setTimeout(() => setCopied(false), 2000)
   }
 
+  /**
+   * Load credentials + AUTO-CONFIRM kalau status masih 'delivered'.
+   * Konsep: aksi "buka credentials" = signal buyer menerima → auto-update
+   * status ke 'confirmed' → unlock review section. Tidak perlu tombol
+   * "Konfirmasi Akun Aktif" terpisah (UX simpler). Kalau buyer ada masalah,
+   * tetap bisa klaim garansi via tiket.
+   */
   async function loadCredentials() {
     setLoadingCreds(true)
     setCredsError(null)
     const result = await api.get<Credentials>(`/orders/${order.id}/credentials`)
-    setLoadingCreds(false)
     if (!result.ok) {
+      setLoadingCreds(false)
       setCredsError(result.message ?? 'Gagal memuat credentials')
       return
     }
     setCreds(result.data)
-  }
 
-  async function handleConfirm() {
-    setConfirming(true)
-    const result = await api.post<{ ok: boolean; status: 'confirmed' }>(`/orders/${order.id}/confirm`)
-    setConfirming(false)
-    if (!result.ok) return
-    router.refresh()
+    // Auto-confirm: kalau status masih delivered, mark confirmed di background.
+    // Fire-and-forget — buyer tetap bisa baca credentials walaupun confirm
+    // gagal. router.refresh() di akhir supaya UI update timeline + review.
+    if (order.status === 'delivered') {
+      try {
+        await api.post(`/orders/${order.id}/confirm`)
+        router.refresh()
+      } catch (err) {
+        console.warn('[order] auto-confirm failed (non-blocking):', err)
+      }
+    }
+    setLoadingCreds(false)
   }
 
   if (!showCreds) return null
@@ -74,6 +85,11 @@ export function OrderActions({ order }: Props) {
         <div className="mt-5">
           <p className="text-[15px] text-ink-muted font-medium leading-relaxed">
             Klik tombol di bawah untuk menampilkan info akses akun (sama dengan yang dikirim via WA & email).
+            {order.status === 'delivered' ? (
+              <span className="block mt-1 text-[13px] text-ink-subtle">
+                Membuka credentials = konfirmasi Anda terima akun, lalu Anda bisa kasih review.
+              </span>
+            ) : null}
           </p>
           <Button onClick={loadCredentials} disabled={loadingCreds} size="lg" className="mt-4">
             {loadingCreds ? 'Memuat...' : 'Tampilkan Credentials'}
@@ -121,12 +137,6 @@ export function OrderActions({ order }: Props) {
       )}
 
       <div className="mt-6 flex flex-wrap gap-3">
-        {order.status === 'delivered' ? (
-          <Button onClick={handleConfirm} disabled={confirming} variant="primary">
-            <CheckCircle2 size={16} strokeWidth={2.5} />
-            {confirming ? 'Memproses...' : 'Konfirmasi Akun Aktif'}
-          </Button>
-        ) : null}
         <a
           href={`/dashboard/tiket/baru?order_id=${order.id}`}
           className="inline-flex items-center gap-2 rounded-lg bg-warning/15 hover:bg-warning/20 text-warning font-extrabold px-5 py-2.5 text-sm border-2 border-warning/50 transition-colors"

@@ -38,6 +38,7 @@ type OrderDetail = {
   product: { name: string; slug: string; supplier_product_id?: string | null } | null
   buyer: { email: string | null }
   notifications: { id: string; channel: string; template: string; status: string; created_at: string }[]
+  review?: { id: string; rating: number; created_at: string } | null
 }
 
 type Props = { params: Promise<{ id: string }> }
@@ -172,6 +173,8 @@ export default async function AdminPesananDetailPage({ params }: Props) {
               buyerConfirmedAt={order.buyer_confirmed_at}
               paymentRejectedReason={order.payment_rejected_reason}
               expiresAt={order.expires_at}
+              reviewSubmittedAt={order.review?.created_at ?? null}
+              reviewRating={order.review?.rating ?? null}
             />
           </div>
 

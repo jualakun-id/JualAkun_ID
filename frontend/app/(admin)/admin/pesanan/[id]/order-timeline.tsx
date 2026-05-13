@@ -20,6 +20,8 @@ type Props = {
   buyerConfirmedAt?: string | null
   paymentRejectedReason?: string | null
   expiresAt?: string | null
+  reviewSubmittedAt?: string | null
+  reviewRating?: number | null
 }
 
 type Step = {
@@ -124,9 +126,9 @@ export function OrderTimeline(props: Props) {
       key: 'confirmed',
       label: 'Buyer konfirmasi terima',
       description: buyerConfirmedAt
-        ? 'Buyer terima credentials & aktif'
+        ? 'Buyer buka credentials → auto-konfirmasi'
         : status === 'delivered'
-          ? 'Menunggu buyer konfirmasi'
+          ? 'Menunggu buyer buka credentials'
           : '—',
       timestamp: buyerConfirmedAt ?? null,
       icon: CheckCircle2,
@@ -139,6 +141,24 @@ export function OrderTimeline(props: Props) {
             : isTerminalCancel
               ? 'cancelled'
               : 'pending',
+    },
+    {
+      key: 'review',
+      label: 'Review diberikan buyer',
+      description: props.reviewSubmittedAt
+        ? `Buyer kasih ${props.reviewRating ?? '—'} bintang`
+        : status === 'confirmed'
+          ? 'Menunggu buyer kasih review'
+          : '—',
+      timestamp: props.reviewSubmittedAt ?? null,
+      icon: Star,
+      state: props.reviewSubmittedAt
+        ? 'done'
+        : status === 'confirmed'
+          ? 'current'
+          : isTerminalCancel
+            ? 'cancelled'
+            : 'pending',
     },
   ]
 
@@ -252,11 +272,11 @@ export function OrderTimeline(props: Props) {
         </p>
       ) : null}
 
-      {/* Bonus: review masuk indicator kalau status confirmed */}
-      {status === 'confirmed' ? (
+      {/* Pesanan selesai full flow (review masuk) */}
+      {props.reviewSubmittedAt ? (
         <div className="mt-4 flex items-center gap-2 rounded-lg border-2 border-success/40 bg-success/5 px-3 py-2 text-xs text-success font-bold">
           <Star size={14} strokeWidth={2.5} />
-          Pesanan selesai — buyer bisa kasih review
+          Pesanan selesai — siklus lengkap dengan review buyer
         </div>
       ) : null}
     </div>

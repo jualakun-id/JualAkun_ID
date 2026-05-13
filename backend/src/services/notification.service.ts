@@ -47,10 +47,26 @@ export class NotificationService {
     userId?: string | null
     orderId?: string | null
   }): Promise<boolean> {
+    // Validate target di awal — kalau empty/null, log ke DB sebagai 'failed'
+    // dengan error message yang clear, hindari panggil WAHA dengan target invalid
+    const trimmedTarget = (args.target ?? '').trim()
+    if (!trimmedTarget) {
+      console.warn('[wa] target kosong — skip send', { template: args.template, orderId: args.orderId })
+      await logNotification({
+        user_id: args.userId ?? null,
+        order_id: args.orderId ?? null,
+        channel: 'wa',
+        template: args.template,
+        status: 'failed',
+        error: 'Target phone_wa kosong / null di profile buyer',
+      })
+      return false
+    }
+
     const baseUrl = process.env.WAHA_BASE_URL!.replace(/\/$/, '')
     const apiKey = process.env.WAHA_API_KEY!
     const session = process.env.WAHA_SESSION || 'default'
-    const chatId = toChatId(args.target)
+    const chatId = toChatId(trimmedTarget)
 
     let status: NotifStatus = 'sent'
     let error: string | null = null
