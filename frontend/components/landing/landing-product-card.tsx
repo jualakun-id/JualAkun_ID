@@ -52,9 +52,10 @@ export function LandingProductCard({
         backgroundSize: '14px 14px',
       }}
     >
-      {/* Discount badge */}
+      {/* Discount badge — neo-brutalist rounded rect, brand cyan untuk match
+          art style (tidak compete dengan warna doodle yang saturated) */}
       {hasDiscount && (
-        <span className="absolute top-5 left-5 bg-gradient-to-r from-purple-600 to-pink-500 text-white text-[13px] font-bold px-3 py-1 rounded-full shadow-sm z-10">
+        <span className="absolute top-4 left-4 bg-brand-500 text-ink text-sm font-extrabold px-3 py-1.5 rounded-md border-2 border-black shadow-[0_2px_0_rgba(0,0,0,0.9)] z-10">
           Diskon {discountPct}%
         </span>
       )}
@@ -92,15 +93,18 @@ export function LandingProductCard({
             </span>
           )}
 
-          <div className="mt-2 flex items-baseline justify-center gap-2">
-            <span className="text-ink font-extrabold text-lg">
-              Rp {product.price.toLocaleString('id-ID')}
-            </span>
+          {/* Harga: original price (coret) di ATAS, harga jual di BAWAH.
+              Ukuran sama (text-lg font-extrabold) — bedanya cuma color +
+              line-through supaya hierarchy tetap jelas via visual treatment. */}
+          <div className="mt-2 flex flex-col items-center gap-0.5">
             {hasDiscount && (
-              <span className="text-ink-muted text-[13px] line-through font-medium">
-                {product.original_price!.toLocaleString('id-ID')}
+              <span className="text-ink-muted text-lg line-through font-extrabold leading-tight">
+                Rp {product.original_price!.toLocaleString('id-ID')}
               </span>
             )}
+            <span className="text-ink font-extrabold text-lg leading-tight">
+              Rp {product.price.toLocaleString('id-ID')}
+            </span>
           </div>
 
           {(durationLabel || warrantyLabel) && (
