@@ -33,28 +33,36 @@ export function FulfillForm({ orderId, productName, hasSupplier }: Props) {
   const [purchasing, setPurchasing] = useState(false)
 
   async function handlePurchaseFromSupplier() {
-    if (!confirm('Beli dari supplier (Canboso)?\n\nWallet akan dipotong. Response & modal akan auto-fill — review sebelum kirim ke buyer.')) {
+    if (!confirm('Beli dari supplier (Canboso)?\n\nWallet akan dipotong. Credentials clean + modal akan auto-fill — review sebelum kirim ke buyer.')) {
       return
     }
     setPurchasing(true)
-    const result = await api.post<{ raw: string; cost_usd: number | null; cost_idr: number | null }>(
-      `/admin/orders/${orderId}/supplier-purchase`,
-    )
+    const result = await api.post<{
+      raw: string
+      formatted_credentials: string
+      cost_usd: number | null
+      cost_idr: number | null
+    }>(`/admin/orders/${orderId}/supplier-purchase`)
     setPurchasing(false)
     if (!result.ok) {
       toast.error(result.message ?? 'Gagal beli dari supplier')
       return
     }
-    setInfo((prev) => (prev ? `${prev}\n\n${result.data.raw}` : result.data.raw))
+    // Pakai formatted_credentials (clean format Email/Password), bukan raw JSON
+    setInfo((prev) =>
+      prev
+        ? `${prev}\n\n${result.data.formatted_credentials}`
+        : result.data.formatted_credentials,
+    )
     if (result.data.cost_idr !== null) {
       setCostIdr(String(result.data.cost_idr))
       setCostUsd(result.data.cost_usd)
       setCostSource('supplier_canboso')
       toast.success(
-        `Berhasil beli dari supplier${result.data.cost_usd ? ` ($${result.data.cost_usd})` : ''}. Modal auto-fill — review sebelum kirim.`,
+        `Berhasil beli dari supplier${result.data.cost_usd ? ` ($${result.data.cost_usd})` : ''}. Credentials & modal auto-fill — review sebelum kirim.`,
       )
     } else {
-      toast.success('Berhasil beli dari supplier. Modal tidak terdeteksi otomatis — input manual.')
+      toast.success('Berhasil beli dari supplier. Credentials auto-fill, modal tidak terdeteksi — input manual.')
     }
   }
 

@@ -375,13 +375,21 @@ export class SupplierCanbosoService {
 
   /**
    * Trigger pembelian on-demand untuk 1 order. Admin click "Beli dari Supplier"
-   * dari Fulfill form. Response berupa raw text yang akan masuk ke note buyer.
-   * Schema POST canboso /purchase: belum confirmed via swagger. Implementasi
-   * default: body `{ productId, quantity: 1 }`. Adjust kalau supplier balas
-   * error schema mismatch.
+   * dari Fulfill form. Response Canboso berupa JSON kompleks dengan field
+   * teknis (productItemId, discountAmount, dll) — kita parse + extract
+   * user-facing fields saja jadi `formatted_credentials` yang siap paste
+   * ke Fulfill form. Raw JSON tetap include untuk debugging admin.
+   *
+   * Schema POST canboso /purchase: `{ productId, quantity: 1 }`. Response
+   * shape:
+   *   {
+   *     deliveredAccounts: [{ user, password, expiryText, otherInfo, ... }],
+   *     amount, amountUsd, balance, balanceUsd, ...
+   *   }
    */
   static async purchase(supplierProductId: string): Promise<{
     raw: string
+    formatted_credentials: string
     cost_usd: number | null
     cost_idr: number | null
   }> {
@@ -402,10 +410,15 @@ export class SupplierCanbosoService {
     try {
       parsed = JSON.parse(text)
     } catch {
-      return { raw: text, cost_usd: null, cost_idr: null }
+      // Raw text fallback — admin manual format
+      return { raw: text, formatted_credentials: text, cost_usd: null, cost_idr: null }
     }
     const obj = parsed as Record<string, unknown>
+
+    // Extract cost (try multiple field names Canboso pakai)
     const costUsd =
+      (typeof obj.amountUsd === 'number' ? obj.amountUsd : undefined) ??
+      (typeof obj.originalAmountUsd === 'number' ? obj.originalAmountUsd : undefined) ??
       (typeof obj.price === 'number' ? obj.price : undefined) ??
       (typeof obj.usdPricing === 'number' ? obj.usdPricing : undefined) ??
       (typeof obj.totalUsd === 'number' ? obj.totalUsd : undefined) ??
@@ -413,10 +426,74 @@ export class SupplierCanbosoService {
       null
     const rate = await ExchangeRateService.getUsdIdr()
     const costIdr = costUsd !== null ? Math.round(costUsd * rate) : null
+
+    // Extract user-facing credentials dari deliveredAccounts array.
+    // Format buyer-ready: "Email/User: xxx\nPassword: xxx\n(catatan opsional)"
+    const formatted = formatCredentialsFromCanboso(obj)
+
     return {
-      raw: typeof parsed === 'string' ? parsed : JSON.stringify(parsed, null, 2),
+      raw: JSON.stringify(parsed, null, 2),
+      formatted_credentials: formatted,
       cost_usd: costUsd,
       cost_idr: costIdr,
     }
   }
+}
+
+/**
+ * Extract user-facing credentials dari response Canboso. Skip semua field
+ * teknis (productItemId, discountAmount, balance, dll) yang tidak relevan
+ * untuk buyer.
+ *
+ * Input: parsed JSON object dari /api/telegram-buyer/purchase
+ * Output: string clean siap paste ke Fulfill form, e.g.:
+ *
+ *   Email: user@example.com
+ *   Password: abc123
+ *
+ *   Catatan: Jangan ubah password.
+ *
+ * Atau kalau ada multiple accounts (jarang):
+ *
+ *   === Akun 1 ===
+ *   Email: ...
+ *   Password: ...
+ *
+ *   === Akun 2 ===
+ *   Email: ...
+ *   Password: ...
+ *
+ * Fallback ke raw JSON kalau struktur tidak dikenali — admin manual format.
+ */
+function formatCredentialsFromCanboso(obj: Record<string, unknown>): string {
+  const accounts = obj.deliveredAccounts
+  if (!Array.isArray(accounts) || accounts.length === 0) {
+    // Tidak ada deliveredAccounts — kembalikan raw JSON, admin manual handle
+    return JSON.stringify(obj, null, 2)
+  }
+
+  const formatAccount = (acc: Record<string, unknown>): string => {
+    const lines: string[] = []
+    const user = typeof acc.user === 'string' ? acc.user : null
+    const password = typeof acc.password === 'string' ? acc.password : null
+    const verifyEmail = typeof acc.verifyEmail === 'string' ? acc.verifyEmail : null
+    const expiryText = typeof acc.expiryText === 'string' ? acc.expiryText : null
+    const otherInfo = typeof acc.otherInfo === 'string' ? acc.otherInfo : null
+
+    if (user) lines.push(`Email/User: ${user}`)
+    if (password) lines.push(`Password: ${password}`)
+    if (verifyEmail) lines.push(`Verify Email: ${verifyEmail}`)
+    if (expiryText) lines.push(`Berlaku sampai: ${expiryText}`)
+    if (otherInfo) lines.push(`\nCatatan dari supplier: ${otherInfo}`)
+    return lines.join('\n')
+  }
+
+  if (accounts.length === 1) {
+    return formatAccount(accounts[0] as Record<string, unknown>)
+  }
+
+  // Multiple accounts — separator per akun
+  return accounts
+    .map((acc, idx) => `=== Akun ${idx + 1} ===\n${formatAccount(acc as Record<string, unknown>)}`)
+    .join('\n\n')
 }
