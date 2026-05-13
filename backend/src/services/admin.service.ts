@@ -381,6 +381,7 @@ export class AdminOrdersService {
       .select(
         `id, order_number, amount_idr, discount_idr, credit_used_idr, total_idr, coupon_code,
          status, payment_provider, payment_method, payment_status, payment_transaction_id,
+         payment_unique_suffix, payment_claimed_at, payment_verified_at, payment_rejected_reason,
          paid_at, delivered_at, created_at, expires_at, user_id,
          cost_idr, cost_usd, cost_source,
          products!inner ( name, slug, supplier_product_id )`,

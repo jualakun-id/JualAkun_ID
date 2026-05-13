@@ -3,8 +3,8 @@ import { ApiError } from '@/types/errors'
 import { CryptoService } from './crypto.service'
 
 const ORDER_STATUSES = [
-  'pending_payment', 'paid', 'delivering', 'delivered', 'confirmed',
-  'expired', 'delivery_failed', 'refunded',
+  'pending_payment', 'verifying', 'paid', 'delivering', 'delivered', 'confirmed',
+  'expired', 'cancelled', 'delivery_failed', 'refunded',
 ] as const
 type OrderStatus = (typeof ORDER_STATUSES)[number]
 
@@ -57,7 +57,8 @@ export class OrdersService {
       .from('orders')
       .select(
         `id, order_number, amount_idr, discount_idr, credit_used_idr, total_idr,
-         coupon_code, status, payment_method, payment_url,
+         coupon_code, status, payment_method,
+         payment_unique_suffix, payment_claimed_at, payment_verified_at, payment_rejected_reason,
          delivered_at, buyer_confirmed_at, guarantee_expires_at, expires_at, created_at,
          products!inner ( id, name, slug, thumbnail_url, duration_days, guarantee_days )`,
       )

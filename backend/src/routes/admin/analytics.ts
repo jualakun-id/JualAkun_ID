@@ -40,6 +40,7 @@ adminAnalyticsRoute.get('/system-health', async (c) => {
       resend_api_set: !!process.env.RESEND_API_KEY,
       resend_from_email: process.env.RESEND_FROM_EMAIL ?? null,
       encryption_key_set: !!process.env.ENCRYPTION_KEY && process.env.ENCRYPTION_KEY.length >= 32,
+      qris_static_payload_set: !!process.env.QRIS_STATIC_PAYLOAD && process.env.QRIS_STATIC_PAYLOAD.length >= 50,
       waha: {
         base_url_set: waha.base_url_set,
         api_key_set: waha.api_key_set,

@@ -2,12 +2,14 @@ export type UserRole = 'buyer' | 'admin'
 
 export type OrderStatus =
   | 'pending_payment'
+  | 'verifying'
   | 'paid'
   | 'delivering'
   | 'delivered'
   | 'confirmed'
   | 'delivery_failed'
   | 'refunded'
+  | 'cancelled'
   | 'expired'
 
 export type Profile = {

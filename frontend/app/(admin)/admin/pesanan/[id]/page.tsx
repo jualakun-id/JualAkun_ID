@@ -21,6 +21,9 @@ type OrderDetail = {
   status: string
   payment_method: string | null
   payment_transaction_id: string | null
+  payment_unique_suffix?: number | null
+  payment_claimed_at?: string | null
+  payment_rejected_reason?: string | null
   paid_at: string | null
   delivered_at: string | null
   created_at: string
@@ -101,6 +104,41 @@ export default async function AdminPesananDetailPage({ params }: Props) {
             ) : null}
           </dl>
 
+          {/* Verifying banner — admin instructions */}
+          {order.status === 'verifying' ? (
+            <div className="mt-5 rounded-xl border-2 border-amber-400 bg-amber-50 p-4 shadow-[0_2px_0_rgba(0,0,0,0.9)]">
+              <div className="font-extrabold text-ink text-sm flex items-center gap-2">
+                ⏳ Buyer Klaim Sudah Bayar — Perlu Verifikasi
+              </div>
+              <div className="mt-2 text-sm text-ink-muted space-y-1">
+                <div>
+                  Expected: <strong className="text-ink text-base">{formatRupiah(order.total_idr)}</strong>
+                  {order.payment_unique_suffix !== null && order.payment_unique_suffix !== undefined ? (
+                    <span className="ml-1.5 text-xs text-amber-700 font-bold">
+                      (suffix: {String(order.payment_unique_suffix).padStart(3, '0')})
+                    </span>
+                  ) : null}
+                </div>
+                {order.payment_claimed_at ? (
+                  <div className="text-xs">Diklaim: {formatDateTime(order.payment_claimed_at)}</div>
+                ) : null}
+              </div>
+              <ol className="mt-3 text-[13px] text-ink-muted space-y-1 list-decimal list-inside">
+                <li>Buka app <strong>GoPay Saya</strong> → Mutasi</li>
+                <li>Cari masuk dengan nominal <strong>{formatRupiah(order.total_idr)}</strong></li>
+                <li>Klik <strong>Konfirmasi</strong> kalau cocok, atau <strong>Reject</strong> kalau tidak nemu</li>
+              </ol>
+            </div>
+          ) : null}
+
+          {/* Rejected reason banner */}
+          {order.status === 'cancelled' && order.payment_rejected_reason ? (
+            <div className="mt-5 rounded-xl border-2 border-danger bg-danger/5 p-4 shadow-[0_2px_0_rgba(0,0,0,0.9)]">
+              <div className="font-extrabold text-danger text-sm">Pembayaran di-reject</div>
+              <p className="mt-1 text-sm text-ink">Alasan: {order.payment_rejected_reason}</p>
+            </div>
+          ) : null}
+
           {['paid', 'delivery_failed'].includes(order.status) ? (
             <FulfillForm
               orderId={id}
@@ -109,7 +147,12 @@ export default async function AdminPesananDetailPage({ params }: Props) {
             />
           ) : null}
 
-          <OrderActions orderId={id} status={order.status} />
+          <OrderActions
+            orderId={id}
+            status={order.status}
+            totalIdr={order.total_idr}
+            uniqueSuffix={order.payment_unique_suffix ?? null}
+          />
         </div>
 
         <div className="rounded-2xl border-2 border-black bg-white p-6 shadow-[0_3px_0_rgba(0,0,0,0.9)]">

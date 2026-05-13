@@ -125,6 +125,28 @@ export const templates = {
       `Buka admin: ${SITE}/admin/pesanan?status=paid`,
   }),
 
+  paymentRejected: (p: { fullName: string; orderNumber: string; amount: number; reason: string }) => ({
+    template: 'payment_rejected',
+    waText:
+      `Halo ${p.fullName},\n\n` +
+      `Mohon maaf, pembayaran untuk pesanan *${p.orderNumber}* (Rp ${p.amount.toLocaleString('id-ID')}) tidak bisa diverifikasi.\n\n` +
+      `Alasan: ${p.reason}\n\n` +
+      `Kalau Anda sudah transfer, mohon kontak admin via dashboard untuk klarifikasi. Atau silakan order ulang di ${SITE}.`,
+    emailSubject: `Pembayaran ${p.orderNumber} tidak terverifikasi — Jualakun.id`,
+    emailHtml: shell(
+      `<p>Halo <strong>${p.fullName}</strong>,</p>
+       <p>Mohon maaf, pembayaran untuk pesanan <strong>${p.orderNumber}</strong> sebesar <strong>Rp ${p.amount.toLocaleString('id-ID')}</strong> tidak bisa diverifikasi.</p>
+       <p><strong>Alasan:</strong> ${p.reason}</p>
+       <p>Kalau Anda sudah transfer namun pesanan ini di-cancel, kemungkinan:</p>
+       <ul style="padding-left:20px;color:#374151;line-height:1.8">
+         <li>Amount transfer tidak sesuai (harus persis termasuk angka unik di belakang)</li>
+         <li>Transfer ke rekening berbeda</li>
+         <li>Bukti belum masuk saat admin verifikasi</li>
+       </ul>
+       <p>Kontak admin via dashboard untuk klarifikasi atau silakan <a href="${SITE}" style="color:#1296A8">order ulang</a>.</p>`,
+    ),
+  }),
+
   orderExpired: (p: { fullName: string; orderNumber: string; productName: string }) => ({
     template: 'order_expired',
     waText:

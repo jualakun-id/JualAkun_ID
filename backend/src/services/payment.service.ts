@@ -265,7 +265,7 @@ export class PaymentService {
     })
   }
 
-  private static async notifyBuyerPaymentReceived(order: OrderForPayment): Promise<void> {
+  static async notifyBuyerPaymentReceived(order: OrderForPayment): Promise<void> {
     const supabase = createAdminClient()
     const { data } = await supabase
       .from('orders')

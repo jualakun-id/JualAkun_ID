@@ -15,6 +15,7 @@ export type Bindings = {
   RESEND_FROM_EMAIL: string
   ADMIN_WHATSAPP_NUMBER: string
   ADMIN_EMAIL: string
+  QRIS_STATIC_PAYLOAD: string
   CORS_ORIGINS: string
   CRON_SECRET: string
   SUPPLIER_CANBOSO_API_KEY: string

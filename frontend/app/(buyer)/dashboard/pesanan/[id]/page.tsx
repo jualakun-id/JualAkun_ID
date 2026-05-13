@@ -1,10 +1,11 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { notFound } from 'next/navigation'
-import { ArrowLeft, ExternalLink } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { DashboardTabs } from '@/components/dashboard-tabs'
 import { OrderStatusBadge } from '@/components/order-status-badge'
 import { OrderActions } from './order-actions'
+import { PaymentSection } from './payment-section'
 import { ReviewSection } from './review-section'
 import { createServerClient } from '@/lib/supabase-server'
 import { serverFetch } from '@/lib/server-fetch'
@@ -21,7 +22,10 @@ type OrderDetail = {
   coupon_code: string | null
   status: OrderStatus
   payment_method: string | null
-  payment_url: string | null
+  payment_unique_suffix: number | null
+  payment_claimed_at: string | null
+  payment_verified_at: string | null
+  payment_rejected_reason: string | null
   delivered_at: string | null
   buyer_confirmed_at: string | null
   guarantee_expires_at: string | null
@@ -105,6 +109,24 @@ export default async function DashboardPesananDetailPage({ params }: Props) {
         </div>
       </div>
 
+      {/* Payment section — render QR + claim button untuk status pending/verifying */}
+      {(order.status === 'pending_payment' || order.status === 'verifying') ? (
+        <PaymentSection orderId={order.id} initialStatus={order.status} />
+      ) : null}
+
+      {/* Reject reason banner kalau cancelled karena reject */}
+      {order.status === 'cancelled' && order.payment_rejected_reason ? (
+        <div className="mt-6 rounded-2xl border-2 border-danger bg-danger/5 p-5 shadow-[0_3px_0_rgba(0,0,0,0.9)]">
+          <div className="font-extrabold text-danger text-base">Pembayaran tidak terverifikasi</div>
+          <p className="mt-2 text-sm text-ink leading-relaxed">
+            <strong>Alasan:</strong> {order.payment_rejected_reason}
+          </p>
+          <p className="mt-2 text-sm text-ink-muted">
+            Kalau Anda sudah transfer, mohon kontak admin via WhatsApp untuk klarifikasi. Atau silakan order ulang.
+          </p>
+        </div>
+      ) : null}
+
       {/* Order actions (credentials + claim) */}
       <OrderActions order={order} jwt={session?.access_token ?? null} />
 
@@ -140,17 +162,6 @@ export default async function DashboardPesananDetailPage({ params }: Props) {
           ) : null}
         </dl>
 
-        {order.status === 'pending_payment' && order.payment_url ? (
-          <a
-            href={order.payment_url}
-            target="_blank"
-            rel="noopener"
-            className="mt-6 inline-flex items-center justify-center gap-1.5 bg-brand-500 hover:bg-brand-400 text-ink font-extrabold px-6 py-3 rounded-lg border-2 border-black shadow-[0_3px_0_rgba(0,0,0,0.9)] hover:shadow-[0_5px_0_rgba(0,0,0,0.9)] hover:-translate-y-0.5 active:translate-y-1 active:shadow-[0_1px_0_rgba(0,0,0,0.9)] transition-all duration-150 text-sm"
-          >
-            Lanjutkan Pembayaran
-            <ExternalLink size={14} strokeWidth={2.5} />
-          </a>
-        ) : null}
       </div>
 
       {!['delivered', 'confirmed'].includes(order.status) ? (

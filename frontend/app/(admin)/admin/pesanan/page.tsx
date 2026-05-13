@@ -87,9 +87,11 @@ export default async function AdminPesananPage({ searchParams }: Props) {
         pills={[
           { label: 'Semua', value: 'all', href: '/admin/pesanan' },
           { label: 'Menunggu Bayar', value: 'pending_payment', href: '/admin/pesanan?status=pending_payment' },
+          { label: 'Verifikasi', value: 'verifying', href: '/admin/pesanan?status=verifying' },
           { label: 'Dibayar', value: 'paid', href: '/admin/pesanan?status=paid' },
           { label: 'Terkirim', value: 'delivered', href: '/admin/pesanan?status=delivered' },
           { label: 'Selesai', value: 'confirmed', href: '/admin/pesanan?status=confirmed' },
+          { label: 'Dibatalkan', value: 'cancelled', href: '/admin/pesanan?status=cancelled' },
           { label: 'Refunded', value: 'refunded', href: '/admin/pesanan?status=refunded' },
           { label: 'Expired', value: 'expired', href: '/admin/pesanan?status=expired' },
         ]}

@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import { zValidator } from '@hono/zod-validator'
 import { z } from 'zod'
 import { AdminOrdersService } from '@/services/admin.service'
+import { ManualPaymentService } from '@/services/manual-payment.service'
 import type { AppEnv } from '@/types/bindings'
 
 export const adminOrdersRoute = new Hono<AppEnv>()
@@ -60,8 +61,27 @@ adminOrdersRoute.post('/:id/notifications/:notifId/resend', async (c) => {
   return c.json({ data })
 })
 
+/**
+ * Manual payment verification endpoints — admin lihat mutasi GoPay Saya,
+ * cocokkan dengan order yang status='verifying', lalu konfirmasi/reject.
+ */
+adminOrdersRoute.post('/:id/verify-payment', async (c) => {
+  const data = await ManualPaymentService.verifyPayment(c.req.param('id'), c.get('userId'))
+  return c.json({ data })
+})
+
+const rejectSchema = z.object({
+  reason: z.string().trim().min(3, 'Alasan minimal 3 karakter').max(500),
+})
+
+adminOrdersRoute.post('/:id/reject-payment', zValidator('json', rejectSchema), async (c) => {
+  const { reason } = c.req.valid('json')
+  const data = await ManualPaymentService.rejectPayment(c.req.param('id'), c.get('userId'), reason)
+  return c.json({ data })
+})
+
 const statusSchema = z.object({
-  status: z.enum(['pending_payment', 'paid', 'delivering', 'delivered', 'confirmed', 'expired', 'delivery_failed', 'refunded']),
+  status: z.enum(['pending_payment', 'verifying', 'paid', 'delivering', 'delivered', 'confirmed', 'expired', 'cancelled', 'delivery_failed', 'refunded']),
 })
 
 adminOrdersRoute.patch('/:id/status', zValidator('json', statusSchema), async (c) => {

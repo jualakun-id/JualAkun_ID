@@ -1,6 +1,6 @@
 import { createAdminClient } from '@/lib/supabase'
 import { ApiError } from '@/types/errors'
-import { PaymentService } from './payment.service'
+import { ManualPaymentService } from './manual-payment.service'
 import { ActivityLogService } from './activity-log.service'
 import { NotificationService } from './notification.service'
 import { templates } from '@/templates/messages'
@@ -15,14 +15,12 @@ type CreateOrderInput = {
 type CreateOrderResult = {
   order_id: string
   order_number: string
-  amount_idr: number
+  amount_idr: number          // harga product asli (sebelum suffix)
   discount_idr: number
   credit_used_idr: number
-  total_idr: number
-  payment_reference: string
-  payment_url: string
-  va_number: string | null
-  qr_string: string | null
+  total_idr: number           // final dengan unique suffix (e.g. 75123)
+  unique_suffix: number        // 3-digit suffix untuk admin identify
+  qris_dynamic_payload: string // payload untuk render QR di frontend
   expires_at: string
 }
 
@@ -175,8 +173,12 @@ export class CheckoutService {
       await supabase.rpc('increment_coupon_usage', { p_code: appliedCouponCode })
     }
 
-    // 8. Create Duitku transaction (writes reference + payment_url back to the order)
-    const tx = await PaymentService.createTransactionForOrder(insertedOrder.id)
+    // 8. Setup manual payment — inject unique 3-digit suffix ke total_idr +
+    //    generate QRIS Dinamis payload. Buyer transfer ke QRIS Statis admin
+    //    (GoPay Saya) dengan amount yang sudah include suffix, admin verify
+    //    manual dari mutasi app.
+    const tx = await ManualPaymentService.setupManualPayment(insertedOrder.id)
+    const finalTotalIdr = tx.total_idr // already includes suffix
 
     // 9. Activity log emit
     await ActivityLogService.log({
@@ -184,8 +186,8 @@ export class CheckoutService {
       ref_id: insertedOrder.id,
       ref_table: 'orders',
       title: `Order baru: ${insertedOrder.order_number}`,
-      description: `${product.name} · Rp ${totalIdr.toLocaleString('id-ID')} · menunggu pembayaran`,
-      metadata: { product_id: product.id, user_id: userId, amount_idr: amountIdr, total_idr: totalIdr },
+      description: `${product.name} · Rp ${finalTotalIdr.toLocaleString('id-ID')} (suffix ${tx.unique_suffix}) · menunggu pembayaran`,
+      metadata: { product_id: product.id, user_id: userId, amount_idr: amountIdr, total_idr: finalTotalIdr, unique_suffix: tx.unique_suffix },
     })
     if (appliedCouponCode) {
       await ActivityLogService.log({
@@ -208,8 +210,7 @@ export class CheckoutService {
       })
     }
 
-    // 10. Notif buyer order created — supaya kalau popup payment ke-close,
-    // buyer masih bisa lanjut bayar dari link di WA/email
+    // 10. Notif buyer order created — kirim link order detail untuk lanjut bayar
     try {
       const { data: profile } = await supabase
         .from('profiles')
@@ -218,12 +219,13 @@ export class CheckoutService {
         .maybeSingle()
       const { data: authUser } = await supabase.auth.admin.getUserById(userId)
       const userEmail = authUser.user?.email
+      const orderDetailUrl = `${process.env.PUBLIC_SITE_URL}/dashboard/pesanan/${insertedOrder.id}`
       const tpl = templates.orderCreated({
         fullName: profile?.full_name ?? 'Buyer',
         orderNumber: insertedOrder.order_number,
         productName: product.name,
-        totalIdr,
-        snapUrl: tx.payment_url,
+        totalIdr: finalTotalIdr,
+        snapUrl: orderDetailUrl, // link ke order detail (bukan popup payment)
       })
       if (profile?.phone_wa) {
         await NotificationService.sendWhatsApp({
@@ -254,11 +256,9 @@ export class CheckoutService {
       amount_idr: amountIdr,
       discount_idr: discountIdr,
       credit_used_idr: creditUsedIdr,
-      total_idr: totalIdr,
-      payment_reference: tx.reference,
-      payment_url: tx.payment_url,
-      va_number: tx.va_number,
-      qr_string: tx.qr_string,
+      total_idr: finalTotalIdr,
+      unique_suffix: tx.unique_suffix,
+      qris_dynamic_payload: tx.qris_dynamic_payload,
       expires_at: insertedOrder.expires_at,
     }
   }
