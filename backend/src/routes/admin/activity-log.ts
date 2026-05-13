@@ -15,10 +15,11 @@ const listSchema = z.object({
       'coupon_used', 'coupon_created', 'coupon_deactivated',
       'review_submitted',
       'stock_critical', 'stock_out',
-      'supplier_purchase', 'supplier_low_balance',
+      'supplier_purchase', 'supplier_low_balance', 'supplier_orphan_detected', 'supplier_unmapped',
       'referral_credited', 'referral_redeemed',
       'notification_failed',
       'product_created',
+      'credentials_edited',
     ])
     .optional(),
   is_read: z

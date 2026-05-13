@@ -66,9 +66,24 @@ export class ActivityLogService {
         description: input.description ?? null,
         metadata: input.metadata ?? null,
       })
-      if (error) console.warn('[ActivityLog]', input.event_type, 'insert failed:', error.message)
+      if (error) {
+        // Enhanced logging: capture full error details supaya admin bisa diagnose
+        // dari Cloudflare Workers logs. Includes code, details, hint untuk
+        // identify schema/RLS/constraint violation.
+        console.error('[ActivityLog] INSERT failed:', {
+          event_type: input.event_type,
+          error_message: error.message,
+          error_code: error.code,
+          error_details: error.details,
+          error_hint: error.hint,
+          ref_id: input.ref_id,
+        })
+      }
     } catch (err) {
-      console.warn('[ActivityLog]', input.event_type, 'exception:', err)
+      console.error('[ActivityLog] exception:', {
+        event_type: input.event_type,
+        message: err instanceof Error ? err.message : String(err),
+      })
     }
   }
 
