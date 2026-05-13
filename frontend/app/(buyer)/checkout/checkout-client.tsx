@@ -1,12 +1,18 @@
 'use client'
 
 import Image from 'next/image'
-import Script from 'next/script'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { AlertCircle, Lock, ShieldCheck, Tag, Wallet } from 'lucide-react'
+import { AlertCircle, ShieldCheck, Tag, Wallet, QrCode } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import {
+  PhoneInput,
+  type CountryCode,
+  buildPhoneE164,
+  isValidLocal,
+  getCountry,
+} from '@/components/ui/phone-input'
 import { api } from '@/lib/api'
 import { formatRupiah } from '@/lib/utils'
 
@@ -28,79 +34,50 @@ type CreateOrderResponse = {
   discount_idr: number
   credit_used_idr: number
   total_idr: number
-  payment_reference: string
-  payment_url: string
-  va_number: string | null
-  qr_string: string | null
+  unique_suffix: number
+  qris_dynamic_payload: string
   expires_at: string
 }
-
-type DuitkuResult = {
-  merchantOrderId?: string
-  reference?: string
-  resultCode?: string
-}
-
-declare global {
-  interface Window {
-    checkout?: {
-      process: (
-        reference: string,
-        callbacks: {
-          successEvent?: (r: DuitkuResult) => void
-          pendingEvent?: (r: DuitkuResult) => void
-          errorEvent?: (r: DuitkuResult) => void
-          closeEvent?: (r: DuitkuResult) => void
-        },
-      ) => void
-    }
-  }
-}
-
-const IS_PROD = process.env.NEXT_PUBLIC_DUITKU_IS_PRODUCTION === 'true'
-const POP_SRC = IS_PROD
-  ? 'https://app-prod.duitku.com/lib/js/duitku.min.js'
-  : 'https://app-sandbox.duitku.com/lib/js/duitku.min.js'
 
 export function CheckoutClient({ product }: { product: Product }) {
   const router = useRouter()
   const [coupon, setCoupon] = useState('')
-  const [phoneWa, setPhoneWa] = useState('')
+  const [phoneCode, setPhoneCode] = useState<CountryCode>('62')
+  const [phoneLocal, setPhoneLocal] = useState('')
+  const [phoneTouched, setPhoneTouched] = useState(false)
   const [useCredits, setUseCredits] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
+  // Validasi phone — opsional, tapi kalau diisi harus valid sesuai region
+  const phoneFilled = phoneLocal.trim().length > 0
+  const phoneValid = !phoneFilled || isValidLocal(phoneCode, phoneLocal)
+
   async function handleCheckout() {
+    if (phoneFilled && !phoneValid) {
+      setPhoneTouched(true)
+      setError(`Nomor WhatsApp tidak valid untuk region ${getCountry(phoneCode).label}`)
+      return
+    }
     setError(null)
     setLoading(true)
     const result = await api.post<CreateOrderResponse>('/checkout/create-order', {
       product_id: product.id,
       coupon_code: coupon || undefined,
       use_credits: useCredits,
-      phone_wa: phoneWa || undefined,
+      phone_wa: phoneFilled ? buildPhoneE164(phoneCode, phoneLocal) : undefined,
     })
     setLoading(false)
     if (!result.ok) {
       setError(result.message ?? 'Gagal membuat order')
       return
     }
-    if (window.checkout?.process) {
-      window.checkout.process(result.data.payment_reference, {
-        successEvent: () => router.push(`/checkout/selesai?order_id=${result.data.order_id}`),
-        pendingEvent: () => router.push(`/checkout/selesai?order_id=${result.data.order_id}`),
-        errorEvent: () => setError('Pembayaran gagal. Silakan coba lagi.'),
-        closeEvent: () => router.push(`/dashboard/pesanan/${result.data.order_id}`),
-      })
-    } else {
-      // POP SDK belum siap — fallback ke halaman hosted Duitku
-      window.location.href = result.data.payment_url
-    }
+    // Redirect ke order detail page — render QR + tombol "Saya sudah bayar"
+    router.push(`/dashboard/pesanan/${result.data.order_id}`)
   }
 
   return (
     <div className="grid gap-5 md:grid-cols-[1fr_360px]">
-      <Script src={POP_SRC} strategy="afterInteractive" />
-
       {/* Detail card */}
       <div className="rounded-2xl border-2 border-black bg-white p-5 sm:p-6 shadow-[0_4px_0_rgba(0,0,0,0.9)]">
         <h2 className="font-heading text-xl md:text-2xl font-extrabold text-ink tracking-tight">
@@ -150,16 +127,26 @@ export function CheckoutClient({ product }: { product: Product }) {
           </div>
           <div>
             <label className="text-sm font-bold text-ink">No. WhatsApp untuk notifikasi</label>
-            <Input
-              type="tel"
-              value={phoneWa}
-              onChange={(e) => setPhoneWa(e.target.value)}
-              placeholder="0812xxxxxxxx"
-              className="mt-2"
-            />
-            <p className="mt-1.5 text-xs text-ink-subtle font-medium">
-              Notifikasi pembayaran & delivery dikirim ke nomor ini
-            </p>
+            <div className="mt-2">
+              <PhoneInput
+                code={phoneCode}
+                local={phoneLocal}
+                onCodeChange={setPhoneCode}
+                onLocalChange={setPhoneLocal}
+                onBlur={() => setPhoneTouched(true)}
+                error={phoneTouched && phoneFilled && !phoneValid}
+                ariaLabel="Nomor WhatsApp"
+              />
+            </div>
+            {phoneTouched && phoneFilled && !phoneValid ? (
+              <p className="mt-1.5 text-xs text-danger font-bold">
+                Nomor {getCountry(phoneCode).label} tidak valid (mulai dari {phoneCode === '62' ? '8 (mis. 812xxxxxxxx)' : '1 (mis. 12xxxxxxx)'})
+              </p>
+            ) : (
+              <p className="mt-1.5 text-xs text-ink-subtle font-medium">
+                Notifikasi pembayaran & delivery dikirim ke nomor ini
+              </p>
+            )}
           </div>
           <label className="flex items-start gap-3 rounded-lg border-2 border-black/15 bg-brand-50/40 p-3.5 cursor-pointer hover:border-brand-400 transition-colors">
             <input
@@ -205,8 +192,8 @@ export function CheckoutClient({ product }: { product: Product }) {
           {loading ? 'Memproses...' : 'Bayar Sekarang →'}
         </Button>
         <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-ink-muted font-medium">
-          <Lock size={11} strokeWidth={2.5} />
-          Pembayaran aman via Duitku
+          <QrCode size={11} strokeWidth={2.5} />
+          Pembayaran via QRIS GoPay Merchant
         </p>
       </div>
     </div>
