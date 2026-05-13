@@ -292,7 +292,7 @@ export default async function ProductDetailPage({ params }: Props) {
         <div className="mt-14">
           <h2 className="font-heading text-2xl md:text-3xl font-extrabold text-ink tracking-tight">Ulasan Pembeli</h2>
           <p className="mt-2 text-[15px] text-ink-muted font-medium">
-            {product.rating_count} pembeli sudah kasih review.
+            {product.rating_count} review masuk untuk produk ini.
             {product.rating_count > product.reviews.length ? (
               <span className="text-ink-subtle"> Tampil 5 review terbaru.</span>
             ) : null}
