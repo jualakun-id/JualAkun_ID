@@ -2,9 +2,8 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { CheckCircle2, AlertTriangle, KeyRound, Info } from 'lucide-react'
+import { CheckCircle2, AlertTriangle, KeyRound, Info, Copy, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { CredentialBox } from '@/components/credential-box'
 import { api } from '@/lib/api'
 import type { OrderStatus } from '@/types'
 
@@ -18,7 +17,8 @@ type Props = {
 }
 
 type Credentials = {
-  credentials: { username: string; password: string; note: string | null }
+  credentials_text: string
+  note: string | null
   guarantee_expires_at: string
 }
 
@@ -28,8 +28,16 @@ export function OrderActions({ order }: Props) {
   const [loadingCreds, setLoadingCreds] = useState(false)
   const [credsError, setCredsError] = useState<string | null>(null)
   const [confirming, setConfirming] = useState(false)
+  const [copied, setCopied] = useState(false)
 
   const showCreds = ['delivered', 'confirmed'].includes(order.status)
+
+  async function handleCopy() {
+    if (!creds) return
+    await navigator.clipboard.writeText(creds.credentials_text)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
 
   async function loadCredentials() {
     setLoadingCreds(true)
@@ -65,7 +73,7 @@ export function OrderActions({ order }: Props) {
       {!creds ? (
         <div className="mt-5">
           <p className="text-[15px] text-ink-muted font-medium leading-relaxed">
-            Klik tombol di bawah untuk menampilkan credentials. Login dengan username & password ini di service yang kamu beli.
+            Klik tombol di bawah untuk menampilkan info akses akun (sama dengan yang dikirim via WA & email).
           </p>
           <Button onClick={loadCredentials} disabled={loadingCreds} size="lg" className="mt-4">
             {loadingCreds ? 'Memuat...' : 'Tampilkan Credentials'}
@@ -79,16 +87,33 @@ export function OrderActions({ order }: Props) {
         </div>
       ) : (
         <div className="mt-5 space-y-3">
-          <CredentialBox label="Username / Email" value={creds.credentials.username} />
-          {creds.credentials.password ? (
-            <CredentialBox label="Password" value={creds.credentials.password} maskable />
-          ) : null}
-          {creds.credentials.note ? (
+          {/* 1 textbox utuh — apapun format dari admin/supplier (email,
+              password, verify email, expiry, catatan) ditampilkan apa
+              adanya. Tidak ada parsing yang bisa salah */}
+          <div className="rounded-xl border-2 border-black/15 bg-brand-50/40 overflow-hidden">
+            <div className="flex items-center justify-between border-b-2 border-black/10 bg-white/60 px-4 py-2.5">
+              <span className="text-xs font-extrabold uppercase tracking-wider text-ink-muted">
+                Info Akses Akun
+              </span>
+              <button
+                type="button"
+                onClick={handleCopy}
+                className="inline-flex items-center gap-1.5 text-xs font-extrabold text-brand-700 hover:text-brand-900"
+              >
+                {copied ? <Check size={13} /> : <Copy size={13} />}
+                {copied ? 'Disalin' : 'Salin Semua'}
+              </button>
+            </div>
+            <pre className="px-4 py-3 text-[14px] font-mono text-ink leading-relaxed whitespace-pre-wrap break-words select-all">
+              {creds.credentials_text}
+            </pre>
+          </div>
+          {creds.note ? (
             <div className="flex items-start gap-2.5 rounded-xl border-2 border-info/40 bg-info/10 p-4">
               <Info size={18} className="text-info shrink-0 mt-0.5" strokeWidth={2.25} />
               <div className="text-sm text-info">
                 <strong className="block text-xs uppercase tracking-wider font-bold mb-1">Catatan dari admin</strong>
-                <span className="font-medium leading-relaxed">{creds.credentials.note}</span>
+                <span className="font-medium leading-relaxed">{creds.note}</span>
               </div>
             </div>
           ) : null}

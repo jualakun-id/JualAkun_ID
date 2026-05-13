@@ -83,10 +83,14 @@ export class OrdersService {
     if (!r?.ok) {
       throw new ApiError('NOT_FOUND', 'Akses ditolak atau order belum dikirim', 404, { code: r?.code })
     }
-    const decrypted = await CryptoService.decrypt(r.credentials_enc!)
-    const [username, password] = decrypted.includes(':') ? decrypted.split(/:(.+)/) : [decrypted, '']
+    // Return raw decrypted text utuh — buyer dapat exactly apa yang admin
+    // input/dari supplier (email + password + verify email + catatan + dll).
+    // Parsing username:password split sebelumnya salah karena format dari
+    // supplier bervariasi (kadang multiline, kadang ada field extra).
+    const credentialsText = await CryptoService.decrypt(r.credentials_enc!)
     return {
-      credentials: { username: username.trim(), password: (password ?? '').trim(), note: r.note ?? null },
+      credentials_text: credentialsText,
+      note: r.note ?? null,
       guarantee_expires_at: r.guarantee_expires_at,
     }
   }
