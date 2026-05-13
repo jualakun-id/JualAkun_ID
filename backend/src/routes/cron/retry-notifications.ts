@@ -5,6 +5,8 @@ import { NotificationService } from '@/services/notification.service'
 import { ActivityLogService } from '@/services/activity-log.service'
 import type { AppEnv } from '@/types/bindings'
 
+// NotificationService masih dipakai di bawah untuk sendAdminAlert exhausted
+
 export const retryNotificationsCron = new Hono<AppEnv>()
 
 retryNotificationsCron.use('*', cronMiddleware)
@@ -76,28 +78,18 @@ retryNotificationsCron.post('/', async (c) => {
     })
   }
 
-  let retried = 0
-  for (const log of failed) {
-    if (!log.user_id) continue
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('phone_wa, full_name')
-      .eq('id', log.user_id)
-      .maybeSingle()
-    if (!profile) continue
+  // DELETED: auto-retry placeholder loop yang sebelumnya kirim text gibberish
+  // "[Retry] Notifikasi pesanan <UUID> (template X)" ke buyer setiap 10 menit.
+  // Bug parah: original notif row status='failed' tidak di-update setelah
+  // retry, jadi same row di-pickup berulang ~36x dalam 6 jam = spam buyer.
+  //
+  // Plus content placeholder useless untuk buyer (UUID + template name, no
+  // actionable info). Original message content (full template-rendered text)
+  // tidak tersimpan di DB.
+  //
+  // Strategi baru: cuma detect + log activity (sudah di-handle di bagian
+  // `exhausted` di atas). Admin lihat di /admin/notifikasi → manual resend
+  // via order detail page dengan content yang correct.
 
-    const placeholder = `[Retry] Notifikasi pesanan ${log.order_id ?? ''} (template ${log.template})`
-    if (log.channel === 'wa' && profile.phone_wa) {
-      await NotificationService.sendWhatsApp({
-        target: profile.phone_wa,
-        message: placeholder,
-        template: log.template,
-        userId: log.user_id,
-        orderId: log.order_id,
-      })
-      retried += 1
-    }
-  }
-
-  return c.json({ data: { ok: true, retried } })
+  return c.json({ data: { ok: true, retried: 0, exhausted_logged: newlyExhausted.length } })
 })
