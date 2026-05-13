@@ -7,7 +7,7 @@ Platform marketplace akun digital Indonesia, admin-managed, domain `jualakun.id`
 - **Frontend:** Next.js 15 App Router + Tailwind CSS + Shadcn/ui — deploy Vercel
 - **Backend:** Hono + Cloudflare Workers — `wrangler dev` untuk local
 - **Database:** Supabase (PostgreSQL + Auth + Storage)
-- **Payment:** Duitku (POP popup) — sebelumnya Midtrans, di-migrasi 2026-05-09 karena Midtrans menolak pendaftaran merchant
+- **Payment:** Manual QRIS via GoPay Saya — buyer scan QRIS Dinamis (auto-generated dari Statis payload, amount + unique 3-digit suffix), admin verify mutasi manual dari app GoPay. History: Midtrans rejected (2026-05-09), Duitku rejected (2026-05-13), OkeConnect H2H butuh CS approval — pivot ke manual 2026-05-14
 - **Email:** Resend
 - **WA Notif:** WAHA (self-hosted WhatsApp HTTP API)
 - **Language:** TypeScript throughout
@@ -104,20 +104,25 @@ RPC penting (jangan bypass dengan raw SQL kecuali debugging):
 Template lengkap di `.env.example`. Variabel kritis:
 - `ENCRYPTION_KEY` — harus sama di semua deployment, jangan pernah rotate tanpa migrate data
 - `SUPABASE_SERVICE_ROLE_KEY` — HANYA di backend, jangan pernah di frontend atau commit ke git
-- `DUITKU_API_KEY` & `DUITKU_MERCHANT_CODE` — HANYA di backend
-- `PUBLIC_API_URL` & `PUBLIC_SITE_URL` — dipakai backend untuk menyusun `callbackUrl` & `returnUrl` saat inquiry Duitku
+- `QRIS_STATIC_PAYLOAD` — raw QRIS Statis payload dari GoPay Saya (decode via zxing.org), di-inject amount + suffix saat checkout
+- `WAHA_BASE_URL` / `WAHA_API_KEY` / `WAHA_SESSION` — koneksi ke WAHA Plus di sumopod
+- `RESEND_API_KEY` / `RESEND_FROM_EMAIL` — email transactional (domain `jualakun.id` verified)
+- `ADMIN_WHATSAPP_NUMBER` / `ADMIN_EMAIL` — alert admin (WA via WAHA, email fallback kalau WA gagal)
+- `SUPPLIER_CANBOSO_API_KEY` — supplier integration untuk auto-purchase
+- `PUBLIC_API_URL` & `PUBLIC_SITE_URL` — base URLs
 
 ## Hal yang Perlu Diingat
 
 - Stok akun menggunakan FIFO + row lock — jangan pernah update `account_stock` langsung, selalu lewat RPC `deliver_order_account`
-- Order expire otomatis 24 jam via cron — jangan manual expire kecuali urgent
-- Semua notif (WA + email) di-log ke `notifications_log` — cek tabel ini jika buyer lapor tidak dapat notif
+- Order expire otomatis 12 jam via cron untuk status `pending_payment`
+- Semua notif (WA + email) di-log ke `notifications_log` — cek tabel ini jika buyer lapor tidak dapat notif (schema column: `template`, `error` — bukan legacy `type`, `error_msg`)
 - Admin akses database via `service_role` key (bypass RLS) — backend sudah handle ini
 - Review hanya bisa dibuat setelah order status `confirmed` (bukan `delivered`)
-- Checkout **wajib login** — tidak ada guest checkout (keputusan final di PRD V1.0)
+- Checkout **wajib login** — tidak ada guest checkout
 - Gunakan `envMiddleware` (Cloudflare bindings → process.env) agar service code bisa pakai `process.env` standar
-- Callback Duitku (`POST /payment/callback`): body `application/x-www-form-urlencoded`, validasi MD5 signature dulu (`MD5(merchantCode + amount + merchantOrderId + apiKey)` — perhatikan urutan amount/merchantOrderId yang tertukar dari formula inquiry) sebelum proses apapun, selalu return HTTP 200
-- Frontend pakai Duitku POP SDK (`window.checkout.process(reference, callbacks)`) — `reference` didapat dari backend `POST /checkout/create-order`, bukan order_number
+- Manual payment flow: ManualPaymentService.setupManualPayment generate unique 3-digit suffix + QRIS Dinamis dari Statis payload (TLV inject + CRC16 recalc di `lib/qris.ts`). DB unique partial index pada `(total_idr, status IN pending|verifying)` sebagai collision defense
+- Order status flow: pending_payment → verifying → paid → delivered → confirmed (sisanya: cancelled, expired, delivery_failed, refunded)
+- saat fulfill manual: WAJIB set `orders.account_stock_id = stockRow.id` supaya RPC `get_order_credentials` JOIN bisa work + notifyBuyerDelivered tidak silent skip
 
 ## Skills Tersedia
 

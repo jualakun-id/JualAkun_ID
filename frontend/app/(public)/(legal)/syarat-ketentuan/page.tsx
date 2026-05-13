@@ -55,19 +55,19 @@ export default function SyaratKetentuanPage() {
 
         <Section number="3" title="Pembelian & Pembayaran">
           <p>
-            Semua pembayaran diproses lewat <strong className="text-ink">Duitku</strong> sebagai payment gateway resmi kami. Metode yang tersedia: GoPay, OVO, DANA, ShopeePay, QRIS, Virtual Account semua bank besar (BCA, BNI, BRI, Mandiri, Permata), retail (Indomaret, Alfamart), dan kartu kredit.
+            Semua pembayaran via <strong className="text-ink">QRIS GoPay Merchant</strong>. Buyer scan QR pada halaman pesanan dengan aplikasi apapun yang support QRIS (GoPay, OVO, DANA, ShopeePay, LinkAja, m-banking BCA / Mandiri / BRI / BNI / Permata / dll). Nominal pembayaran sudah otomatis include kode unik agar transaksi mudah diidentifikasi.
           </p>
           <p className="mt-3">
-            Pesanan yang sudah dibuat harus dibayar dalam <strong className="text-ink">24 jam</strong>. Lewat dari itu, sistem otomatis mengubah status jadi <em>expired</em> dan stok dikembalikan ke pool — kamu perlu order ulang kalau masih mau.
+            Pesanan yang sudah dibuat harus dibayar dalam <strong className="text-ink">12 jam</strong>. Lewat dari itu, sistem otomatis mengubah status jadi <em>expired</em> dan stok dikembalikan ke pool — kamu perlu order ulang kalau masih mau.
           </p>
           <p className="mt-3">
-            Harga di website adalah harga final dalam Rupiah (IDR), sudah termasuk biaya layanan. Tidak ada biaya tersembunyi. Biaya admin payment gateway (kalau ada, misal untuk virtual account bank tertentu) ditampilkan eksplisit di halaman checkout sebelum kamu konfirmasi.
+            Harga di website adalah harga final dalam Rupiah (IDR), sudah termasuk biaya layanan. Tidak ada biaya tersembunyi.
           </p>
         </Section>
 
         <Section number="4" title="Pengiriman Akun">
           <p>
-            Setelah pembayaran <strong className="text-ink">dikonfirmasi sukses</strong> oleh Duitku, akun yang kamu beli langsung dikirim ke dashboard akun Jualakun.id kamu — biasanya kurang dari 5 menit. Notifikasi juga dikirim via:
+            Setelah transfer, buyer klik tombol <strong className="text-ink">"Saya sudah bayar"</strong> di halaman pesanan. Admin akan verifikasi mutasi pembayaran dalam <strong className="text-ink">5-15 menit</strong> (jam operasional 09:00-22:00 WIB). Setelah terverifikasi, akun langsung dikirim ke dashboard dan dinotifikasi via:
           </p>
           <ul className="mt-3 list-disc space-y-1 pl-6">
             <li>Email ke alamat yang terdaftar</li>

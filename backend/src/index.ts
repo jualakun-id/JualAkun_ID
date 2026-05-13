@@ -10,7 +10,6 @@ import { rateLimitMiddleware, authRateLimitMiddleware } from '@/middleware/rate-
 import { authRoute } from '@/routes/auth'
 import { catalogRoute } from '@/routes/catalog'
 import { checkoutRoute } from '@/routes/checkout'
-import { paymentRoute } from '@/routes/payment'
 import { ordersRoute } from '@/routes/orders'
 import { dashboardRoute } from '@/routes/dashboard'
 import { ticketsRoute } from '@/routes/tickets'
@@ -34,10 +33,9 @@ app.use('/auth/*', authRateLimitMiddleware)
 // Public health check
 app.get('/', (c) => c.json({ data: { service: 'jualakun-backend', status: 'ok' } }))
 
-// Public auth + catalog + payment webhook
+// Public auth + catalog
 app.route('/auth', authRoute)
 app.route('/catalog', catalogRoute)
-app.route('/payment', paymentRoute)
 
 // User-scoped (auth middleware applied inside each route)
 app.route('/checkout', checkoutRoute)

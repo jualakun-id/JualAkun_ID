@@ -1,42 +1,24 @@
 import { createAdminClient } from '@/lib/supabase'
-import { createInquiry, verifyCallbackSignature } from '@/lib/duitku'
-import { ApiError } from '@/types/errors'
 import { CryptoService } from './crypto.service'
 import { NotificationService } from './notification.service'
 import { ActivityLogService } from './activity-log.service'
 import { templates } from '@/templates/messages'
 
-type CreateTransactionResult = {
-  reference: string
-  payment_url: string
-  va_number: string | null
-  qr_string: string | null
-}
-
 /**
- * Subset of Duitku callback fields we act on.
- * Full list: https://docs.duitku.com/api/id (Callback API)
+ * Pasca-migrasi dari Duitku ke manual QRIS flow (GoPay Saya), service ini
+ * cuma menjadi container untuk helper-helper notif post-payment yang
+ * dipakai bareng oleh ManualPaymentService dan AdminOrdersService:
+ *
+ *   - notifyBuyerPaymentReceived(order) — dipanggil setelah admin verify
+ *   - alertAdminPendingFulfillment(order) — dipanggil setelah verify, kasih
+ *     reminder admin untuk fulfill manual
+ *   - notifyBuyerDelivered(order) — dipanggil setelah admin fulfill
+ *   - creditReferralAndNotify(orderId, refereeId) — trigger RPC credit
+ *     referral + kirim notif ke referrer kalau eligible
+ *
+ * Tidak ada lagi createTransactionForOrder / processCallback — Duitku
+ * integration sudah dihapus.
  */
-export type DuitkuCallback = {
-  merchantCode: string
-  amount: string
-  merchantOrderId: string
-  signature: string
-  reference: string
-  resultCode: string // '00' success, '01' failed
-  paymentCode?: string
-  productDetail?: string
-  additionalParam?: string
-  merchantUserId?: string
-  publisherOrderId?: string
-  spUserHash?: string
-  settlementDate?: string
-  issuerCode?: string
-}
-
-type WebhookOutcome =
-  | { ok: true; effect: 'paid' | 'failed' | 'noop' }
-  | { ok: false; reason: string }
 
 type OrderForPayment = {
   id: string
@@ -47,224 +29,7 @@ type OrderForPayment = {
   status: string
 }
 
-const TERMINAL_PAID_STATUSES = new Set(['paid', 'delivering', 'delivered', 'confirmed', 'refunded'])
-
 export class PaymentService {
-  /**
-   * Create a Duitku transaction for an order in pending_payment state.
-   * Persists reference + paymentUrl back to the order row so the buyer can
-   * resume payment from their order detail page.
-   */
-  static async createTransactionForOrder(orderId: string): Promise<CreateTransactionResult> {
-    const supabase = createAdminClient()
-    const { data: order, error } = await supabase
-      .from('orders')
-      .select(
-        `id, user_id, order_number, total_idr, status,
-         products!inner ( name )`,
-      )
-      .eq('id', orderId)
-      .maybeSingle()
-
-    if (error || !order) {
-      throw new ApiError('NOT_FOUND', 'Order tidak ditemukan', 404)
-    }
-    if (order.status !== 'pending_payment') {
-      throw new ApiError('PAYMENT_INVALID', 'Order tidak dalam status menunggu pembayaran', 400)
-    }
-
-    // orders.user_id REFERENCES auth.users (bukan profiles), jadi gak bisa
-    // langsung embed profiles via FK. Pakai separate query.
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('full_name, phone_wa')
-      .eq('id', (order as { user_id: string }).user_id)
-      .maybeSingle()
-
-    // Supabase joined relations come back as arrays in TS — unwrap.
-    const productRel = (order as unknown as { products: { name: string } | { name: string }[] }).products
-    const product = Array.isArray(productRel) ? productRel[0] : productRel
-
-    const { data: authUser } = await supabase.auth.admin.getUserById(order.user_id)
-    const email = authUser.user?.email ?? `${order.order_number.toLowerCase()}@no-reply.jualakun.id`
-    const fullName = profile?.full_name ?? 'Jualakun.id Buyer'
-    const [firstName, ...lastParts] = fullName.split(' ')
-
-    const apiBase = process.env.PUBLIC_API_URL ?? ''
-    const siteBase = process.env.PUBLIC_SITE_URL ?? ''
-    if (!apiBase || !siteBase) {
-      throw new ApiError('INTERNAL_ERROR', 'PUBLIC_API_URL / PUBLIC_SITE_URL belum di-set', 500)
-    }
-
-    const inquiry = await createInquiry({
-      merchantOrderId: order.order_number,
-      paymentAmount: order.total_idr,
-      productDetails: product.name.slice(0, 80),
-      email,
-      customerVaName: fullName.slice(0, 50),
-      phoneNumber: profile?.phone_wa,
-      callbackUrl: `${apiBase}/payment/callback`,
-      returnUrl: `${siteBase}/checkout/selesai?order_id=${order.id}`,
-      itemDetails: [
-        {
-          name: product.name.slice(0, 50),
-          price: order.total_idr,
-          quantity: 1,
-        },
-      ],
-      customerDetail: {
-        firstName: firstName || 'Buyer',
-        lastName: lastParts.join(' ') || undefined,
-        email,
-        phoneNumber: profile?.phone_wa,
-      },
-    })
-
-    await supabase
-      .from('orders')
-      .update({
-        payment_reference: inquiry.reference,
-        payment_url: inquiry.paymentUrl,
-        payment_external_id: order.order_number,
-      })
-      .eq('id', orderId)
-
-    return {
-      reference: inquiry.reference,
-      payment_url: inquiry.paymentUrl,
-      va_number: inquiry.vaNumber ?? null,
-      qr_string: inquiry.qrString ?? null,
-    }
-  }
-
-  /**
-   * Process a Duitku callback notification.
-   * Returns an outcome — caller (route) always responds 200 to Duitku to
-   * suppress retries; we self-recover via cron + admin alerts.
-   *
-   * Flow:
-   *  1. Verify MD5 signature (formula in lib/duitku.ts)
-   *  2. Map resultCode → order status
-   *  3. On '00': mark paid, call deliver_order_account RPC, notify buyer
-   *  4. On '01': mark expired (final state per Duitku — they don't retry)
-   */
-  static async processCallback(notif: DuitkuCallback): Promise<WebhookOutcome> {
-    const valid = await verifyCallbackSignature({
-      merchantCode: notif.merchantCode,
-      amount: notif.amount,
-      merchantOrderId: notif.merchantOrderId,
-      signature: notif.signature,
-    })
-    if (!valid) {
-      console.warn('[duitku] invalid signature', { merchantOrderId: notif.merchantOrderId })
-      return { ok: false, reason: 'INVALID_SIGNATURE' }
-    }
-
-    const supabase = createAdminClient()
-
-    const { data: order } = await supabase
-      .from('orders')
-      .select('id, user_id, product_id, total_idr, status, order_number')
-      .eq('order_number', notif.merchantOrderId)
-      .maybeSingle<OrderForPayment>()
-
-    if (!order) {
-      console.warn('[duitku] order not found', { merchantOrderId: notif.merchantOrderId })
-      return { ok: false, reason: 'ORDER_NOT_FOUND' }
-    }
-
-    // Idempotency: ignore if already settled into a terminal paid-state.
-    if (TERMINAL_PAID_STATUSES.has(order.status)) {
-      return { ok: true, effect: 'noop' }
-    }
-
-    // Defense in depth: amount tamper check. Duitku already signs amount but we
-    // double-check it matches the order we're acting on.
-    const amountNum = Number(notif.amount)
-    if (Number.isFinite(amountNum) && amountNum !== order.total_idr) {
-      console.warn('[duitku] amount mismatch', {
-        order_id: order.id,
-        notif: amountNum,
-        order: order.total_idr,
-      })
-      return { ok: false, reason: 'AMOUNT_MISMATCH' }
-    }
-
-    // Always log the latest payment metadata regardless of effect.
-    await supabase
-      .from('orders')
-      .update({
-        payment_transaction_id: notif.reference,
-        payment_method: notif.paymentCode ?? null,
-        payment_status: notif.resultCode,
-        payment_metadata: notif as unknown as Record<string, unknown>,
-      })
-      .eq('id', order.id)
-
-    if (notif.resultCode === '00') {
-      await this.handlePaid(order)
-      return { ok: true, effect: 'paid' }
-    }
-
-    if (notif.resultCode === '01') {
-      await supabase
-        .from('orders')
-        .update({ status: 'expired' })
-        .eq('id', order.id)
-        .eq('status', 'pending_payment')
-      return { ok: true, effect: 'failed' }
-    }
-
-    return { ok: true, effect: 'noop' }
-  }
-
-  private static async handlePaid(order: OrderForPayment): Promise<void> {
-    const supabase = createAdminClient()
-
-    // Mark order as paid (only if still pending_payment).
-    // Atomic update + .eq('status', 'pending_payment') = idempotency guard:
-    // kalau Duitku retry callback (mereka kadang lakukan), update kedua tidak
-    // match karena status sudah 'paid'. Updated null → exit early sebelum
-    // emit activity log / notif (mencegah duplicate event).
-    const { data: updated, error: updateErr } = await supabase
-      .from('orders')
-      .update({ status: 'paid', paid_at: new Date().toISOString() })
-      .eq('id', order.id)
-      .eq('status', 'pending_payment')
-      .select('id')
-      .maybeSingle()
-
-    if (updateErr || !updated) {
-      console.info('[duitku] callback idempotent — order sudah paid sebelumnya', { order_id: order.id })
-      return
-    }
-
-    // Manual fulfillment model (Opsi A): tidak auto-deliver.
-    // Order tetap di status 'paid' sampai admin fulfill manual via admin panel.
-    // Kirim notif "pembayaran berhasil, sedang diproses" ke buyer + alert admin.
-    try {
-      await this.notifyBuyerPaymentReceived(order)
-      await this.alertAdminPendingFulfillment(order)
-    } catch (err) {
-      console.error('[duitku] post-paid notif failed', { order_id: order.id, err })
-    }
-
-    // Log activity feed untuk admin
-    await ActivityLogService.log({
-      event_type: 'order_paid',
-      ref_id: order.id,
-      ref_table: 'orders',
-      title: `Pembayaran diterima: ${order.order_number}`,
-      description: `Total Rp ${order.total_idr.toLocaleString('id-ID')} — perlu di-fulfill`,
-      metadata: {
-        order_number: order.order_number,
-        total_idr: order.total_idr,
-        user_id: order.user_id,
-        product_id: order.product_id,
-      },
-    })
-  }
-
   static async notifyBuyerPaymentReceived(order: OrderForPayment): Promise<void> {
     const supabase = createAdminClient()
     const { data } = await supabase
@@ -310,6 +75,9 @@ export class PaymentService {
         orderId: order.id,
       })
     }
+
+    // Alert admin untuk fulfill manual
+    await this.alertAdminPendingFulfillment(order)
   }
 
   private static async alertAdminPendingFulfillment(order: OrderForPayment): Promise<void> {

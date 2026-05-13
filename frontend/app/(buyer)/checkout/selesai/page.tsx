@@ -30,7 +30,7 @@ export default async function CheckoutSelesaiPage({ searchParams }: Props) {
             <div className="flex-1">
               <p className="font-bold text-ink text-sm">Konfirmasi pembayaran</p>
               <p className="mt-0.5 text-sm text-ink-muted font-medium leading-relaxed">
-                Duitku verifikasi pembayaran kamu — biasanya beberapa detik untuk QRIS/e-wallet, sampai 10 menit untuk virtual account
+                Klik "Saya sudah bayar" di halaman pesanan setelah transfer. Admin verifikasi 5-15 menit (jam 09:00-22:00 WIB)
               </p>
             </div>
           </li>

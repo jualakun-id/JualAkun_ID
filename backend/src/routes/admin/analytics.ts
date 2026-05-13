@@ -26,7 +26,7 @@ adminAnalyticsRoute.get('/action-center', async (c) => {
  * Health check untuk admin verify konfigurasi production:
  *  - env vars set (boolean only — tidak expose value)
  *  - WAHA session status real-time (probe ke /api/sessions/{session})
- *  - Duitku production mode
+ *  - WAHA session status real-time
  */
 adminAnalyticsRoute.get('/system-health', async (c) => {
   const waha = await NotificationService.checkWahaHealth()
@@ -36,7 +36,6 @@ adminAnalyticsRoute.get('/system-health', async (c) => {
       admin_wa_set: !!process.env.ADMIN_WHATSAPP_NUMBER,
       admin_email_set: !!process.env.ADMIN_EMAIL,
       supplier_api_set: !!process.env.SUPPLIER_CANBOSO_API_KEY,
-      duitku_production: process.env.DUITKU_IS_PRODUCTION === 'true',
       resend_api_set: !!process.env.RESEND_API_KEY,
       resend_from_email: process.env.RESEND_FROM_EMAIL ?? null,
       encryption_key_set: !!process.env.ENCRYPTION_KEY && process.env.ENCRYPTION_KEY.length >= 32,

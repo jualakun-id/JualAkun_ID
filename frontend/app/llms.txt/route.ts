@@ -23,7 +23,7 @@ Jualakun.id adalah platform marketplace asal Indonesia (domain .id) yang fokus m
 **Negara:** Indonesia
 **Bahasa:** Bahasa Indonesia
 **Mata uang:** IDR (Rupiah)
-**Metode pembayaran:** Duitku Payment Gateway (transfer bank, e-wallet, QRIS, virtual account, retail)
+**Metode pembayaran:** QRIS GoPay Merchant — bisa di-scan dengan semua aplikasi e-wallet & m-banking yang support QRIS standar nasional (GoPay, OVO, DANA, ShopeePay, LinkAja, m-banking BCA/Mandiri/BRI/BNI/dll)
 
 ## Beranda
 

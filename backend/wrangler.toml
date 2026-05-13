@@ -6,7 +6,6 @@ account_id = "821071ae5e28d3de9dc3635acd10db72"
 
 # Non-secret env vars only — secrets via: wrangler secret put NAMA_KEY
 [vars]
-DUITKU_IS_PRODUCTION = "false"
 PUBLIC_API_URL = "https://api.jualakun.id"
 PUBLIC_SITE_URL = "https://jualakun.id"
 CORS_ORIGINS = "https://jualakun.id,https://www.jualakun.id,https://jual-akun-id.vercel.app,http://localhost:3000"
@@ -24,12 +23,13 @@ crons = [
 # - SUPABASE_ANON_KEY
 # - SUPABASE_SERVICE_ROLE_KEY
 # - ENCRYPTION_KEY
-# - DUITKU_MERCHANT_CODE
-# - DUITKU_API_KEY
+# - QRIS_STATIC_PAYLOAD  (raw payload dari GoPay Saya QRIS, decode via zxing.org)
 # - WAHA_BASE_URL
 # - WAHA_API_KEY
 # - WAHA_SESSION
 # - RESEND_API_KEY
 # - RESEND_FROM_EMAIL
 # - ADMIN_WHATSAPP_NUMBER
+# - ADMIN_EMAIL
+# - SUPPLIER_CANBOSO_API_KEY
 # - CRON_SECRET

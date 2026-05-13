@@ -317,7 +317,7 @@ export default async function HomePage() {
 const FAQS = [
   {
     q: 'Bagaimana cara membeli akun di Jualakun.id?',
-    a: 'Pilih produk di salah satu kategori → klik "Pesan Sekarang" → login/daftar → bayar via Duitku → akun otomatis terkirim ke dashboard kamu dalam < 5 menit.',
+    a: 'Pilih produk di salah satu kategori → klik "Pesan Sekarang" → login/daftar → bayar via QRIS (GoPay, OVO, DANA, ShopeePay, dll) → admin verifikasi → akun dikirim ke email & WhatsApp kamu.',
   },
   {
     q: 'Kapan akun aktif setelah pembayaran?',
@@ -333,7 +333,7 @@ const FAQS = [
   },
   {
     q: 'Metode pembayaran apa saja yang tersedia?',
-    a: 'Semua metode di Duitku: GoPay, OVO, DANA, ShopeePay, QRIS, Virtual Account (BCA, BNI, BRI, Mandiri, Permata), retail (Indomaret, Alfamart), dan kartu kredit.',
+    a: 'Pembayaran via QRIS standar nasional — bisa scan pakai semua app e-wallet & m-banking: GoPay, OVO, DANA, ShopeePay, LinkAja, BCA Mobile, Mandiri Livin, BRImo, BNI Mobile, Permata Mobile, dan e-wallet lain yang support QRIS.',
   },
   {
     q: 'Berapa lama masa garansi yang berlaku?',

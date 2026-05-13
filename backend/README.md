@@ -50,13 +50,14 @@ wrangler secret put SUPABASE_URL
 wrangler secret put SUPABASE_ANON_KEY
 wrangler secret put SUPABASE_SERVICE_ROLE_KEY
 wrangler secret put ENCRYPTION_KEY
-wrangler secret put DUITKU_MERCHANT_CODE
-wrangler secret put DUITKU_API_KEY
+wrangler secret put QRIS_STATIC_PAYLOAD
 wrangler secret put WAHA_BASE_URL
 wrangler secret put WAHA_API_KEY
 wrangler secret put WAHA_SESSION
 wrangler secret put RESEND_API_KEY
 wrangler secret put RESEND_FROM_EMAIL
 wrangler secret put ADMIN_WHATSAPP_NUMBER
+wrangler secret put ADMIN_EMAIL
+wrangler secret put SUPPLIER_CANBOSO_API_KEY
 wrangler secret put CRON_SECRET
 ```

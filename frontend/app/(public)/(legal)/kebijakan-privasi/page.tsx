@@ -63,7 +63,7 @@ export default function KebijakanPrivasiPage() {
           <h3 className="mt-5 font-heading text-base font-bold text-ink">b. Saat kamu transaksi</h3>
           <ul className="mt-2 list-disc space-y-1 pl-6">
             <li>Riwayat order (produk, harga, tanggal, status)</li>
-            <li>Metode pembayaran yang dipakai (bukan nomor kartu/VA — itu di Duitku)</li>
+            <li>Metode pembayaran yang dipakai (QRIS via e-wallet pilihanmu)</li>
             <li>Catatan tiket support / klaim garansi</li>
           </ul>
 
@@ -132,7 +132,7 @@ export default function KebijakanPrivasiPage() {
               </thead>
               <tbody className="bg-white">
                 <ProviderRow name="Supabase" purpose="Database & auth" data="Email, profile, riwayat order" />
-                <ProviderRow name="Duitku" purpose="Payment gateway" data="Nama, email, nominal, order ID" />
+                <ProviderRow name="GoPay Merchant" purpose="QRIS payment receiver" data="Nominal transfer (tidak ada data pribadi)" />
                 <ProviderRow name="WAHA" purpose="WhatsApp notifikasi" data="Nomor WA & isi pesan" />
                 <ProviderRow name="Resend" purpose="Email transaksional" data="Email & isi pesan" />
                 <ProviderRow name="Vercel" purpose="Hosting frontend" data="IP, user agent (log akses)" />

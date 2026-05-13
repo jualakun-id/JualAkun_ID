@@ -23,14 +23,20 @@ Buka `/admin/analytics/system-health` (atau cek via API: `GET /admin/analytics/s
 
 ```json
 {
-  "cron_secret_set": true,           ← harus true
-  "admin_wa_set": true,              ← harus true (terima alert kritis)
-  "supplier_api_set": true,          ← harus true (kalau pakai Canboso)
-  "duitku_production": true,         ← MUST true sebelum go-live
-  "resend_api_set": true,            ← harus true
-  "resend_from_email": "noreply@jualakun.id", ← domain harus verified
-  "waha_base_url_set": true,         ← harus true
-  "encryption_key_set": true         ← harus true (32+ char)
+  "cron_secret_set": true,                       ← harus true
+  "admin_wa_set": true,                          ← harus true (terima alert kritis)
+  "admin_email_set": true,                       ← harus true (fallback alert)
+  "supplier_api_set": true,                      ← harus true (kalau pakai Canboso)
+  "resend_api_set": true,                        ← harus true
+  "resend_from_email": "noreply@jualakun.id",    ← domain harus verified
+  "encryption_key_set": true,                    ← harus true (32+ char)
+  "qris_static_payload_set": true,               ← harus true (payload GoPay Saya)
+  "waha": {
+    "base_url_set": true,
+    "api_key_set": true,
+    "session": "jualakun",
+    "status": "WORKING"                          ← real-time WAHA session status
+  }
 }
 ```
 
@@ -72,7 +78,7 @@ echo "VALUE" | npx --prefix backend wrangler secret put NAMA_KEY --name jualakun
 
 ### 3.1. Fulfill Order
 
-**Trigger:** Order status = `paid` (callback Duitku sukses)
+**Trigger:** Order status = `paid` (setelah admin verify pembayaran QRIS dari mutasi GoPay)
 
 **Steps:**
 1. Buka `/admin/pesanan?status=paid`
@@ -101,13 +107,11 @@ echo "VALUE" | npx --prefix backend wrangler secret put NAMA_KEY --name jualakun
 1. Buka `/admin/pesanan/<order-id>` (detail page)
 2. Klik tombol "Proses Refund" di action panel
 3. Confirm — status → `refunded`
-4. **Manual transfer balik ke buyer** via:
-   - Bank transfer manual (lihat metode pembayaran original di order detail)
-   - Atau pakai Duitku Refund API kalau aktif (cek dashboard Duitku)
+4. **Manual transfer balik ke buyer** via GoPay / bank transfer (ambil nomor rekening dari buyer via WA)
 5. WhatsApp buyer untuk konfirmasi refund process + estimasi waktu
 6. Activity log otomatis emit `order_refunded`
 
-**Penting:** Refund Duitku **tidak auto** — perlu manual transfer balik.
+**Penting:** Refund **selalu manual** — pakai QRIS GoPay merchant berarti tidak ada API refund. Admin pegang full kontrol.
 
 ---
 
@@ -225,18 +229,18 @@ Symptom: WA notif gagal semua, success rate drops di /admin/analytics
 3. Update buyer existing dengan email saja (sementara)
 4. **Preventive:** pakai number business verified, bukan personal
 
-### 4.6. Duitku Issue
+### 4.6. Buyer Klaim Sudah Bayar tapi Tidak Ditemukan di Mutasi
 
-Symptom: callback tidak masuk, order paid stuck di pending_payment
+Symptom: buyer klik "Saya sudah bayar" (status verifying), tapi admin tidak nemu mutasi di GoPay Saya app
 
 **Actions:**
-1. Cek dashboard Duitku merchant: apakah ada notifikasi maintenance?
-2. Cek `notifications_log` untuk error message
-3. Kalau buyer claim sudah bayar tapi status masih pending: verifikasi manual di Duitku dashboard, lalu admin manual update status:
-   ```sql
-   UPDATE orders SET status = 'paid', paid_at = NOW() WHERE id = '<order_id>';
-   ```
-4. Lalu trigger admin fulfill via UI normal
+1. Cek nominal exact: buyer harus transfer **persis** termasuk 3 digit suffix unique
+2. Cek interval waktu: GoPay kadang delay 1-5 menit propagate ke mutasi
+3. Refresh GoPay Saya app (pull-down) — kadang cache stale
+4. Kalau benar-benar tidak ada setelah 30 menit:
+   - Klik **Reject** di order detail → input alasan "Pembayaran tidak ditemukan di mutasi setelah 30 menit"
+   - Buyer dapat notif WA + email, status order → cancelled
+   - Buyer bisa order ulang kalau memang transfer ke rekening salah
 
 ---
 
@@ -266,8 +270,9 @@ Auto-cleanup retention 90 hari berjalan tiap 30 menit. Kalau perlu adjust:
 ## 6. Contact / Escalation
 
 - **Developer (technical):** [contact via project owner]
-- **Duitku Support:** support@duitku.com
-- **WAHA Issues:** cek dokumentasi WAHA selfhosted
+- **GoPay Saya support:** via app GoPay (untuk merchant issues)
+- **Canboso supplier:** [bot Telegram @CanbosoBot](https://t.me/CanbosoBot)
+- **WAHA Issues:** cek dokumentasi WAHA selfhosted + sumopod dashboard
 - **Supabase:** support@supabase.com (paid plan) / Discord community (free)
 - **Vercel:** dashboard.vercel.com → Help
 
