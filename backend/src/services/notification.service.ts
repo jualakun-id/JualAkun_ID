@@ -12,6 +12,17 @@ type LogEntry = {
   error: string | null
 }
 
+/**
+ * Strip BOM (U+FEFF), zero-width chars (U+200B-U+200D, U+2060), dan whitespace
+ * dari env var value. PowerShell pipe ke `wrangler secret put` kadang prepend
+ * BOM ke value yang bikin `new URL()` throw "Invalid URL". Defensive cleanup
+ * untuk semua env vars yang dipakai untuk URL/header value.
+ */
+function sanitizeEnv(val: string | undefined): string {
+  if (!val) return ''
+  return val.replace(/[﻿​‌‍⁠]/g, '').trim()
+}
+
 async function logNotification(entry: LogEntry): Promise<void> {
   const supabase = createAdminClient()
   const { error } = await supabase.from('notifications_log').insert(entry)
@@ -76,9 +87,14 @@ export class NotificationService {
       return false
     }
 
-    const baseUrl = process.env.WAHA_BASE_URL!.replace(/\/$/, '')
-    const apiKey = process.env.WAHA_API_KEY!
-    const session = process.env.WAHA_SESSION || 'default'
+    // Strip BOM (U+FEFF) + zero-width chars + whitespace + trailing slash.
+    // PowerShell pipe ke `wrangler secret put` kadang prepend BOM (U+FEFF)
+    // ke string, bikin fetch() throw "Invalid URL" karena URL contains
+    // invisible char di awal. Defensive: clean semua invisible characters
+    // sebelum dipakai.
+    const baseUrl = sanitizeEnv(process.env.WAHA_BASE_URL).replace(/\/$/, '')
+    const apiKey = sanitizeEnv(process.env.WAHA_API_KEY)
+    const session = sanitizeEnv(process.env.WAHA_SESSION) || 'default'
     const chatId = toChatId(trimmedTarget)
 
     let status: NotifStatus = 'sent'
