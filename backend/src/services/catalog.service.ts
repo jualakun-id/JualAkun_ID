@@ -116,12 +116,14 @@ export class CatalogService {
     if (error) throw new ApiError('INTERNAL_ERROR', error.message, 500)
     if (!product) throw new ApiError('NOT_FOUND', 'Produk tidak ditemukan', 404)
 
+    // 5 ulasan terakhir, sorted desc by created_at — di tampilkan menyamping
+    // (horizontal scroll) di halaman product detail
     const { data: reviews } = await supabase
       .from('product_reviews')
       .select('id, rating, comment, created_at')
       .eq('product_id', product.id)
       .order('created_at', { ascending: false })
-      .limit(10)
+      .limit(5)
 
     const cat = product.categories as { name: string; slug: string } | { name: string; slug: string }[] | null
     const category = Array.isArray(cat) ? cat[0] : cat

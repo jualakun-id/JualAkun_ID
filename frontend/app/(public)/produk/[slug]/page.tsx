@@ -292,32 +292,39 @@ export default async function ProductDetailPage({ params }: Props) {
         <div className="mt-14">
           <h2 className="font-heading text-2xl md:text-3xl font-extrabold text-ink tracking-tight">Ulasan Pembeli</h2>
           <p className="mt-2 text-[15px] text-ink-muted font-medium">
-            {product.rating_count} pembeli sudah kasih review untuk produk ini.
+            {product.rating_count} pembeli sudah kasih review.
+            {product.rating_count > product.reviews.length ? (
+              <span className="text-ink-subtle"> Tampil 5 review terbaru.</span>
+            ) : null}
           </p>
-          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {product.reviews.map((r) => (
-              <div
-                key={r.id}
-                className="rounded-2xl border-2 border-black bg-white p-5 shadow-[0_3px_0_rgba(0,0,0,0.9)]"
-              >
-                <div className="flex items-center gap-2">
-                  <div className="flex gap-0.5 text-warning">
-                    {Array.from({ length: r.rating }).map((_, i) => (
-                      <Star key={i} size={16} fill="currentColor" />
-                    ))}
-                    {Array.from({ length: 5 - r.rating }).map((_, i) => (
-                      <Star key={`empty-${i}`} size={16} className="text-gray-200" fill="currentColor" />
-                    ))}
+          {/* Horizontal scroll: 5 review terbaru menyamping. Di desktop fit
+              ~3 card visible, di mobile 1 card, scroll horizontal */}
+          <div className="mt-6 -mx-4 sm:mx-0 px-4 sm:px-0 overflow-x-auto pb-4 [scrollbar-width:thin]">
+            <div className="flex gap-4 snap-x snap-mandatory">
+              {product.reviews.map((r) => (
+                <div
+                  key={r.id}
+                  className="snap-start shrink-0 w-[280px] sm:w-[320px] rounded-2xl border-2 border-black bg-white p-5 shadow-[0_3px_0_rgba(0,0,0,0.9)]"
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="flex gap-0.5 text-warning">
+                      {Array.from({ length: r.rating }).map((_, i) => (
+                        <Star key={i} size={16} fill="currentColor" />
+                      ))}
+                      {Array.from({ length: 5 - r.rating }).map((_, i) => (
+                        <Star key={`empty-${i}`} size={16} className="text-gray-200" fill="currentColor" />
+                      ))}
+                    </div>
+                    <span className="ml-auto text-xs text-ink-subtle font-medium">{formatDate(r.created_at)}</span>
                   </div>
-                  <span className="ml-auto text-xs text-ink-subtle font-medium">{formatDate(r.created_at)}</span>
+                  {r.comment ? (
+                    <p className="mt-3 text-[14px] text-ink leading-relaxed font-medium line-clamp-5">{r.comment}</p>
+                  ) : (
+                    <p className="mt-3 text-[14px] text-ink-subtle italic">Tidak ada komentar</p>
+                  )}
                 </div>
-                {r.comment ? (
-                  <p className="mt-3 text-[15px] text-ink leading-relaxed font-medium">{r.comment}</p>
-                ) : (
-                  <p className="mt-3 text-[15px] text-ink-subtle italic">Tidak ada komentar</p>
-                )}
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       ) : null}
