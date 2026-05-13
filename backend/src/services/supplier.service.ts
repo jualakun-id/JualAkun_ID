@@ -488,12 +488,23 @@ function formatCredentialsFromCanboso(obj: Record<string, unknown>): string {
     return lines.join('\n')
   }
 
+  let formatted: string
   if (accounts.length === 1) {
-    return formatAccount(accounts[0] as Record<string, unknown>)
+    formatted = formatAccount(accounts[0] as Record<string, unknown>)
+  } else {
+    // Multiple accounts — separator per akun
+    formatted = accounts
+      .map((acc, idx) => `=== Akun ${idx + 1} ===\n${formatAccount(acc as Record<string, unknown>)}`)
+      .join('\n\n')
   }
 
-  // Multiple accounts — separator per akun
-  return accounts
-    .map((acc, idx) => `=== Akun ${idx + 1} ===\n${formatAccount(acc as Record<string, unknown>)}`)
-    .join('\n\n')
+  // SAFETY NET: kalau hasil format empty atau cuma whitespace (artinya Canboso
+  // kirim field selain user/password/verifyEmail/expiryText/otherInfo yang
+  // tidak dikenali), fallback ke raw JSON supaya admin tidak dapat textarea
+  // kosong. Admin selalu punya source of truth untuk paste manual.
+  if (formatted.trim().length === 0) {
+    return JSON.stringify(obj, null, 2)
+  }
+
+  return formatted
 }

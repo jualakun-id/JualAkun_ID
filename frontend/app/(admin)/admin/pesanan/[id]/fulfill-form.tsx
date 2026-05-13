@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Send, ShoppingCart, Loader2 } from 'lucide-react'
+import { Send, ShoppingCart, Loader2, RefreshCw } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/components/toast'
@@ -31,6 +31,24 @@ export function FulfillForm({ orderId, productName, hasSupplier }: Props) {
   const [costSource, setCostSource] = useState<CostSource>('manual')
   const [loading, setLoading] = useState(false)
   const [purchasing, setPurchasing] = useState(false)
+  // Simpan formatted + raw dari supplier untuk toggle (kalau format clean
+  // terlihat aneh, admin bisa switch ke raw JSON utuh untuk inspect/edit)
+  const [formattedFromSupplier, setFormattedFromSupplier] = useState<string | null>(null)
+  const [rawFromSupplier, setRawFromSupplier] = useState<string | null>(null)
+  const [usingRaw, setUsingRaw] = useState(false)
+
+  function togglePakaiRaw() {
+    if (!rawFromSupplier || !formattedFromSupplier) return
+    if (usingRaw) {
+      // Switch back ke formatted
+      setInfo(formattedFromSupplier)
+      setUsingRaw(false)
+    } else {
+      // Switch ke raw JSON
+      setInfo(rawFromSupplier)
+      setUsingRaw(true)
+    }
+  }
 
   async function handlePurchaseFromSupplier() {
     if (!confirm('Beli dari supplier (Canboso)?\n\nWallet akan dipotong. Credentials clean + modal akan auto-fill — review sebelum kirim ke buyer.')) {
@@ -48,7 +66,11 @@ export function FulfillForm({ orderId, productName, hasSupplier }: Props) {
       toast.error(result.message ?? 'Gagal beli dari supplier')
       return
     }
-    // Pakai formatted_credentials (clean format Email/Password), bukan raw JSON
+    // Pakai formatted_credentials (clean format Email/Password). Simpan
+    // formatted + raw untuk toggle kalau admin perlu lihat raw response.
+    setFormattedFromSupplier(result.data.formatted_credentials)
+    setRawFromSupplier(result.data.raw)
+    setUsingRaw(false)
     setInfo((prev) =>
       prev
         ? `${prev}\n\n${result.data.formatted_credentials}`
@@ -133,9 +155,23 @@ export function FulfillForm({ orderId, productName, hasSupplier }: Props) {
       </div>
 
       <div className="space-y-1">
-        <label htmlFor="info" className="text-xs font-bold text-ink-muted uppercase tracking-wider">
-          Info Pesanan untuk Buyer <span className="text-danger">*</span>
-        </label>
+        <div className="flex items-center justify-between gap-2">
+          <label htmlFor="info" className="text-xs font-bold text-ink-muted uppercase tracking-wider">
+            Info Pesanan untuk Buyer <span className="text-danger">*</span>
+          </label>
+          {/* Toggle ke raw JSON kalau formatted terlihat aneh / kehilangan info */}
+          {rawFromSupplier && formattedFromSupplier ? (
+            <button
+              type="button"
+              onClick={togglePakaiRaw}
+              title={usingRaw ? 'Kembali ke format clean' : 'Lihat & pakai raw JSON dari supplier'}
+              className="inline-flex items-center gap-1 text-[11px] font-bold text-brand-700 hover:text-brand-900 underline decoration-dashed"
+            >
+              <RefreshCw size={11} strokeWidth={2.5} />
+              {usingRaw ? 'Kembali ke Format Clean' : 'Pakai Raw JSON'}
+            </button>
+          ) : null}
+        </div>
         <textarea
           id="info"
           required
@@ -148,6 +184,11 @@ export function FulfillForm({ orderId, productName, hasSupplier }: Props) {
           disabled={loading}
           className="w-full rounded-lg border-2 border-black/15 bg-white px-4 py-3 text-sm font-mono text-ink placeholder:text-ink-subtle placeholder:font-normal placeholder:font-sans focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/25 disabled:opacity-50"
         />
+        {usingRaw ? (
+          <p className="text-[11px] text-warning font-medium">
+            ⚠️ Mode raw JSON — buyer akan dapat JSON utuh. Edit/sanitize dulu kalau perlu.
+          </p>
+        ) : null}
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
