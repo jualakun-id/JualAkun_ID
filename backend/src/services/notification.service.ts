@@ -174,8 +174,15 @@ export class NotificationService {
   }
 
   /**
-   * Kirim alert ke admin via WA. Kalau WA gagal (WAHA down, QR expired, dll),
-   * fallback ke email Resend supaya alert critical tidak hilang.
+   * Kirim alert ke admin via WA. Target:
+   *  1. ADMIN_WHATSAPP_NUMBER (personal admin) — primary
+   *  2. ADMIN_WA_GROUP_ID (group "Notif. Penjualan Akun") — kalau di-set,
+   *     kirim juga ke group supaya semua admin di group bisa langsung
+   *     respond (cek mutasi GoPay, fulfill order, dll)
+   *  3. ADMIN_EMAIL — fallback kalau semua WA target fail
+   *
+   * Behavior: kirim ke admin + group paralel. Email fallback cuma kalau
+   * keduanya fail (atau cuma yang di-set yang gagal).
    *
    * Subject email auto-prefix [ALERT JualAkun]. Body WA & email plain text
    * sama supaya konsisten — email di-wrap minimal HTML untuk readability.
@@ -184,22 +191,37 @@ export class NotificationService {
     template: string
     title: string
     message: string
-  }): Promise<{ wa: boolean; email: boolean }> {
+  }): Promise<{ wa: boolean; group: boolean; email: boolean }> {
     const adminWa = process.env.ADMIN_WHATSAPP_NUMBER
+    const adminGroupId = process.env.ADMIN_WA_GROUP_ID
     const adminEmail = process.env.ADMIN_EMAIL
+    const formattedMessage = `[${args.title}]\n\n${args.message}`
 
+    // 1. Kirim ke admin personal WA
     let waOk = false
     if (adminWa) {
       waOk = await this.sendWhatsApp({
         target: adminWa,
         template: args.template,
-        message: `[${args.title}]\n\n${args.message}`,
+        message: formattedMessage,
       })
     }
 
-    // Fallback email kalau WA gagal atau admin WA tidak diset
+    // 2. Kirim ke group WA (kalau di-set). Group ID format: <num>@g.us
+    let groupOk = false
+    if (adminGroupId) {
+      groupOk = await this.sendWhatsApp({
+        target: adminGroupId, // sudah include @g.us suffix
+        template: `${args.template}_group`,
+        message: formattedMessage,
+      })
+    }
+
+    // 3. Fallback email kalau SEMUA WA target fail (kedua-duanya / yang
+    //    di-set tidak ada yang sukses). Mencegah alert kritis hilang.
     let emailOk = false
-    if (!waOk && adminEmail) {
+    const anyWaSuccess = waOk || groupOk
+    if (!anyWaSuccess && adminEmail) {
       const html = `
         <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1f2937;">
           <div style="background: linear-gradient(135deg, #dc2626, #ef4444); padding: 24px; text-align: center; border-radius: 8px 8px 0 0;">
@@ -222,7 +244,7 @@ export class NotificationService {
       })
     }
 
-    return { wa: waOk, email: emailOk }
+    return { wa: waOk, group: groupOk, email: emailOk }
   }
 
   /**

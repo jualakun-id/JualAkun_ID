@@ -12,6 +12,10 @@ WAHA_SESSION=default
 RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 RESEND_FROM_EMAIL=noreply@jualakun.id
 ADMIN_WHATSAPP_NUMBER=628xxxxxxxxxxxxxxx
+# WhatsApp group ID untuk admin alerts (selain admin personal number).
+# Dapatkan via WAHA API: GET /api/{session}/groups → cari subject "Notif Penjualan"
+# Format: "<id>@g.us" misal "120363426756060932@g.us"
+ADMIN_WA_GROUP_ID=
 ADMIN_EMAIL=admin@jualakun.id
 # QRIS Statis dari GoPay Saya — decode QR image pakai zxing.org untuk dapat string
 QRIS_STATIC_PAYLOAD=00020101021126620014ID.CO.QRIS.WWW...

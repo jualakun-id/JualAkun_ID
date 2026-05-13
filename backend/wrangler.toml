@@ -30,6 +30,7 @@ crons = [
 # - RESEND_API_KEY
 # - RESEND_FROM_EMAIL
 # - ADMIN_WHATSAPP_NUMBER
+# - ADMIN_WA_GROUP_ID  (opsional: WA group id "<num>@g.us" untuk broadcast alert)
 # - ADMIN_EMAIL
 # - SUPPLIER_CANBOSO_API_KEY
 # - CRON_SECRET

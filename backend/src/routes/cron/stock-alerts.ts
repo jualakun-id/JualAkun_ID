@@ -85,5 +85,5 @@ stockAlertsCron.post('/', async (c) => {
     message: tpl.waText.replace(/^\[[^\]]+\]\n\n/, ''),
   })
 
-  return c.json({ data: { ok: true, alerted: lowStock.length, wa_sent: result.wa, email_fallback: result.email } })
+  return c.json({ data: { ok: true, alerted: lowStock.length, wa_sent: result.wa, group_sent: result.group, email_fallback: result.email } })
 })
