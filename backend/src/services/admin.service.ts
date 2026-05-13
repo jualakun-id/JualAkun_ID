@@ -480,11 +480,16 @@ export class AdminOrdersService {
       .single()
     if (stockErr) throw new ApiError('INTERNAL_ERROR', `insert stock: ${stockErr.message}`, 500)
 
+    // PENTING: set account_stock_id ke stock row yang baru di-insert.
+    // RPC get_order_credentials JOIN via orders.account_stock_id — kalau
+    // tidak di-set, buyer dapat "Akses ditolak" + notifyBuyerDelivered
+    // silent skip karena embed account_stock return null.
     const { error: updateErr } = await supabase
       .from('orders')
       .update({
         status: 'delivered',
         delivered_at: new Date().toISOString(),
+        account_stock_id: stockRow.id,
         cost_idr: payload.cost_idr,
         cost_usd: payload.cost_usd ?? null,
         cost_source: payload.cost_source,
