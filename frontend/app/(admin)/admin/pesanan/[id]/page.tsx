@@ -5,7 +5,8 @@ import { AdminHeader } from '@/components/admin/admin-header'
 import { StatusBadge } from '@/components/admin/status-badge'
 import { OrderActions } from './order-actions'
 import { FulfillForm } from './fulfill-form'
-import { NotificationItem } from './notification-item'
+import { OrderTimeline } from './order-timeline'
+import { CredentialsPanel } from './credentials-panel'
 import { ExpiresCountdown } from './expires-countdown'
 import { adminFetch } from '@/lib/admin-fetch'
 import { formatRupiah, formatDateTime } from '@/lib/utils'
@@ -23,9 +24,12 @@ type OrderDetail = {
   payment_transaction_id: string | null
   payment_unique_suffix?: number | null
   payment_claimed_at?: string | null
+  payment_verified_at?: string | null
   payment_rejected_reason?: string | null
   paid_at: string | null
   delivered_at: string | null
+  buyer_confirmed_at?: string | null
+  account_stock_id?: string | null
   created_at: string
   expires_at: string | null
   cost_idr: number | null
@@ -155,18 +159,29 @@ export default async function AdminPesananDetailPage({ params }: Props) {
           />
         </div>
 
-        <div className="rounded-2xl border-2 border-black bg-white p-6 shadow-[0_3px_0_rgba(0,0,0,0.9)]">
-          <h2 className="font-heading text-xl font-extrabold tracking-tight">Log Notifikasi</h2>
-          <div className="mt-3 space-y-2">
-            {order.notifications.length === 0 ? (
-              <p className="text-sm text-ink-muted font-medium text-center py-6">
-                Belum ada notifikasi terkirim untuk pesanan ini.
-              </p>
-            ) : null}
-            {order.notifications.map((n) => (
-              <NotificationItem key={n.id} orderId={id} notif={n} />
-            ))}
+        <div className="space-y-4">
+          {/* Timeline progres pesanan — replace Log Notifikasi */}
+          <div className="rounded-2xl border-2 border-black bg-white p-5 shadow-[0_3px_0_rgba(0,0,0,0.9)]">
+            <OrderTimeline
+              status={order.status}
+              createdAt={order.created_at}
+              paymentClaimedAt={order.payment_claimed_at}
+              paymentVerifiedAt={order.payment_verified_at}
+              paidAt={order.paid_at}
+              deliveredAt={order.delivered_at}
+              buyerConfirmedAt={order.buyer_confirmed_at}
+              paymentRejectedReason={order.payment_rejected_reason}
+              expiresAt={order.expires_at}
+            />
           </div>
+
+          {/* Panel credentials — admin bisa lihat + edit credentials yang
+              sudah dikirim ke buyer, terpisah dari ticket flow */}
+          <CredentialsPanel
+            orderId={id}
+            orderStatus={order.status}
+            hasAccountStock={!!order.account_stock_id}
+          />
         </div>
       </div>
 

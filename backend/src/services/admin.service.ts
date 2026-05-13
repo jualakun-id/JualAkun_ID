@@ -382,7 +382,8 @@ export class AdminOrdersService {
         `id, order_number, amount_idr, discount_idr, credit_used_idr, total_idr, coupon_code,
          status, payment_provider, payment_method, payment_status, payment_transaction_id,
          payment_unique_suffix, payment_claimed_at, payment_verified_at, payment_rejected_reason,
-         paid_at, delivered_at, created_at, expires_at, user_id,
+         paid_at, delivered_at, buyer_confirmed_at, account_stock_id,
+         created_at, expires_at, user_id,
          cost_idr, cost_usd, cost_source,
          products!inner ( name, slug, supplier_product_id )`,
       )
@@ -409,6 +410,112 @@ export class AdminOrdersService {
       buyer: { email: authUser.user?.email ?? null },
       notifications: notifications ?? [],
     }
+  }
+
+  /**
+   * Admin lihat credentials yang sudah di-deliver ke buyer. Untuk verify
+   * sebelum edit kalau ada complaint dari buyer. Decrypt server-side dengan
+   * service role — hasil tidak di-cache.
+   */
+  static async getCredentials(orderId: string) {
+    const supabase = createAdminClient()
+    const { data: order } = await supabase
+      .from('orders')
+      .select('id, account_stock_id, status, delivered_at')
+      .eq('id', orderId)
+      .maybeSingle()
+    if (!order) throw new ApiError('NOT_FOUND', 'Pesanan tidak ditemukan', 404)
+    if (!order.account_stock_id) {
+      throw new ApiError('VALIDATION_ERROR', 'Order belum di-fulfill — credentials belum ada', 400)
+    }
+
+    const { data: stock } = await supabase
+      .from('account_stock')
+      .select('id, credentials_enc, note, used_at')
+      .eq('id', order.account_stock_id)
+      .maybeSingle()
+    if (!stock) throw new ApiError('NOT_FOUND', 'Account stock tidak ditemukan', 404)
+
+    const decrypted = await CryptoService.decrypt(stock.credentials_enc)
+    return {
+      credentials_text: decrypted,
+      note: stock.note ?? null,
+      delivered_at: order.delivered_at,
+      account_stock_id: stock.id,
+    }
+  }
+
+  /**
+   * Admin edit credentials yang sudah dikirim ke buyer (untuk kasus admin
+   * input salah / supplier kasih akun rusak tanpa perlu ticket). Berbeda
+   * dari ticket flow yang harus dari buyer side.
+   *
+   * Steps:
+   *  1. Encrypt credentials baru
+   *  2. Update account_stock.credentials_enc + note (kalau ada perubahan)
+   *  3. Opsional: re-send notif WA + email ke buyer dengan credentials baru
+   *  4. Activity log emit credentials_edited
+   */
+  static async updateCredentials(
+    orderId: string,
+    adminId: string,
+    payload: { credentials: string; note?: string; resend_notif: boolean },
+  ) {
+    const supabase = createAdminClient()
+    const { data: order } = await supabase
+      .from('orders')
+      .select('id, user_id, product_id, order_number, total_idr, status, account_stock_id')
+      .eq('id', orderId)
+      .maybeSingle()
+    if (!order) throw new ApiError('NOT_FOUND', 'Pesanan tidak ditemukan', 404)
+    if (!order.account_stock_id) {
+      throw new ApiError('VALIDATION_ERROR', 'Order belum di-fulfill — tidak bisa edit credentials', 400)
+    }
+    if (!['delivered', 'confirmed'].includes(order.status)) {
+      throw new ApiError('VALIDATION_ERROR', `Status ${order.status} tidak bisa di-edit credentials`, 400)
+    }
+
+    const credentialsEnc = await CryptoService.encrypt(payload.credentials.trim())
+    const { error: updErr } = await supabase
+      .from('account_stock')
+      .update({ credentials_enc: credentialsEnc, note: payload.note?.trim() || null })
+      .eq('id', order.account_stock_id)
+    if (updErr) throw new ApiError('INTERNAL_ERROR', `update stock: ${updErr.message}`, 500)
+
+    // Activity log untuk audit trail
+    await ActivityLogService.log({
+      event_type: 'credentials_edited',
+      ref_id: order.id as string,
+      ref_table: 'orders',
+      title: `Credentials di-edit: ${order.order_number}`,
+      description: payload.resend_notif
+        ? 'Admin edit credentials + trigger re-send notif ke buyer'
+        : 'Admin edit credentials (silent, tidak re-send notif)',
+      metadata: {
+        order_id: order.id,
+        admin_id: adminId,
+        resend_notif: payload.resend_notif,
+      },
+    })
+
+    // Re-send notif kalau diminta (default: yes — biasanya admin edit karena
+    // credentials salah, buyer harus tau credentials baru)
+    if (payload.resend_notif) {
+      try {
+        await PaymentService.notifyBuyerDelivered({
+          id: order.id as string,
+          user_id: order.user_id as string,
+          product_id: order.product_id as string,
+          order_number: order.order_number as string,
+          total_idr: order.total_idr as number,
+          status: order.status as string,
+        })
+      } catch (err) {
+        console.warn('[updateCredentials] resend notif failed:', err)
+      }
+    }
+
+    return { ok: true, resent: payload.resend_notif }
   }
 
   static async manualDeliver(orderId: string) {

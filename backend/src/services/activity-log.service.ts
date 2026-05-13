@@ -20,6 +20,7 @@ export type ActivityEventType =
   | 'supplier_low_balance'
   | 'supplier_orphan_detected'
   | 'supplier_unmapped'
+  | 'credentials_edited'
   | 'referral_credited'
   | 'referral_redeemed'
   | 'notification_failed'

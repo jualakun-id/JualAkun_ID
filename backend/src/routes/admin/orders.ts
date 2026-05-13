@@ -61,6 +61,27 @@ adminOrdersRoute.post('/:id/notifications/:notifId/resend', async (c) => {
   return c.json({ data })
 })
 
+// Admin lihat + edit credentials yang sudah dikirim ke buyer (tanpa ticket flow)
+adminOrdersRoute.get('/:id/credentials', async (c) => {
+  const data = await AdminOrdersService.getCredentials(c.req.param('id'))
+  return c.json({ data })
+})
+
+const editCredsSchema = z.object({
+  credentials: z.string().trim().min(3, 'Credentials minimal 3 karakter').max(2000),
+  note: z.string().trim().max(500).optional(),
+  resend_notif: z.boolean().default(true),
+})
+
+adminOrdersRoute.patch('/:id/credentials', zValidator('json', editCredsSchema), async (c) => {
+  const data = await AdminOrdersService.updateCredentials(
+    c.req.param('id'),
+    c.get('userId'),
+    c.req.valid('json'),
+  )
+  return c.json({ data })
+})
+
 /**
  * Manual payment verification endpoints — admin lihat mutasi GoPay Saya,
  * cocokkan dengan order yang status='verifying', lalu konfirmasi/reject.
