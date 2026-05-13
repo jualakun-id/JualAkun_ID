@@ -14,7 +14,20 @@ type LogEntry = {
 
 async function logNotification(entry: LogEntry): Promise<void> {
   const supabase = createAdminClient()
-  await supabase.from('notifications_log').insert(entry)
+  const { error } = await supabase.from('notifications_log').insert(entry)
+  if (error) {
+    // Supabase JS client TIDAK throw error pada insert — return { error } object.
+    // Tanpa explicit check, INSERT silent fail (e.g. schema mismatch, constraint
+    // violation). Log ke console supaya admin bisa diagnose dari Cloudflare logs.
+    console.error('[notif-log] INSERT failed:', {
+      error_message: error.message,
+      error_code: error.code,
+      error_details: error.details,
+      entry_channel: entry.channel,
+      entry_template: entry.template,
+      entry_order_id: entry.order_id,
+    })
+  }
 }
 
 /**
