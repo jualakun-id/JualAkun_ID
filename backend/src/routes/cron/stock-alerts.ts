@@ -48,6 +48,24 @@ stockAlertsCron.post('/', async (c) => {
     console.warn('[cron/stock-alerts] cleanup failed:', err)
   }
 
+  // Stock alert WA + activity log HANYA jam 06:00-06:29 WIB (digest harian)
+  // supaya grup tidak ke-spam tiap 30 menit. Cron tetap jalan tiap 30 menit
+  // untuk kupon expired + cleanup logs, tapi stock alert WA/email gate ke
+  // morning slot saja.
+  //
+  // WIB = UTC+7. Cron */30 trigger di menit :00 dan :30. Slot pagi WIB:
+  //   - WIB 06:00 = UTC 23:00 (slot :00 → masuk window)
+  //   - WIB 06:30 = UTC 23:30 (slot :30 → skip, hindari dobel kirim)
+  const now = new Date()
+  const utcHour = now.getUTCHours()
+  const utcMinute = now.getUTCMinutes()
+  const wibHour = (utcHour + 7) % 24
+  const isMorningDigestSlot = wibHour === 6 && utcMinute < 30
+
+  if (!isMorningDigestSlot) {
+    return c.json({ data: { ok: true, alerted: 0, skipped: 'not-morning-digest-slot' } })
+  }
+
   const supabase = createAdminClient()
   // Pakai display_stock (admin-managed) untuk monitoring publik
   const { data: lowStock, error } = await supabase
@@ -81,7 +99,7 @@ stockAlertsCron.post('/', async (c) => {
   const tpl = templates.adminLowStock({ products: lowStock.map((p) => ({ name: p.name, stock_count: p.display_stock })) })
   const result = await NotificationService.sendAdminAlert({
     template: tpl.template,
-    title: 'Stok Kritis',
+    title: 'Stok Kritis (Digest Pagi)',
     message: tpl.waText.replace(/^\[[^\]]+\]\n\n/, ''),
   })
 
