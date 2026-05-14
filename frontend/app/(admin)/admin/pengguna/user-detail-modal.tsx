@@ -130,7 +130,7 @@ export function UserDetailModal({ open, userId, onClose }: Props) {
       onClose={onClose}
       title={user?.full_name ?? user?.phone_wa ?? 'Detail Pengguna'}
       description={user?.email ?? (user ? '— belum verifikasi email —' : 'Memuat data...')}
-      size="xl"
+      size="3xl"
       rightSlot={
         user ? (
           <div className="flex flex-wrap items-center gap-1.5">

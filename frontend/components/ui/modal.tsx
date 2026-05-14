@@ -3,13 +3,15 @@
 import { useEffect } from 'react'
 import { X } from 'lucide-react'
 
-type Size = 'sm' | 'md' | 'lg' | 'xl'
+type Size = 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl'
 
 const SIZE_CLASS: Record<Size, string> = {
   sm: 'max-w-sm',
   md: 'max-w-md',
   lg: 'max-w-lg',
   xl: 'max-w-2xl',
+  '2xl': 'max-w-4xl', // 896px — untuk modal dengan banyak section (e.g. user detail)
+  '3xl': 'max-w-6xl', // 1152px — untuk page-style modal dengan grid kompleks
 }
 
 type Props = {
