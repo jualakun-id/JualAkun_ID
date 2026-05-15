@@ -10,6 +10,7 @@ import {
   parsePhoneE164,
   isValidLocal,
   getCountry,
+  getPrefixHint,
   type CountryCode,
 } from '@/components/ui/phone-input'
 import { useToast } from '@/components/toast'
@@ -63,9 +64,7 @@ export function ProfileForm({ email, fullName, phoneWa, referralCode }: Props) {
         hint="Wajib aktif — semua notifikasi pesanan & klaim garansi dikirim ke sini"
         error={
           touchedPhone && !phoneValid
-            ? `Nomor ${getCountry(phoneCode).label} tidak valid (mulai dari ${
-                phoneCode === '62' ? '8' : '1'
-              })`
+            ? `Nomor ${getCountry(phoneCode).label} tidak valid (mulai dari ${getPrefixHint(phoneCode)})`
             : undefined
         }
       >

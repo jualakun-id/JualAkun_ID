@@ -10,6 +10,7 @@ import {
   buildPhoneE164,
   isValidLocal,
   getCountry,
+  getPrefixHint,
   type CountryCode,
 } from '@/components/ui/phone-input'
 import { api } from '@/lib/api'
@@ -171,9 +172,7 @@ export function RegisterForm({ referralCode }: Props) {
         state={fieldState(phoneValid, touched.phoneWa)}
         error={
           touched.phoneWa && !phoneValid
-            ? `Nomor ${getCountry(phoneCode).label} tidak valid (mulai dari ${
-                phoneCode === '62' ? '8 (mis. 812xxxxxxxx)' : '1 (mis. 12xxxxxxx)'
-              })`
+            ? `Nomor ${getCountry(phoneCode).label} tidak valid (mulai dari ${getPrefixHint(phoneCode)})`
             : undefined
         }
         hint="Nomor wajib aktif WhatsApp — semua info pesanan & klaim dikirim ke sini."

@@ -30,8 +30,8 @@ type SessionPayload = {
 function normalizePhoneWa(input?: string): string | null {
   if (!input) return null
   const digits = input.replace(/\D/g, '')
-  // Already normalized E.164 (62 = Indonesia, 60 = Malaysia, etc.)
-  if (digits.startsWith('62') || digits.startsWith('60')) return digits
+  // Already normalized E.164 (62 = Indonesia, 60 = Malaysia, 82 = Korea)
+  if (digits.startsWith('62') || digits.startsWith('60') || digits.startsWith('82')) return digits
   // Fallback Indonesia local format (untuk backward compat)
   if (digits.startsWith('0')) return `62${digits.slice(1)}`
   if (digits.startsWith('8')) return `62${digits}`

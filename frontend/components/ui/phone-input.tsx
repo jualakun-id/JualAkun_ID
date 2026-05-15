@@ -4,7 +4,7 @@ import { useId } from 'react'
 import { ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-export type CountryCode = '62' | '60'
+export type CountryCode = '62' | '60' | '82'
 
 export const COUNTRIES: Array<{
   code: CountryCode
@@ -19,6 +19,7 @@ export const COUNTRIES: Array<{
 }> = [
   { code: '62', dial: '+62', flag: '🇮🇩', label: 'Indonesia', example: '812xxxxxxxx', minLocal: 9, maxLocal: 12 },
   { code: '60', dial: '+60', flag: '🇲🇾', label: 'Malaysia',   example: '12xxxxxxx',  minLocal: 9, maxLocal: 10 },
+  { code: '82', dial: '+82', flag: '🇰🇷', label: 'Korea',      example: '10xxxxxxxx', minLocal: 9, maxLocal: 10 },
 ]
 
 export function getCountry(code: CountryCode) {
@@ -132,8 +133,9 @@ export function PhoneInput({
 
 /**
  * Validate that local digits match country's expected length & starts dgn digit valid.
- * Untuk ID: mobile prefix 8 (62 + 8xx...)
- * Untuk MY: mobile prefix 1 (60 + 1xx...)
+ * Untuk ID: mobile prefix 8  (62 + 8xx...)
+ * Untuk MY: mobile prefix 1  (60 + 1xx...)
+ * Untuk KR: mobile prefix 10 (82 + 10xxxxxxxx)
  */
 export function isValidLocal(code: CountryCode, local: string): boolean {
   const digits = local.replace(/\D/g, '').replace(/^0+/, '')
@@ -141,5 +143,18 @@ export function isValidLocal(code: CountryCode, local: string): boolean {
   if (digits.length < country.minLocal || digits.length > country.maxLocal) return false
   if (code === '62' && !digits.startsWith('8')) return false
   if (code === '60' && !digits.startsWith('1')) return false
+  if (code === '82' && !digits.startsWith('10')) return false
   return true
+}
+
+/**
+ * Hint format prefix per negara untuk error message konsisten.
+ * Misal: "8 (mis. 812xxxxxxxx)" untuk Indonesia, "10 (mis. 10xxxxxxxx)" untuk Korea.
+ */
+export function getPrefixHint(code: CountryCode): string {
+  const country = getCountry(code)
+  if (code === '62') return `8 (mis. ${country.example})`
+  if (code === '60') return `1 (mis. ${country.example})`
+  if (code === '82') return `10 (mis. ${country.example})`
+  return country.example
 }

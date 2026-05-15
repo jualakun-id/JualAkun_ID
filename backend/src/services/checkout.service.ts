@@ -43,8 +43,8 @@ type CouponRpcResult = {
  */
 function normalizePhoneWa(input: string): string | null {
   const digits = input.replace(/\D/g, '')
-  // E.164 normalized (62 = ID, 60 = MY, dst.)
-  if (digits.startsWith('62') || digits.startsWith('60')) return digits
+  // E.164 normalized (62 = ID, 60 = MY, 82 = KR)
+  if (digits.startsWith('62') || digits.startsWith('60') || digits.startsWith('82')) return digits
   // Fallback Indonesia local format
   if (digits.startsWith('0')) return `62${digits.slice(1)}`
   if (digits.startsWith('8')) return `62${digits}`

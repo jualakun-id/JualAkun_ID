@@ -12,6 +12,7 @@ import {
   buildPhoneE164,
   isValidLocal,
   getCountry,
+  getPrefixHint,
 } from '@/components/ui/phone-input'
 import { api } from '@/lib/api'
 import { formatRupiah } from '@/lib/utils'
@@ -140,7 +141,7 @@ export function CheckoutClient({ product }: { product: Product }) {
             </div>
             {phoneTouched && phoneFilled && !phoneValid ? (
               <p className="mt-1.5 text-xs text-danger font-bold">
-                Nomor {getCountry(phoneCode).label} tidak valid (mulai dari {phoneCode === '62' ? '8 (mis. 812xxxxxxxx)' : '1 (mis. 12xxxxxxx)'})
+                Nomor {getCountry(phoneCode).label} tidak valid (mulai dari {getPrefixHint(phoneCode)})
               </p>
             ) : (
               <p className="mt-1.5 text-xs text-ink-subtle font-medium">
