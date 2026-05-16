@@ -50,13 +50,16 @@ customerRemindersCron.post('/', async (c) => {
 
   let guaranteeSent = 0
   for (const o of (guaranteeCandidates ?? []) as Candidate[]) {
-    // Dedup: skip kalau sudah pernah dikirim untuk order ini
+    // Dedup: skip kalau ada ANY notif log (sent/failed/pending) untuk
+    // template+order ini. STRICT dedup — jangan filter by status karena
+    // kalau status='failed' atau 'pending', tetap counts sebagai sudah
+    // mencoba kirim → jangan retry otomatis (admin manual resend kalau perlu).
     const { data: prev } = await supabase
       .from('notifications_log')
       .select('id')
       .eq('order_id', o.id)
       .eq('template', 'guarantee_expiring_soon')
-      .eq('status', 'sent')
+      .limit(1)
       .maybeSingle()
     if (prev) continue
 
@@ -123,19 +126,19 @@ customerRemindersCron.post('/', async (c) => {
 
   let reviewSent = 0
   for (const o of (reviewCandidates ?? []) as Candidate[]) {
-    // Dedup
+    // Dedup STRICT: ANY notif log (regardless status) → skip
     const { data: prev } = await supabase
       .from('notifications_log')
       .select('id')
       .eq('order_id', o.id)
       .eq('template', 'review_reminder')
-      .eq('status', 'sent')
+      .limit(1)
       .maybeSingle()
     if (prev) continue
 
-    // Skip kalau buyer sudah kasih review
+    // Skip kalau buyer sudah kasih review (FIX: table = product_reviews, bukan reviews)
     const { data: existingReview } = await supabase
-      .from('reviews')
+      .from('product_reviews')
       .select('id')
       .eq('order_id', o.id)
       .maybeSingle()
