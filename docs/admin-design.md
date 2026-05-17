@@ -205,9 +205,9 @@ X total · Y pending · Z delivery_failed
 
 | # | Order # | Buyer | Produk | Total | Payment | Status | Waktu | Aksi |
 |---|---------|-------|--------|-------|---------|--------|-------|------|
-| 1 | JA-001 | budi@gmail.com | Netflix Premium | Rp 47.500 | GoPay ✓ | 🟢 Terkirim | 2 mnt lalu | ⋯ |
-| 2 | JA-002 | siti@gmail.com | Spotify 3 Bln | Rp 89.000 | QRIS ⏳ | 🟡 Pending | 35 mnt lalu | ⋯ |
-| 3 | JA-003 | andi@gmail.com | ChatGPT Plus | Rp 155.000 | BCA ✓ | 🔴 Gagal Kirim | 12 mnt lalu | ⋯ |
+| 1 | JA-001 | budi@gmail.com | Netflix Premium | Rp 47.627 | QRIS ✓ | 🟢 Terkirim | 2 mnt lalu | ⋯ |
+| 2 | JA-002 | siti@gmail.com | Spotify 3 Bln | Rp 89.183 | QRIS ⏳ | 🟡 Verifying | 35 mnt lalu | ⋯ |
+| 3 | JA-003 | andi@gmail.com | ChatGPT Plus | Rp 155.412 | QRIS ✓ | 🔴 Gagal Kirim | 12 mnt lalu | ⋯ |
 
 **Highlight otomatis:**
 - Row merah jika `delivery_failed`
@@ -239,9 +239,9 @@ X total · Y pending · Z delivery_failed
 │  Kredit: -                 │  LOG NOTIFIKASI             │
 │                            │  ✅ WA order_created        │
 │  PAYMENT DETAIL            │  ✅ Email order_created      │
-│  Provider: Midtrans        │  ❌ WA account_delivered    │
-│  Method: BCA Virtual Acct  │  ❌ Email account_delivered │
-│  Transaction ID: MID-xxx   │                             │
+│  Provider: Manual QRIS     │  ❌ WA account_delivered    │
+│  Method: GoPay (verify mn) │  ❌ Email account_delivered │
+│  Suffix: 127               │                             │
 │  Paid at: 10:15:32         │                             │
 ├────────────────────────────┴─────────────────────────────┤
 │  TIMELINE                                                │

@@ -225,7 +225,7 @@ export class CheckoutService {
         orderNumber: insertedOrder.order_number,
         productName: product.name,
         totalIdr: finalTotalIdr,
-        snapUrl: orderDetailUrl, // link ke order detail (bukan popup payment)
+        orderDetailUrl,
       })
       if (profile?.phone_wa) {
         await NotificationService.sendWhatsApp({

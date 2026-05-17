@@ -22,8 +22,8 @@ npm run dev                       # wrangler dev → http://localhost:8787
 - `src/index.ts` — entry, middleware stack, route mount, scheduled() handler
 - `src/middleware/` — env (Bindings → process.env), cors, rate-limit, auth, admin, cron
 - `src/routes/` — endpoint groups (publik + auth-required + admin)
-- `src/services/` — business logic (payment, notification, crypto, delivery)
-- `src/lib/` — Supabase client, Duitku client (inquiry + MD5 signature)
+- `src/services/` — business logic (checkout, manual-payment, notification, crypto, delivery)
+- `src/lib/` — Supabase client, QRIS dinamis builder (TLV inject + CRC16)
 - `src/types/` — `Bindings`, `Variables`, `ApiError`
 
 ## Konvensi
@@ -31,9 +31,9 @@ npm run dev                       # wrangler dev → http://localhost:8787
 - Semua env via `c.env` di-bridge ke `process.env` lewat `envMiddleware` (Appendix E.3)
 - Response sukses: `c.json({ data: ... })` — error: `c.json({ ok: false, code, message }, status)` via `ApiError`
 - Buyer endpoints pakai `createUserClient(jwt)` (RLS aktif)
-- Admin / cron / webhook pakai `createAdminClient()` (bypass RLS)
+- Admin / cron pakai `createAdminClient()` (bypass RLS)
 - Stok akun WAJIB lewat RPC `deliver_order_account` — jangan UPDATE langsung
-- Callback Duitku (`POST /payment/callback`) wajib verifikasi MD5 signature dulu (formula `MD5(merchantCode + amount + merchantOrderId + apiKey)`), body x-www-form-urlencoded, selalu return 200
+- Manual payment: `ManualPaymentService.setupManualPayment(order_id)` generate unique 3-digit suffix + QRIS Dinamis dari `QRIS_STATIC_PAYLOAD`. Admin verify mutasi GoPay manual via `/admin/orders/:id/confirm-payment`
 
 ## Cron triggers
 

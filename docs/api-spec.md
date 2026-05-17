@@ -236,7 +236,7 @@ Detail satu produk.
 ### `POST /checkout/create-order`
 🔐 Auth
 
-Buat order dan dapatkan Midtrans Snap token.
+Buat order + generate QRIS Dinamis untuk manual payment via GoPay Saya.
 
 **Body:**
 ```json
@@ -253,38 +253,35 @@ Buat order dan dapatkan Midtrans Snap token.
 {
   "data": {
     "order_id": "uuid",
-    "order_number": "JA-20260509-00001",
+    "order_number": "JA-20260509-AB12C",
     "amount_idr": 47500,
     "discount_idr": 4750,
     "credit_used_idr": 0,
-    "total_idr": 42750,
-    "snap_token": "abc123...",
-    "snap_url": "https://app.midtrans.com/snap/v2/vtweb/abc123",
-    "expires_at": "2026-05-10T10:00:00Z"
+    "total_idr": 42877,
+    "unique_suffix": 127,
+    "qris_dynamic_payload": "00020101021226...6304XXXX",
+    "expires_at": "2026-05-09T22:00:00Z"
   }
 }
 ```
+
+Catatan:
+- `total_idr` sudah include `unique_suffix` (3-digit) untuk identifikasi mutasi di app GoPay admin
+- `qris_dynamic_payload` di-render jadi QR code di frontend (pakai library `qrcode` atau sejenisnya)
+- Order expire 12 jam dari `created_at`
 
 **Errors:** `PRODUCT_NOT_FOUND`, `OUT_OF_STOCK`, `INSUFFICIENT_CREDITS`
 
 ---
 
-### `POST /payment/webhook`
-✅ Public (validated via Midtrans signature)
+### `POST /orders/:id/mark-paid`
+🔐 Auth
 
-Midtrans payment notification webhook.
+Buyer klik "Saya Sudah Bayar" setelah transfer QRIS — pindah status `pending_payment` → `verifying` supaya admin tahu order ini menunggu di-verify.
 
-**Body:** Midtrans notification object (raw)
+**Response 200:** `{ "data": { "ok": true, "status": "verifying" } }`
 
-**Flow backend:**
-1. Validasi signature Midtrans
-2. Cek `transaction_status` (settlement → paid)
-3. Update order status → `paid`
-4. Panggil RPC `deliver_order_account(order_id)`
-5. Jika delivery sukses → kirim notif WA + email
-6. Jika delivery gagal → alert admin, queue refund
-
-**Response 200:** `{ "ok": true }` (selalu 200 agar Midtrans tidak retry)
+**Errors:** `ORDER_NOT_FOUND`, `INVALID_STATUS_TRANSITION`
 
 ---
 
@@ -591,10 +588,32 @@ Upload CSV. `Content-Type: multipart/form-data`
 
 ---
 
+### `POST /admin/orders/:id/confirm-payment`
+🛡️ Admin
+
+Konfirmasi mutasi GoPay sudah masuk → status `verifying` → `paid` → auto-trigger `deliver_order_account(order_id)` → status `delivered` + kirim notif WA & email ke buyer.
+
+**Response 200:** `{ "data": { "ok": true, "status": "delivered" } }`
+
+**Errors:** `ORDER_NOT_FOUND`, `INVALID_STATUS_TRANSITION`, `STOCK_EMPTY`
+
+---
+
+### `POST /admin/orders/:id/reject-payment`
+🛡️ Admin
+
+Reject order yang amount-nya tidak match mutasi (atau tidak ada mutasi sama sekali). Status → `cancelled` + notif buyer dengan alasan.
+
+**Body:** `{ "reason": "Amount transfer tidak sesuai" }`
+
+**Response 200:** `{ "data": { "ok": true, "status": "cancelled" } }`
+
+---
+
 ### `POST /admin/orders/:id/deliver`
 🛡️ Admin
 
-Manual trigger pengiriman akun (fallback jika auto-deliver gagal).
+Manual trigger pengiriman akun (fallback jika auto-deliver pas confirm-payment gagal karena stok kosong sesaat).
 
 **Response 200:** `{ "data": { "ok": true, "delivered": true } }`
 
@@ -716,5 +735,5 @@ Retry notif WA/email yang `status = 'failed'`.
 | `GUARANTEE_EXPIRED` | 400 | Masa garansi sudah habis |
 | `TICKET_ALREADY_EXISTS` | 409 | Tiket untuk order ini sudah ada |
 | `REVIEW_ALREADY_EXISTS` | 409 | Review sudah pernah dibuat |
-| `INVALID_WEBHOOK_SIGNATURE` | 400 | Signature Midtrans tidak valid |
+| `INVALID_STATUS_TRANSITION` | 409 | Status transition tidak diperbolehkan (e.g. paid → pending) |
 | `INTERNAL_ERROR` | 500 | Server error |

@@ -17,20 +17,20 @@ function shell(body: string, footer = 'Terima kasih telah berbelanja di Jualakun
 }
 
 export const templates = {
-  orderCreated: (p: { fullName: string; orderNumber: string; productName: string; totalIdr: number; snapUrl: string }) => ({
+  orderCreated: (p: { fullName: string; orderNumber: string; productName: string; totalIdr: number; orderDetailUrl: string }) => ({
     template: 'order_created',
     waText:
       `Halo ${p.fullName},\n\n` +
       `Pesanan *${p.orderNumber}* untuk _${p.productName}_ sudah dibuat.\n` +
       `Total: Rp ${p.totalIdr.toLocaleString('id-ID')}\n\n` +
-      `Lanjutkan pembayaran: ${p.snapUrl}\n\n` +
+      `Lanjutkan pembayaran: ${p.orderDetailUrl}\n\n` +
       `Pesanan akan kedaluwarsa dalam 24 jam.`,
     emailSubject: `Pesanan ${p.orderNumber} — Lanjutkan Pembayaran`,
     emailHtml: shell(
       `<p>Halo <strong>${p.fullName}</strong>,</p>
        <p>Pesanan <strong>${p.orderNumber}</strong> untuk <em>${p.productName}</em> sudah dibuat.</p>
        <p>Total: <strong>Rp ${p.totalIdr.toLocaleString('id-ID')}</strong></p>
-       <p><a href="${p.snapUrl}" style="display:inline-block;background:#1296A8;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600">Lanjutkan Pembayaran</a></p>
+       <p><a href="${p.orderDetailUrl}" style="display:inline-block;background:#1296A8;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600">Lanjutkan Pembayaran</a></p>
        <p style="color:#6B7280;font-size:13px">Pesanan akan kedaluwarsa dalam 24 jam.</p>`,
     ),
   }),

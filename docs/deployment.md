@@ -9,9 +9,9 @@
 
 | Layanan | Akun & Setup |
 |---|---|
-| **Supabase** | Project sudah dibuat, semua 13 migration di `supabase/migrations/` sudah `supabase db push` |
+| **Supabase** | Project sudah dibuat, semua migration di `supabase/migrations/` sudah `supabase db push` |
 | **Cloudflare** | Akun aktif, **Workers Paid plan ($5/bulan)** — wajib karena cron triggers tidak jalan di Free plan |
-| **Midtrans** | Akun Sandbox/Production, sudah dapat Server Key + Client Key |
+| **GoPay Saya** | Admin punya akun GoPay Saya merchant aktif, QRIS Statis sudah di-print/decode payload (raw text untuk `QRIS_STATIC_PAYLOAD`) |
 | **Resend** | Domain sudah verified, API key sudah dibuat |
 | **WAHA** | Instance self-hosted sudah jalan (VPS/Docker), session WhatsApp sudah scan QR & connected |
 | **Vercel** | Akun aktif, repo sudah di-push ke GitHub/GitLab/Bitbucket |
@@ -45,7 +45,7 @@ Semua harus exit 0. Jangan lanjut kalau ada error.
 
 ### 2.1 Set Secrets
 
-13 secret wajib di-set sebelum deploy. Jalankan satu per satu — wrangler akan minta value via prompt:
+Secret wajib di-set sebelum deploy. Jalankan satu per satu — wrangler akan minta value via prompt:
 
 ```powershell
 cd backend
@@ -54,14 +54,15 @@ npx wrangler secret put SUPABASE_URL
 npx wrangler secret put SUPABASE_ANON_KEY
 npx wrangler secret put SUPABASE_SERVICE_ROLE_KEY
 npx wrangler secret put ENCRYPTION_KEY            # 32 karakter random, JANGAN rotate
-npx wrangler secret put MIDTRANS_SERVER_KEY
-npx wrangler secret put MIDTRANS_CLIENT_KEY
+npx wrangler secret put QRIS_STATIC_PAYLOAD       # raw payload QRIS Statis admin (decode via zxing.org)
 npx wrangler secret put WAHA_BASE_URL
 npx wrangler secret put WAHA_API_KEY
 npx wrangler secret put WAHA_SESSION              # default biasanya "default"
 npx wrangler secret put RESEND_API_KEY
 npx wrangler secret put RESEND_FROM_EMAIL
 npx wrangler secret put ADMIN_WHATSAPP_NUMBER     # format 62xxx@c.us
+npx wrangler secret put ADMIN_EMAIL               # email admin untuk fallback alert
+npx wrangler secret put SUPPLIER_CANBOSO_API_KEY  # untuk auto-purchase supplier
 npx wrangler secret put CRON_SECRET               # random string buat gate /api/cron/*
 ```
 
@@ -74,7 +75,8 @@ npx wrangler secret put CRON_SECRET               # random string buat gate /api
 
 Catatan:
 - `ENCRYPTION_KEY` dipakai untuk encrypt `account_stock.credentials_enc`. **Jangan pernah rotate** tanpa migrate ulang semua data — credential lama bakal corrupt.
-- `MIDTRANS_IS_PRODUCTION` dan `CORS_ORIGINS` ada di `wrangler.toml` (bukan secret). Edit langsung kalau perlu ubah.
+- `QRIS_STATIC_PAYLOAD` adalah raw payload dari QRIS Statis admin (cek dengan decode QR fisik via [zxing.org/w/decode.jspx](https://zxing.org/w/decode.jspx)). Backend inject amount + suffix → generate QRIS Dinamis per order.
+- `CORS_ORIGINS` ada di `wrangler.toml` (bukan secret). Edit langsung kalau perlu ubah.
 
 ### 2.2 Verifikasi Secrets
 
@@ -82,7 +84,7 @@ Catatan:
 npx wrangler secret list
 ```
 
-Harus muncul 13 secret di atas.
+Harus muncul semua secret di atas.
 
 ### 2.3 Deploy
 
@@ -109,14 +111,6 @@ curl https://api.jualakun.id/catalog
 curl -X POST https://api.jualakun.id/api/cron/expire-orders
 ```
 
-### 2.6 Konfigurasi Webhook Midtrans
-
-Login Midtrans dashboard → Settings → Configuration → **Payment Notification URL**:
-
-```
-https://api.jualakun.id/payment/webhook
-```
-
 ---
 
 ## 3. Deploy Frontend (Vercel)
@@ -132,18 +126,16 @@ https://api.jualakun.id/payment/webhook
 
 ### 3.2 Set Environment Variables
 
-Di tab **Environment Variables** sebelum first deploy, tambahkan 6 var ini untuk **semua environment** (Production, Preview, Development):
+Di tab **Environment Variables** sebelum first deploy, tambahkan 4 var ini untuk **semua environment** (Production, Preview, Development):
 
 | Variable | Value |
 |---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | `https://<project>.supabase.co` |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | (dari Supabase → Settings → API → anon key) |
 | `NEXT_PUBLIC_API_URL` | `https://api.jualakun.id` |
-| `NEXT_PUBLIC_MIDTRANS_CLIENT_KEY` | (dari Midtrans dashboard) |
-| `NEXT_PUBLIC_MIDTRANS_IS_PRODUCTION` | `false` (sandbox) atau `true` (live) |
 | `NEXT_PUBLIC_SITE_URL` | `https://jualakun.id` |
 
-Catatan: **JANGAN** masukkan `SUPABASE_SERVICE_ROLE_KEY`, `MIDTRANS_SERVER_KEY`, atau `ENCRYPTION_KEY` di Vercel — semua server-secret HANYA di backend Cloudflare.
+Catatan: **JANGAN** masukkan `SUPABASE_SERVICE_ROLE_KEY`, `QRIS_STATIC_PAYLOAD`, atau `ENCRYPTION_KEY` di Vercel — semua server-secret HANYA di backend Cloudflare.
 
 ### 3.3 Deploy
 
@@ -170,7 +162,7 @@ Re-deploy: `npx wrangler deploy`.
 - Buka `/produk/<slug-apapun>` — detail produk muncul
 - Coba register di `/daftar` — email verifikasi terkirim
 - Login di `/masuk` → redirect ke `/dashboard`
-- Klik produk → tombol "Beli Sekarang" → checkout → Snap Midtrans muncul
+- Klik produk → tombol "Beli Sekarang" → checkout → QRIS Dinamis muncul + timer 12 jam aktif
 
 ---
 
@@ -210,9 +202,9 @@ Login ulang — `/admin` sekarang accessible.
 - [ ] Register + email verifikasi sampai inbox
 - [ ] Login → dashboard accessible
 - [ ] Admin panel accessible setelah role di-upgrade
-- [ ] Checkout end-to-end: pilih produk → Snap muncul → bayar (sandbox) → status `paid` di admin
-- [ ] Webhook Midtrans masuk (cek `notifications_log` dan `orders.payment_log`)
-- [ ] Delivery otomatis: order `paid` → status berubah `delivered` → credentials muncul di buyer dashboard
+- [ ] Checkout end-to-end: pilih produk → QRIS Dinamis muncul → buyer klik "Saya Sudah Bayar" → status `verifying` di admin
+- [ ] Admin confirm payment: status `paid` → auto-trigger `deliver_order_account` → status `delivered`
+- [ ] Credentials muncul di buyer dashboard setelah delivered
 - [ ] WA notif ke buyer (cek `notifications_log` channel `whatsapp`)
 - [ ] Email notif ke buyer (cek `notifications_log` channel `email`)
 - [ ] Cron `expire-orders` jalan (cek di Cloudflare dashboard → Workers → Triggers → Logs setelah ~5 menit)
@@ -243,8 +235,8 @@ Vercel dashboard → Deployments → cari deploy lama yang sehat → **⋯ → P
 |---|---|
 | Homepage error "Failed to fetch" | `NEXT_PUBLIC_API_URL` di Vercel + CORS origin di backend |
 | Login redirect loop | Supabase **Site URL** + **Redirect URLs** |
-| Snap Midtrans tidak muncul | `NEXT_PUBLIC_MIDTRANS_CLIENT_KEY` salah, atau `IS_PRODUCTION` mismatch |
-| Webhook 401 | Signature SHA-512 salah → cek `MIDTRANS_SERVER_KEY` di backend |
+| QRIS Dinamis tidak muncul / payload kosong | `QRIS_STATIC_PAYLOAD` belum di-set atau format invalid (cek CRC16 trailing 4-char) |
+| Amount mismatch di QRIS | Bug di `lib/qris.ts` (TLV inject / CRC recalc) — re-decode payload via zxing.org untuk konfirmasi |
 | Cron tidak jalan | Workers Paid plan belum aktif |
 | WA tidak terkirim | WAHA session disconnected → buka WAHA dashboard, scan ulang QR |
 | Email tidak masuk | Resend domain belum verified, atau `RESEND_FROM_EMAIL` bukan domain yang verified |
@@ -258,8 +250,7 @@ Tidak wajib untuk deploy pertama, tapi catat untuk iterasi berikutnya:
 
 - [ ] `vercel.json` dengan security headers (HSTS, CSP, X-Frame-Options)
 - [ ] Sentry / PostHog integration (env var sudah ada di `.env.example`)
-- [ ] Cloudflare WAF rules untuk `/payment/webhook` (rate limit per IP)
+- [ ] Cloudflare WAF rules untuk endpoint admin (rate limit per IP)
 - [ ] Backup Supabase otomatis (Supabase Pro plan)
-- [ ] `MIDTRANS_IS_PRODUCTION=true` + replace key Sandbox → Production
 - [ ] Workers Analytics + Logpush ke storage
 - [ ] Status page (StatusPage / BetterStack)

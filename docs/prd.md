@@ -32,7 +32,7 @@ Secara strategis, platform ini mengisi gap di pasar Indonesia di mana tidak ada 
 | Bahasa | Bahasa Indonesia |
 | Target Release | 2026-Q3 (MVP) |
 | Tech Stack | Next.js 15 + Vercel (frontend), Hono + Cloudflare Workers (backend API), Supabase (database + auth + storage) |
-| Payment | Midtrans Payment Gateway |
+| Payment | Manual QRIS via GoPay Saya (admin verifikasi mutasi manual) |
 | Notifikasi | WAHA (self-hosted WhatsApp HTTP API) + Resend (email) |
 | PM Owner | Zeo Studio |
 
@@ -75,9 +75,9 @@ Secara strategis, platform ini mengisi gap di pasar Indonesia di mana tidak ada 
 3. Halaman detail produk: baca deskripsi, durasi, garansi, harga
 4. Klik "Beli Sekarang" → diarahkan ke checkout
 5. (Jika belum login) Sistem minta login/daftar — bisa via email atau Google OAuth
-6. Halaman checkout: konfirmasi produk, masukkan data (jika perlu), pilih metode bayar
-7. User dibawa ke halaman pembayaran Midtrans
-8. Setelah pembayaran dikonfirmasi Midtrans (webhook), sistem auto-kirim akun
+6. Halaman checkout: konfirmasi produk, masukkan data (jika perlu)
+7. Order dibuat → halaman pembayaran tampilkan QRIS Dinamis (amount + unique 3-digit suffix) untuk di-scan via GoPay/QRIS-supported e-wallet
+8. Setelah admin verifikasi mutasi GoPay manual & konfirmasi di admin panel, sistem auto-kirim akun
 9. User menerima notifikasi WhatsApp + email "Pesanan kamu siap!"
 10. User masuk dashboard → lihat detail akun (username/password/note)
 11. User klik "Konfirmasi Diterima" → garansi aktif mulai hari ini
@@ -142,15 +142,15 @@ Secara strategis, platform ini mengisi gap di pasar Indonesia di mana tidak ada 
 #### Halaman Checkout (`/checkout`)
 - Ringkasan pesanan: nama produk, durasi, harga
 - Form data pembeli: email (pre-fill jika login), nomor WhatsApp (untuk notifikasi)
-- Pilih metode pembayaran: Bank Transfer (BCA, Mandiri, BNI, BRI), GoPay, OVO, QRIS, ShopeePay, Indomaret, Alfamart
+- Metode pembayaran: **QRIS Dinamis** (scan via GoPay, OVO, Dana, ShopeePay, atau e-wallet QRIS-compatible)
 - Input kode referral (opsional) — tampilkan diskon jika valid
-- Total harga final (setelah diskon referral jika ada)
-- Tombol "Bayar Sekarang" → redirect ke Midtrans payment page
+- Total harga final (setelah diskon referral jika ada, + unique 3-digit suffix untuk identifikasi mutasi admin)
+- Tombol "Lanjut Pembayaran" → tampilkan halaman QR code untuk di-scan buyer
 - Halaman batas waktu: tampilkan timer countdown (24 jam) untuk menyelesaikan pembayaran
 
 #### Halaman Konfirmasi (`/pesanan/[id]`)
-- Tampil segera setelah redirect dari Midtrans
-- Status: "Menunggu Konfirmasi Pembayaran" / "Pembayaran Dikonfirmasi" / "Akun Terkirim"
+- Tampil segera setelah order dibuat (sebelum buyer scan QRIS)
+- Status: "Menunggu Pembayaran" / "Menunggu Verifikasi Admin" / "Pembayaran Dikonfirmasi" / "Akun Terkirim"
 - Detail pesanan
 - Instruksi: "Cek email dan WhatsApp kamu untuk detail akun"
 - Link ke dashboard
@@ -197,16 +197,18 @@ Secara strategis, platform ini mengisi gap di pasar Indonesia di mana tidak ada 
 
 **Business rule:**
 - Order dibuat dengan status `pending_payment` setelah user submit checkout
-- Order expired otomatis setelah 24 jam jika belum dibayar
-- Setelah webhook Midtrans konfirmasi pembayaran, status → `paid` → trigger pengiriman akun
-- Pengiriman akun: ambil 1 akun dari pool stok (FIFO), assign ke order, kirim via email + simpan di dashboard
+- Manual payment: backend inject unique 3-digit suffix ke `total_idr` + generate QRIS Dinamis dari `QRIS_STATIC_PAYLOAD` admin
+- Order expired otomatis setelah 12 jam jika belum dibayar (cron `expire-orders`)
+- Buyer transfer via QRIS, lalu klik "Saya Sudah Bayar" → status `verifying`
+- Admin cek mutasi GoPay manual, konfirmasi di `/admin/pesanan` → status `paid` → trigger pengiriman akun
+- Pengiriman akun: ambil 1 akun dari pool stok (FIFO), assign ke order, kirim via WA + email + simpan di dashboard
 - Setelah pengiriman berhasil, status → `delivered`
-- Garansi mulai aktif saat user klik "Konfirmasi Diterima" (atau otomatis setelah 48 jam)
+- Garansi mulai aktif saat user klik "Konfirmasi Diterima" (atau otomatis setelah 48 jam) → status `confirmed`
 
 **Edge cases:**
-- Webhook Midtrans datang duplikat: idempotency check via `order_id`
+- Collision amount: unique partial index pada `(total_idr, status IN pending|verifying)` cegah dua order aktif dengan amount sama (suffix di-regenerate)
 - Pengiriman gagal (stok kosong mendadak): order status → `delivery_failed`, alert admin, refund otomatis dalam 1x24 jam
-- Payment sukses tapi webhook tidak masuk: admin bisa manual trigger konfirmasi
+- Buyer transfer tapi amount tidak match: admin reject → status `cancelled`, buyer diminta order ulang
 
 #### Referral System
 
@@ -257,10 +259,10 @@ Cron handler dipanggil via `scheduled(event, env, ctx)` di Worker entry point. P
 | **Checkout** | [x] Checkout **wajib login** — tidak ada guest checkout. Redirect ke `/masuk` jika belum login. Alasan: credential akun disimpan di dashboard, referral & garansi butuh user identity. |
 | | [ ] Kode referral valid menampilkan diskon sebelum konfirmasi bayar |
 | | [ ] Kode referral invalid menampilkan pesan error yang jelas |
-| | [ ] Order dibuat dan tersimpan sebelum user redirect ke Midtrans |
-| **Payment** | [ ] Webhook Midtrans diproses dalam < 30 detik setelah pembayaran |
-| | [ ] Duplikat webhook tidak menyebabkan duplikat pengiriman akun |
-| | [ ] Order expired setelah 24 jam otomatis dibatalkan |
+| | [ ] Order dibuat & QRIS Dinamis ter-generate sebelum tampil ke buyer |
+| **Payment** | [ ] Admin verifikasi mutasi GoPay dalam < 30 menit (target SLA, manual) |
+| | [ ] Unique 3-digit suffix cegah collision: dua order aktif tidak boleh punya `total_idr` sama |
+| | [ ] Order expired setelah 12 jam otomatis dibatalkan |
 | **Pengiriman Akun** | [ ] Akun terkirim ke email dan tersedia di dashboard dalam < 5 menit setelah bayar dikonfirmasi |
 | | [ ] Satu akun dari pool tidak bisa dikirim ke dua pembeli berbeda (concurrent safety) |
 | | [ ] Jika stok kosong saat delivery, admin langsung dapat alert dan order masuk status `delivery_failed` |
@@ -286,8 +288,8 @@ Cron handler dipanggil via `scheduled(event, env, ctx)` di Worker entry point. P
 | `product_viewed` | User buka detail produk | `product_id`, `product_name`, `category`, `price` |
 | `add_to_checkout` | User klik "Beli Sekarang" | `product_id`, `variant`, `price` |
 | `checkout_started` | User tiba di halaman checkout | `order_id`, `total_price` |
-| `payment_initiated` | User klik "Bayar Sekarang" | `order_id`, `payment_method`, `total_price` |
-| `payment_completed` | Webhook Midtrans sukses | `order_id`, `payment_method`, `total_price` |
+| `payment_initiated` | User klik "Lanjut Pembayaran" (QRIS muncul) | `order_id`, `total_price` |
+| `payment_completed` | Admin konfirmasi mutasi GoPay (`paid`) | `order_id`, `total_price` |
 | `order_delivered` | Akun berhasil dikirim ke buyer | `order_id`, `product_id`, `delivery_time_seconds` |
 | `guarantee_claimed` | User submit klaim garansi | `order_id`, `product_id`, `reason` |
 | `referral_used` | Kode referral valid dipakai | `referrer_user_id`, `order_id` |
@@ -311,13 +313,13 @@ Cron handler dipanggil via `scheduled(event, env, ctx)` di Worker entry point. P
 - Admin routes dilindungi middleware role-based (`admin` role), chained setelah `authMiddleware`
 - Middleware ordering: `envMiddleware → corsMiddleware → rateLimitMiddleware → authMiddleware → adminMiddleware`
 - Credential akun disimpan terenkripsi dengan **AES-256-GCM + random IV per enkripsi** (IV di-embed dalam ciphertext base64) — bukan AES-256-CBC. Ini mencegah pattern analysis meskipun plaintext sama.
-- Webhook Midtrans divalidasi via **SHA-512 signature**: `SHA512(order_id + status_code + gross_amount + server_key)` — wajib cek sebelum proses apapun, selalu return HTTP 200 untuk cegah retry storm
+- Manual payment verification dilakukan admin via dashboard — tidak ada webhook eksternal yang perlu di-validate signature
 - Rate limiting: user-id based untuk `/api/*` (120 req/menit), IP-based untuk `/auth/*` (20 req/menit) — in-memory bucket dengan TTL cleanup (cocok untuk Cloudflare Workers stateless)
 - **Zod validators** di semua endpoint via `@hono/zod-validator` — validasi sebelum handler, reject request invalid sebelum ke service layer
 - HTTPS-only, HSTS header
 - Input sanitization di semua form (cegah XSS & SQL injection)
-- Tidak menyimpan data kartu kredit/debit (Midtrans yang handle)
-- `SUPABASE_SERVICE_ROLE_KEY` dan `ENCRYPTION_KEY` disimpan sebagai Cloudflare Workers secrets (`wrangler secret put`) — tidak pernah di `wrangler.toml` plaintext
+- Tidak menyimpan data kartu kredit/debit (manual QRIS tidak melibatkan card data)
+- `SUPABASE_SERVICE_ROLE_KEY`, `ENCRYPTION_KEY`, dan `QRIS_STATIC_PAYLOAD` disimpan sebagai Cloudflare Workers secrets (`wrangler secret put`) — tidak pernah di `wrangler.toml` plaintext
 
 ### 8.3 Aksesibilitas
 - Target: WCAG 2.1 Level AA (dasar)
@@ -340,7 +342,7 @@ Cron handler dipanggil via `scheduled(event, env, ctx)` di Worker entry point. P
 
 | Dependency | Tipe | Fungsi | Status |
 |-----------|------|--------|--------|
-| **Midtrans** | Eksternal | Payment gateway | Perlu mendaftar akun merchant |
+| **GoPay Saya (QRIS Statis)** | Eksternal | Penerima pembayaran QRIS (manual verifikasi via app) | Set `QRIS_STATIC_PAYLOAD` dari raw payload QRIS Statis admin |
 | **WAHA (WhatsApp HTTP API)** | Eksternal (self-hosted) | Notifikasi WhatsApp | Self-host WAHA + scan QR untuk session, set WAHA_BASE_URL/API_KEY/SESSION |
 | **Resend** | Eksternal | Email transaksional | Perlu mendaftar + verifikasi domain |
 | **Supabase** | Eksternal | Database, auth, storage | Setup project |
@@ -367,7 +369,7 @@ Cron handler dipanggil via `scheduled(event, env, ctx)` di Worker entry point. P
 **Technical:**
 - [ ] Semua acceptance criteria pass
 - [ ] Load test: simulasi 100 concurrent checkout
-- [ ] Webhook Midtrans test di staging environment
+- [ ] QRIS Dinamis test end-to-end di staging (scan, transfer kecil, admin verify)
 - [ ] Notifikasi WhatsApp & email test end-to-end
 - [ ] Monitoring error (Sentry atau Cloudflare Analytics) aktif
 - [ ] Backup & recovery database diverifikasi
@@ -377,7 +379,7 @@ Cron handler dipanggil via `scheduled(event, env, ctx)` di Worker entry point. P
 - [ ] Kebijakan Privasi published
 - [ ] Kebijakan Garansi & Refund published
 - [ ] Kontak support (WA Business) aktif dan responsif
-- [ ] Akun Midtrans production sudah aktif (bukan sandbox)
+- [ ] Akun GoPay Saya admin sudah aktif, QRIS Statis sudah di-print/decode payload
 - [ ] Stok produk awal tersedia minimal 50 unit per produk unggulan
 
 **Marketing:**
@@ -415,9 +417,9 @@ R = Responsible (author/PIC), C = Consulted (reviewer), I = Informed
 | Backend API | Hono + Cloudflare Workers | Express + Railway, Fastify + Fly.io | Edge computing (0ms cold start), biaya sangat murah, dekat ke CDN |
 | Database | Supabase (PostgreSQL) | PlanetScale, Neon, Railway Postgres | Auth built-in, Realtime, Row Level Security, free tier generous |
 | File Storage | Supabase Storage | Cloudflare R2 | Sudah terintegrasi dengan Supabase, cukup untuk MVP |
-| Payment | Midtrans | Xendit, Duitku | Coverage bank & e-wallet Indonesia terluas, dokumentasi solid |
+| Payment | Manual QRIS (GoPay Saya) | Midtrans, Duitku, OkeConnect | Midtrans & Duitku rejected approval merchant (2026-05-09 & 2026-05-13), OkeConnect H2H butuh CS approval. Manual QRIS = zero biaya admin per transaksi + admin punya kontrol penuh verifikasi |
 | Email | Resend | SendGrid, Mailgun | Developer-friendly, pricing murah, deliverability baik |
-| WA Notif | WAHA (self-hosted) | Fonnte, Wablas, WA Business API | Self-host WAHA: tanpa biaya per pesan, kontrol penuh, mudah swap engine (Core/Plus/NoWeb) |
+| WA Notif | WAHA (self-hosted) | Wablas, WA Business API | Self-host WAHA: tanpa biaya per pesan, kontrol penuh, mudah swap engine (Core/Plus/NoWeb) |
 | Auth | Supabase Auth | NextAuth, Clerk | Sudah satu ekosistem dengan DB, gratis di free tier |
 
 ---
@@ -450,8 +452,8 @@ products (id, category_id, name, slug, description, thumbnail_url,
 account_stock (id, product_id, credentials_encrypted, is_used, 
                used_at, order_id, created_at)
 
-orders (id, user_id, product_id, status, total_price, payment_method,
-        midtrans_order_id, midtrans_snap_token, delivered_at, 
+orders (id, user_id, product_id, status, total_idr, unique_suffix,
+        qris_dynamic_payload, delivered_at, paid_at,
         guarantee_expires_at, created_at, expires_at)
 
 order_account (id, order_id, account_stock_id, is_confirmed_by_user, confirmed_at)
@@ -478,7 +480,7 @@ Semua migration ada di `supabase/migrations/`. Jalankan via `supabase db push` a
 | `002_create_categories.sql` | Tabel `categories` + seed 6 kategori default | Setup awal |
 | `003_create_products.sql` | Tabel `products` dengan field stock_count, sold_count, rating | Setup awal |
 | `004_create_account_stock.sql` | Tabel `account_stock` (pool FIFO), trigger sync stock_count ke products | Setup awal |
-| `005_create_orders.sql` | Tabel `coupons` + tabel `orders` dengan payment fields Midtrans | Setup awal |
+| `005_create_orders.sql` | Tabel `coupons` + tabel `orders` (legacy: kolom payment_* dari era Midtrans/Duitku, sekarang NULL untuk manual QRIS) | Setup awal |
 | `006_create_referrals.sql` | Tabel `referrals` untuk tracking kredit referral | Setup awal |
 | `007_create_support_tickets.sql` | Tabel `support_tickets` untuk klaim garansi | Setup awal |
 | `008_create_notifications_log.sql` | Tabel `notifications_log` untuk audit trail WA & email | Setup awal |
@@ -491,7 +493,7 @@ Semua migration ada di `supabase/migrations/`. Jalankan via `supabase db push` a
 
 | RPC | Fungsi | Dipanggil oleh |
 |-----|--------|----------------|
-| `deliver_order_account(order_id)` | FIFO delivery akun + row lock (cegah duplicate) | Backend webhook Midtrans |
+| `deliver_order_account(order_id)` | FIFO delivery akun + row lock (cegah duplicate) | Backend setelah admin konfirmasi pembayaran |
 | `confirm_order_received(order_id, user_id)` | Buyer konfirmasi terima akun | API endpoint buyer |
 | `validate_coupon(code, product_id, amount)` | Validasi + hitung diskon kupon | API checkout |
 | `increment_coupon_usage(code)` | Atomic increment used_count kupon | Backend setelah order paid |
@@ -510,9 +512,9 @@ SELECT name, stock_count FROM products WHERE is_active = true AND stock_count <=
 -- Cek order yang gagal delivery
 SELECT id, order_number, status, created_at FROM orders WHERE status = 'delivery_failed' ORDER BY created_at DESC;
 
--- Cek pending orders > 30 menit (mungkin webhook Midtrans macet)
-SELECT id, order_number, payment_status, created_at FROM orders 
-WHERE status = 'pending_payment' AND created_at < NOW() - INTERVAL '30 minutes';
+-- Cek pending orders > 30 menit (buyer belum bayar / admin belum verify)
+SELECT id, order_number, status, created_at FROM orders 
+WHERE status IN ('pending_payment','verifying') AND created_at < NOW() - INTERVAL '30 minutes';
 
 -- Cek tiket garansi yang belum direspons > 24 jam
 SELECT id, reason, created_at FROM support_tickets 
@@ -526,7 +528,7 @@ WHERE status IN ('delivered','confirmed') AND paid_at >= CURRENT_DATE;
 SELECT name, sold_count, stock_count FROM products ORDER BY sold_count DESC LIMIT 10;
 
 -- Cek notifikasi yang gagal terkirim
-SELECT type, channel, recipient, error_msg, created_at FROM notifications_log 
+SELECT template, channel, recipient, error, created_at FROM notifications_log 
 WHERE status = 'failed' ORDER BY created_at DESC LIMIT 20;
 
 -- Cek referral yang sudah terkreditkan hari ini
@@ -618,7 +620,6 @@ export async function envMiddleware(c: Context, next: Next): Promise<void> {
 `wrangler.toml` — hanya non-secret di `vars`:
 ```toml
 [vars]
-MIDTRANS_IS_PRODUCTION = "false"
 CORS_ORIGINS = "https://jualakun.id"
 
 # JANGAN taruh secret di sini — gunakan: wrangler secret put NAMA_KEY

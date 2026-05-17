@@ -1,32 +1,26 @@
 # JualAkun — Catatan & TODO Post-Deployment
 
-> Last updated: 2026-05-09
+> Last updated: 2026-05-17
 > Status: MVP live di jualakun.id
 
 ---
 
 ## Pending Tasks (Prioritas)
 
-### 1. Midtrans — Payment Gateway
-**Status:** Belum dikonfigurasi (sandbox)
+### 1. Manual QRIS — Payment Setup
+**Status:** Aktif (manual verification via admin)
 
-Yang harus dilakukan:
-- Daftar akun Midtrans Sandbox di [dashboard.sandbox.midtrans.com](https://dashboard.sandbox.midtrans.com)
-- Ambil **Server Key** dan **Client Key** dari Settings → Access Keys
-- Set secrets di backend:
+Yang harus dipastikan untuk production:
+- `QRIS_STATIC_PAYLOAD` di backend secret sudah di-set (raw payload QRIS Statis dari GoPay Saya — decode QR fisik via [zxing.org/w/decode.jspx](https://zxing.org/w/decode.jspx))
+- Admin punya akses ke app GoPay Saya untuk verify mutasi masuk
+- Admin biasa cek `/admin/pesanan?status=verifying` minimal 2x/hari (atau notif WA grup admin sudah aktif)
+- Set secrets backend:
   ```powershell
   cd d:\JualAkun_ID\backend
-  npx wrangler secret put MIDTRANS_SERVER_KEY
-  npx wrangler secret put MIDTRANS_CLIENT_KEY
+  npx wrangler secret put QRIS_STATIC_PAYLOAD
   ```
-- Tambahkan di Vercel env vars:
-  - `NEXT_PUBLIC_MIDTRANS_CLIENT_KEY` = Client Key sandbox
-  - `NEXT_PUBLIC_MIDTRANS_IS_PRODUCTION` = `false` *(sudah ada)*
-- Set Webhook Notification URL di Midtrans dashboard:
-  ```
-  https://jualakun-backend.jualakun.workers.dev/payment/webhook
-  ```
-- Redeploy frontend Vercel setelah env vars ditambah
+
+Catatan: Manual payment flow inject unique 3-digit suffix ke `total_idr` + generate QRIS Dinamis. Buyer scan QR Dinamis, transfer persis sesuai amount, admin verify mutasi GoPay manual lalu konfirmasi di `/admin/pesanan`.
 
 ---
 
@@ -111,10 +105,9 @@ $$;
 ## Post-MVP (Tidak Wajib untuk Launch)
 
 - [ ] Google OAuth (Supabase Auth → Providers → Google) — butuh Google Cloud project
-- [ ] `NEXT_PUBLIC_MIDTRANS_IS_PRODUCTION = true` + ganti ke Midtrans Production key
 - [ ] `vercel.json` dengan security headers (HSTS, CSP, X-Frame-Options)
 - [ ] Sentry / PostHog error monitoring
-- [ ] Cloudflare WAF rules untuk `/payment/webhook`
+- [ ] Cloudflare WAF rules untuk endpoint admin
 - [ ] Load test 100 concurrent checkout
 - [ ] Sitemap.xml dan robots.txt
 - [ ] Akun media sosial (Instagram, TikTok)
@@ -142,11 +135,12 @@ $$;
 | SUPABASE_SERVICE_ROLE_KEY | ✅ |
 | ENCRYPTION_KEY | ✅ |
 | CRON_SECRET | ✅ |
-| MIDTRANS_SERVER_KEY | ❌ Belum |
-| MIDTRANS_CLIENT_KEY | ❌ Belum |
+| QRIS_STATIC_PAYLOAD | ❌ Belum |
 | WAHA_BASE_URL | ❌ Belum |
 | WAHA_API_KEY | ❌ Belum |
 | WAHA_SESSION | ❌ Belum |
 | RESEND_API_KEY | ❌ Belum |
 | RESEND_FROM_EMAIL | ❌ Belum |
 | ADMIN_WHATSAPP_NUMBER | ❌ Belum |
+| ADMIN_EMAIL | ❌ Belum |
+| SUPPLIER_CANBOSO_API_KEY | ❌ Belum |
