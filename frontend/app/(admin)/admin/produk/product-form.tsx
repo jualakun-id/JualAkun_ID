@@ -426,20 +426,39 @@ export function ProductForm({ categories, initial, embedded, onSuccess }: Props)
         )}
       </div>
 
-      <label className="flex items-start gap-3 rounded-lg border-2 border-black/15 bg-brand-50/40 p-3.5 cursor-pointer hover:border-brand-400 transition-colors">
-        <input
-          type="checkbox"
-          checked={form.is_active}
-          onChange={(e) => update('is_active', e.target.checked)}
-          className="mt-0.5 h-4 w-4 accent-brand-500 cursor-pointer"
-        />
-        <span className="flex-1">
-          <span className="text-sm font-bold text-ink block">Aktif (tampil di publik)</span>
-          <span className="text-xs text-ink-muted font-medium block mt-0.5">
-            Uncheck untuk simpan sebagai draft — tidak muncul di marketplace
+      {/* Status publik: auto-managed (read-only banner) atau manual (checkbox) */}
+      {form.auto_manage_publish && form.supplier_product_id ? (
+        <div className="flex items-start gap-3 rounded-lg border-2 border-brand-300/60 bg-brand-50/40 p-3.5">
+          <span className="mt-0.5 inline-flex h-4 w-4 items-center justify-center text-sm">🤖</span>
+          <div className="flex-1">
+            <span className="text-sm font-bold text-ink block">
+              Status: <span className={form.is_active ? 'text-success' : 'text-ink-subtle'}>
+                {form.is_active ? 'Aktif' : 'Draft'}
+              </span>{' '}
+              <span className="text-xs font-medium text-ink-subtle">· dikelola otomatis</span>
+            </span>
+            <span className="text-xs text-ink-muted font-medium block mt-0.5 leading-relaxed">
+              Sistem otomatis publish/draft sesuai stok supplier (cron 10 menit). Uncheck
+              <strong className="text-ink"> &ldquo;Auto publish/draft&rdquo;</strong> di atas kalau mau kontrol manual.
+            </span>
+          </div>
+        </div>
+      ) : (
+        <label className="flex items-start gap-3 rounded-lg border-2 border-black/15 bg-brand-50/40 p-3.5 cursor-pointer hover:border-brand-400 transition-colors">
+          <input
+            type="checkbox"
+            checked={form.is_active}
+            onChange={(e) => update('is_active', e.target.checked)}
+            className="mt-0.5 h-4 w-4 accent-brand-500 cursor-pointer"
+          />
+          <span className="flex-1">
+            <span className="text-sm font-bold text-ink block">Aktif (tampil di publik)</span>
+            <span className="text-xs text-ink-muted font-medium block mt-0.5">
+              Uncheck untuk simpan sebagai draft — tidak muncul di marketplace
+            </span>
           </span>
-        </span>
-      </label>
+        </label>
+      )}
       <Button type="submit" loading={loading} size="lg">
         {loading ? 'Menyimpan...' : isEdit ? 'Simpan Perubahan' : 'Buat Produk'}
       </Button>
