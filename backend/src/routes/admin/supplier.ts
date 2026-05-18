@@ -11,6 +11,11 @@ adminSupplierRoute.get('/products', async (c) => {
   return c.json({ data })
 })
 
+adminSupplierRoute.get('/unmapped', async (c) => {
+  const data = await SupplierCanbosoService.listUnmappedProducts()
+  return c.json({ data })
+})
+
 adminSupplierRoute.get('/balance', async (c) => {
   const data = await SupplierCanbosoService.getBalance()
   return c.json({ data })

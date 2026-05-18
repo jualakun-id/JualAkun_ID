@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react'
 import {
   LayoutDashboard,
   Package,
+  PackagePlus,
   ShoppingCart,
   LifeBuoy,
   Tag,
@@ -23,6 +24,7 @@ import { createBrowserClient } from '@/lib/supabase'
 const NAV = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/produk', label: 'Produk', icon: Package },
+  { href: '/admin/supplier-baru', label: 'Produk Supplier', icon: PackagePlus },
   { href: '/admin/pesanan', label: 'Pesanan', icon: ShoppingCart },
   { href: '/admin/tiket', label: 'Tiket', icon: LifeBuoy },
   { href: '/admin/kupon', label: 'Kupon', icon: Tag },

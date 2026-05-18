@@ -157,6 +157,23 @@ export class SupplierCanbosoService {
   }
 
   /**
+   * List supplier products yang belum di-link ke produk JualAkun manapun.
+   * Dipakai halaman /admin/supplier-baru untuk surface produk Canboso yang
+   * masih bisa di-import ke katalog. Filter `hidden=true` di Canboso (yang
+   * sengaja disembunyikan supplier) supaya admin tidak salah import barang
+   * yang sudah deprecated.
+   */
+  static async listUnmappedProducts() {
+    const { walletCurrency, products } = await this.listProducts()
+    const unmapped = products.filter((p) => p.taken_by_product_id === null && !p.hidden)
+    return {
+      walletCurrency,
+      total: unmapped.length,
+      products: unmapped,
+    }
+  }
+
+  /**
    * Sync display_stock = supplier.stats.available untuk semua produk JualAkun
    * yang sudah punya `supplier_product_id`. Run by admin button atau cron.
    *
