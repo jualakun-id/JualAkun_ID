@@ -144,6 +144,12 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* ── PRODUCT CATALOG (unified, dgn filter category dropdown + sort + pagination) ── */}
+      <ProductBrowserSection
+        categories={(categories ?? []).map((c) => ({ slug: c.slug, name: c.name }))}
+        initialData={initialCatalog}
+      />
+
       {/* ── BENEFITS ───────────────────────────────────────── */}
       <section className="bg-white py-12 md:py-16 border-t border-gray-100">
         <div className="container mx-auto px-4 max-w-6xl">
@@ -184,12 +190,6 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
-
-      {/* ── PRODUCT CATALOG (unified, dgn filter category dropdown + sort + pagination) ── */}
-      <ProductBrowserSection
-        categories={(categories ?? []).map((c) => ({ slug: c.slug, name: c.name }))}
-        initialData={initialCatalog}
-      />
 
       {/* ── HOW IT WORKS ───────────────────────────────────── */}
       <section id="cara-pesan" className="bg-white py-16 md:py-20 scroll-mt-24">
