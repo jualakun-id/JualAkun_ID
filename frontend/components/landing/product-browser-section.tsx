@@ -6,7 +6,7 @@ import { LandingProductCard } from './landing-product-card'
 import type { Product } from '@/types'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8787'
-const PAGE_SIZE = 8
+const PAGE_SIZE = 16
 
 type ProductWithCategory = Product & { category?: { name: string; slug: string } }
 
