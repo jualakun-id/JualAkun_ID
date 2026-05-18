@@ -61,7 +61,7 @@ export default async function AdminPesananPage({ searchParams }: Props) {
   if (sp.status) params.set('status', sp.status)
   if (sp.search) params.set('search', sp.search)
   params.set('page', String(page))
-  params.set('limit', '10')
+  params.set('limit', '15')
   if (sp.sort_by) params.set('sort_by', sp.sort_by)
   if (sp.sort_dir) params.set('sort_dir', sp.sort_dir)
   const data = await adminFetch<ListResponse>(`/admin/orders?${params.toString()}`)

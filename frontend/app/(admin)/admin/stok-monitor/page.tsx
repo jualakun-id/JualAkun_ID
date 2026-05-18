@@ -60,7 +60,7 @@ export default async function AdminStokMonitorPage({ searchParams }: Props) {
   if (sp.category) params.set('category_slug', sp.category)
   if (sp.search) params.set('search', sp.search)
   params.set('page', String(page))
-  params.set('limit', '10')
+  params.set('limit', '15')
   if (sp.sort_by) params.set('sort_by', sp.sort_by)
   if (sp.sort_dir) params.set('sort_dir', sp.sort_dir)
 
