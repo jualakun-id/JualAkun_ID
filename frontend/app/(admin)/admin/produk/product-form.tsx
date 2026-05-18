@@ -39,6 +39,7 @@ type Props = {
     discount_ends_at: string | null
     display_stock: number
     supplier_product_id: string | null
+    auto_manage_publish: boolean
     cost_stats: {
       sample_size: number
       avg_cost_idr: number
@@ -77,6 +78,9 @@ export function ProductForm({ categories, initial, embedded, onSuccess }: Props)
     is_active: initial?.is_active ?? false,
     display_stock: initial?.display_stock ?? 0,
     supplier_product_id: initial?.supplier_product_id ?? '',
+    // Default ON untuk produk baru (signal: pakai supplier → mau auto-manage).
+    // Untuk edit, baca dari initial — false kalau column belum ter-set.
+    auto_manage_publish: initial?.auto_manage_publish ?? !isEdit,
     original_price: initial?.original_price ?? '',
     discount_starts_at: isoToLocal(initial?.discount_starts_at),
     discount_ends_at: isoToLocal(initial?.discount_ends_at),
@@ -170,6 +174,7 @@ export function ProductForm({ categories, initial, embedded, onSuccess }: Props)
       is_active: form.is_active,
       display_stock: Number(form.display_stock),
       supplier_product_id: form.supplier_product_id || null,
+      auto_manage_publish: form.auto_manage_publish,
       original_price:
         showDiscount && form.original_price !== '' ? Number(form.original_price) : null,
       discount_starts_at:
@@ -344,6 +349,28 @@ export function ProductForm({ categories, initial, embedded, onSuccess }: Props)
             />
           )
         })() : null}
+
+        {/* Toggle auto-manage publish — hanya tampil kalau supplier sudah di-link */}
+        {form.supplier_product_id ? (
+          <label className="mt-3 flex items-start gap-3 rounded-lg border-2 border-black/15 bg-white p-3.5 cursor-pointer hover:border-brand-400 transition-colors">
+            <input
+              type="checkbox"
+              checked={form.auto_manage_publish}
+              onChange={(e) => update('auto_manage_publish', e.target.checked)}
+              className="mt-0.5 h-4 w-4 accent-brand-500 cursor-pointer"
+            />
+            <span className="flex-1">
+              <span className="text-sm font-bold text-ink block">
+                Auto publish/draft berdasarkan stok supplier
+              </span>
+              <span className="text-xs text-ink-muted font-medium block mt-0.5 leading-relaxed">
+                Sistem otomatis hide produk dari katalog publik saat stok supplier habis,
+                dan publish kembali saat re-stock. Kamu tidak perlu manual unchecklist
+                &ldquo;Aktif&rdquo; di bawah tiap kali stok berubah.
+              </span>
+            </span>
+          </label>
+        ) : null}
       </Field>
 
       {/* ── DISKON SECTION ──────────────────────────────────────── */}

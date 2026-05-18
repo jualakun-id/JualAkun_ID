@@ -84,6 +84,7 @@ export class AdminProductsService {
     discount_ends_at?: string | null
     display_stock?: number
     supplier_product_id?: string | null
+    auto_manage_publish?: boolean
   }) {
     const supabase = createAdminClient()
     const { data, error } = await supabase
@@ -127,6 +128,7 @@ export class AdminProductsService {
       discount_ends_at: string | null
       display_stock: number
       supplier_product_id: string | null
+      auto_manage_publish: boolean
     }>,
   ) {
     const supabase = createAdminClient()
@@ -194,7 +196,7 @@ export class AdminProductsService {
     const supabase = createAdminClient()
     const { data, error } = await supabase
       .from('products')
-      .select('id, category_id, name, slug, description, thumbnail_url, duration_days, price, guarantee_days, is_active, stock_count, display_stock, sold_count, original_price, discount_starts_at, discount_ends_at, supplier_product_id, supplier_synced_at')
+      .select('id, category_id, name, slug, description, thumbnail_url, duration_days, price, guarantee_days, is_active, stock_count, display_stock, sold_count, original_price, discount_starts_at, discount_ends_at, supplier_product_id, supplier_synced_at, auto_manage_publish')
       .eq('id', id)
       .maybeSingle()
     if (error) throw new ApiError('INTERNAL_ERROR', error.message, 500)

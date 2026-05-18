@@ -25,6 +25,8 @@ export type ActivityEventType =
   | 'referral_redeemed'
   | 'notification_failed'
   | 'product_created'
+  | 'product_auto_published'
+  | 'product_auto_drafted'
 
 export type ActivityLog = {
   id: string

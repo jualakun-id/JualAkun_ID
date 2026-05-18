@@ -28,6 +28,7 @@ type ProductDetail = {
   discount_ends_at: string | null
   supplier_product_id: string | null
   supplier_synced_at: string | null
+  auto_manage_publish: boolean
   cost_stats: {
     sample_size: number
     avg_cost_idr: number

@@ -54,6 +54,10 @@ const createSchema = z.object({
     .nullable()
     .optional()
     .transform((v) => (v && v.length > 0 ? v : null)),
+  // Opt-in auto-toggle is_active berdasarkan stok supplier (migration 031).
+  // TRUE = cron syncStock akan hide/publish produk otomatis sesuai stok.
+  // Cuma berpengaruh kalau supplier_product_id juga ada.
+  auto_manage_publish: z.boolean().optional(),
 })
 
 adminProductsRoute.post('/', zValidator('json', createSchema), async (c) => {

@@ -199,7 +199,7 @@ export class SupplierCanbosoService {
     const supabase = createAdminClient()
     const { data: jualakunProducts, error } = await supabase
       .from('products')
-      .select('id, name, supplier_product_id, display_stock, supplier_orphan_at, supplier_orphan_confirmed_at')
+      .select('id, name, supplier_product_id, display_stock, is_active, auto_manage_publish, supplier_orphan_at, supplier_orphan_confirmed_at')
       .not('supplier_product_id', 'is', null)
       .neq('supplier_product_id', '')
     if (error) throw new ApiError('INTERNAL_ERROR', error.message, 500)
@@ -213,6 +213,7 @@ export class SupplierCanbosoService {
     }
     const orphans: OrphanInfo[] = []
     const newlyConfirmedIds: { id: string; name: string; supId: string }[] = []
+    const autoToggled: { id: string; name: string; from: boolean; to: boolean }[] = []
     const now = new Date().toISOString()
     const CONFIRMATION_THRESHOLD_MS = 30 * 60 * 1000 // 30 menit
 
@@ -268,6 +269,26 @@ export class SupplierCanbosoService {
         fields.supplier_orphan_at = null
         fields.supplier_orphan_confirmed_at = null
       }
+
+      // Auto-toggle is_active (opt-in via auto_manage_publish, migration 031).
+      // Tujuannya: produk auto-hide saat stok supplier habis, auto-publish
+      // saat re-stock. Admin tidak perlu manual checklist tiap kali.
+      // Hanya fire kalau transisi (avoid noise di activity log).
+      const autoManage = p.auto_manage_publish as boolean
+      const wasActive = p.is_active as boolean
+      if (autoManage) {
+        const shouldBeActive = available > 0
+        if (wasActive !== shouldBeActive) {
+          fields.is_active = shouldBeActive
+          autoToggled.push({
+            id: p.id as string,
+            name: p.name as string,
+            from: wasActive,
+            to: shouldBeActive,
+          })
+        }
+      }
+
       const { error: updErr } = await supabase.from('products').update(fields).eq('id', p.id)
       if (updErr) {
         console.warn('[supplier.syncStock] update fail', p.id, updErr.message)
@@ -292,6 +313,23 @@ export class SupplierCanbosoService {
       })
     }
 
+    // Emit activity log per auto-toggle is_active. Supaya admin bisa trace
+    // kalau produk tiba-tiba ke-draft atau ke-publish tanpa intervensi manual.
+    for (const t of autoToggled) {
+      await ActivityLogService.log({
+        event_type: t.to ? 'product_auto_published' : 'product_auto_drafted',
+        ref_id: t.id,
+        ref_table: 'products',
+        title: t.to
+          ? `Auto-publish: ${t.name}`
+          : `Auto-draft: ${t.name}`,
+        description: t.to
+          ? `Stok supplier kembali tersedia → produk otomatis dipublish ulang ke katalog publik.`
+          : `Stok supplier habis → produk otomatis di-draft (disembunyikan dari katalog publik).`,
+        metadata: { product_id: t.id, from_active: t.from, to_active: t.to },
+      })
+    }
+
     const confirmedCount = orphans.filter((o) => o.confirmed_at !== null).length
     const youngCount = orphans.length - confirmedCount
 
@@ -302,6 +340,7 @@ export class SupplierCanbosoService {
       confirmed_orphans: confirmedCount,
       young_orphans: youngCount, // dalam observation window, belum confirmed
       newly_confirmed: newlyConfirmedIds.length,
+      auto_toggled: autoToggled.length,
       synced_at: now,
     }
   }
