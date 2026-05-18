@@ -88,20 +88,26 @@ export function ProductForm({ categories, initial, embedded, onSuccess }: Props)
   const [supplierOptions, setSupplierOptions] = useState<SupplierOption[]>([])
   const [supplierLoading, setSupplierLoading] = useState(true)
   const [supplierError, setSupplierError] = useState<string | null>(null)
+  const [exchangeRate, setExchangeRate] = useState<number>(18000) // fallback kalau balance API down
 
-  // Fetch supplier products (1x on-mount) untuk dropdown mapping
+  // Fetch supplier products + exchange rate (parallel, 1x on-mount)
   useEffect(() => {
     let cancelled = false
-    api.get<{ walletCurrency: string; products: SupplierOption[] }>('/admin/supplier/products')
-      .then((result) => {
-        if (cancelled) return
-        setSupplierLoading(false)
-        if (!result.ok) {
-          setSupplierError(result.message ?? 'Gagal load supplier')
-          return
-        }
-        setSupplierOptions(result.data.products)
-      })
+    Promise.all([
+      api.get<{ walletCurrency: string; products: SupplierOption[] }>('/admin/supplier/products'),
+      api.get<{ exchange_rate: number } | null>('/admin/supplier/balance'),
+    ]).then(([productsResult, balanceResult]) => {
+      if (cancelled) return
+      setSupplierLoading(false)
+      if (!productsResult.ok) {
+        setSupplierError(productsResult.message ?? 'Gagal load supplier')
+        return
+      }
+      setSupplierOptions(productsResult.data.products)
+      if (balanceResult.ok && balanceResult.data) {
+        setExchangeRate(balanceResult.data.exchange_rate)
+      }
+    })
     return () => { cancelled = true }
   }, [])
 
@@ -315,13 +321,29 @@ export function ProductForm({ categories, initial, embedded, onSuccess }: Props)
                 if (!s.taken_by_product_id) return true
                 return s.taken_by_product_id === initial?.id
               })
-              .map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name} · {s.wallet_price_text} · stok {s.available}
-                </option>
-              ))}
+              .map((s) => {
+                const idr = Math.round(s.price_usd * exchangeRate)
+                return (
+                  <option key={s.id} value={s.id}>
+                    {s.name} · {s.wallet_price_text} ≈ Rp {idr.toLocaleString('id-ID')} · stok {s.available}
+                  </option>
+                )
+              })}
           </select>
         )}
+
+        {/* Card real-time modal supplier — muncul setelah pilih supplier */}
+        {form.supplier_product_id ? (() => {
+          const sel = supplierOptions.find((s) => s.id === form.supplier_product_id)
+          if (!sel) return null
+          return (
+            <SupplierPriceCard
+              supplier={sel}
+              exchangeRate={exchangeRate}
+              currentPrice={Number(form.price) || 0}
+            />
+          )
+        })() : null}
       </Field>
 
       {/* ── DISKON SECTION ──────────────────────────────────────── */}
@@ -468,6 +490,69 @@ function Stat({ label, value }: { label: string; value: React.ReactNode }) {
     <div className="rounded-lg bg-white border border-black/10 px-3 py-2">
       <div className="text-[10px] font-bold text-ink-subtle uppercase tracking-wide">{label}</div>
       <div className="mt-0.5 text-sm font-extrabold text-ink tabular-nums">{value}</div>
+    </div>
+  )
+}
+
+/**
+ * Card real-time harga supplier — muncul di bawah dropdown setelah admin
+ * pilih supplier. Beda dengan CostInsightCard yang historical (avg 30 hari
+ * dari orders), card ini selalu reflect harga supplier SAAT INI dari API
+ * Canboso. Buat aware kalau supplier baru naikkan harga sebelum order baru
+ * masuk. Proyeksi margin recompute setiap user ubah field "Harga Jual".
+ */
+function SupplierPriceCard({
+  supplier,
+  exchangeRate,
+  currentPrice,
+}: {
+  supplier: SupplierOption
+  exchangeRate: number
+  currentPrice: number
+}) {
+  const costIdr = Math.round(supplier.price_usd * exchangeRate)
+  const projectedMargin =
+    currentPrice > 0 ? Math.round(((currentPrice - costIdr) / currentPrice) * 100) : null
+  const marginColor =
+    projectedMargin === null
+      ? 'text-ink-subtle'
+      : projectedMargin >= 30
+        ? 'text-success'
+        : projectedMargin >= 15
+          ? 'text-warning'
+          : 'text-danger'
+  const recommendedPrice = Math.round(costIdr / 0.5) // 50% margin target
+  const fmt = (n: number) => `Rp ${n.toLocaleString('id-ID')}`
+
+  return (
+    <div className="mt-3 rounded-xl border-2 border-brand-300/60 bg-brand-50/40 p-4 space-y-2">
+      <div className="flex items-center justify-between gap-2">
+        <h4 className="text-sm font-bold text-ink">Modal Supplier Saat Ini</h4>
+        <span className="text-[10px] font-bold text-ink-subtle uppercase tracking-wider">
+          live · kurs {fmt(exchangeRate)}/$
+        </span>
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
+        <Stat label="Harga Modal" value={<>{fmt(costIdr)}<span className="ml-1 text-[10px] font-bold text-ink-subtle">({supplier.wallet_price_text})</span></>} />
+        <Stat label="Stok Supplier" value={`${supplier.available} unit`} />
+        <Stat
+          label="Proyeksi Margin"
+          value={
+            <span className={marginColor}>
+              {projectedMargin === null ? '—' : `${projectedMargin}%`}
+            </span>
+          }
+        />
+      </div>
+      {projectedMargin !== null && projectedMargin < 15 ? (
+        <p className="text-xs text-danger font-medium">
+          ⚠️ Margin tipis di harga jual saat ini. Rekomendasi minimum {fmt(recommendedPrice)} untuk margin 50%.
+        </p>
+      ) : projectedMargin === null ? (
+        <p className="text-xs text-ink-subtle font-medium">
+          💡 Set Harga Jual di atas {fmt(recommendedPrice)} untuk margin 50% — atau sesuaikan dengan strategi pricing kamu.
+        </p>
+      ) : null}
     </div>
   )
 }
