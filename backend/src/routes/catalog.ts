@@ -12,7 +12,7 @@ const listQuerySchema = z.object({
   max_price: z.coerce.number().int().nonnegative().optional(),
   duration_days: z.coerce.number().int().positive().optional(),
   search: z.string().optional(),
-  sort: z.enum(['sold_count', 'price_asc', 'price_desc', 'newest']).optional(),
+  sort: z.enum(['stock', 'sold_count', 'price_asc', 'price_desc', 'newest']).optional(),
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().max(50).default(20),
 })

@@ -30,7 +30,7 @@ export const revalidate = 300
 
 export default async function HomePage() {
   const [initialCatalog, categories] = await Promise.all([
-    serverFetch<CatalogResponse>('/catalog?sort=sold_count&limit=16', { revalidate: 300 }),
+    serverFetch<CatalogResponse>('/catalog?sort=stock&limit=16', { revalidate: 300 }),
     serverFetch<Category[]>('/catalog/categories', { revalidate: 300 }),
   ])
 

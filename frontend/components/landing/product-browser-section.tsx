@@ -15,10 +15,10 @@ type CatalogResponse = {
   pagination: { page: number; limit: number; total: number; total_pages: number }
 }
 
-type SortValue = 'sold_count' | 'price_asc' | 'price_desc' | 'newest'
+type SortValue = 'stock' | 'price_asc' | 'price_desc' | 'newest'
 
 const SORT_OPTIONS: Array<{ value: SortValue; label: string }> = [
-  { value: 'sold_count', label: 'Terlaris' },
+  { value: 'stock', label: 'Tersedia' },
   { value: 'newest', label: 'Terbaru' },
   { value: 'price_asc', label: 'Termurah' },
   { value: 'price_desc', label: 'Termahal' },
@@ -32,7 +32,7 @@ type CategoryOption = {
 type Props = {
   /** Daftar kategori untuk dropdown — server-fetched */
   categories: CategoryOption[]
-  /** Initial data (page 1, all categories, sort=sold_count) untuk SSR + SEO */
+  /** Initial data (page 1, all categories, sort=stock) untuk SSR + SEO */
   initialData: CatalogResponse | null
 }
 
@@ -41,7 +41,7 @@ export function ProductBrowserSection({ categories, initialData }: Props) {
   const [pagination, setPagination] = useState(
     initialData?.pagination ?? { page: 1, limit: PAGE_SIZE, total: 0, total_pages: 0 },
   )
-  const [sort, setSort] = useState<SortValue>('sold_count')
+  const [sort, setSort] = useState<SortValue>('stock')
   const [categorySlug, setCategorySlug] = useState<string>('')
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(false)

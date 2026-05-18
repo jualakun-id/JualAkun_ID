@@ -7,7 +7,7 @@ type CatalogQuery = {
   max_price?: number
   duration_days?: number
   search?: string
-  sort?: 'sold_count' | 'price_asc' | 'price_desc' | 'newest'
+  sort?: 'stock' | 'sold_count' | 'price_asc' | 'price_desc' | 'newest'
   page: number
   limit: number
 }
@@ -29,7 +29,9 @@ export class CatalogService {
         ? 'price'
         : q.sort === 'newest'
           ? 'created_at'
-          : 'sold_count'
+          : q.sort === 'stock'
+            ? 'display_stock'
+            : 'sold_count'
     const sortAsc = q.sort === 'price_asc'
 
     let query = supabase
