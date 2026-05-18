@@ -4,17 +4,8 @@ import { Pagination } from '@/components/admin/pagination'
 import { StockMonitorTableClient } from './stock-monitor-table-client'
 import { SupplierSyncButton } from './supplier-sync-button'
 import { WalletBalance } from './wallet-balance'
-import { OrphanBanner } from './orphan-banner'
 import { adminFetch } from '@/lib/admin-fetch'
 import type { Category } from '@/types'
-
-type Orphan = {
-  product_id: string
-  product_name: string
-  supplier_product_id: string
-  first_orphan_at: string
-  confirmed_at: string
-}
 
 type StockRow = {
   id: string
@@ -67,11 +58,10 @@ export default async function AdminStokMonitorPage({ searchParams }: Props) {
   const countsParams = new URLSearchParams()
   if (sp.category) countsParams.set('category_slug', sp.category)
 
-  const [data, counts, categories, orphans] = await Promise.all([
+  const [data, counts, categories] = await Promise.all([
     adminFetch<ListResponse>(`/admin/stock-monitor?${params.toString()}`),
     adminFetch<CountsResponse>(`/admin/stock-monitor/counts${countsParams.toString() ? `?${countsParams.toString()}` : ''}`),
     adminFetch<Category[]>('/catalog/categories'),
-    adminFetch<Orphan[]>('/admin/supplier/orphans'),
   ])
 
   // Pagination basePath: preserve semua filter + sort, drop page
@@ -117,8 +107,6 @@ export default async function AdminStokMonitorPage({ searchParams }: Props) {
           </div>
         }
       />
-
-      <OrphanBanner orphans={orphans ?? []} />
 
       <FilterBar
         activeValue={filter}
