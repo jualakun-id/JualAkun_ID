@@ -25,13 +25,13 @@ const NAV = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/produk', label: 'Produk', icon: Package },
   { href: '/admin/supplier-baru', label: 'Produk Supplier', icon: PackagePlus },
+  { href: '/admin/stok-monitor', label: 'Stok Monitor', icon: Boxes },
   { href: '/admin/pesanan', label: 'Pesanan', icon: ShoppingCart },
   { href: '/admin/tiket', label: 'Tiket', icon: LifeBuoy },
   { href: '/admin/kupon', label: 'Kupon', icon: Tag },
   { href: '/admin/pengguna', label: 'Pengguna', icon: Users },
   { href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
   { href: '/admin/notifikasi', label: 'Notifikasi', icon: Bell },
-  { href: '/admin/stok-monitor', label: 'Stok Monitor', icon: Boxes },
 ] as const
 
 export function AdminSidebar() {
