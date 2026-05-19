@@ -92,7 +92,7 @@ export const templates = {
     waText:
       `[STOK] Produk supplier yang masih bisa dijual hari ini (${p.totalAvailable} produk):\n\n` +
       p.products.map((pr) => `- ${pr.name}: ${pr.stock_count} unit`).join('\n') +
-      `\n\nLink: ${SITE}/admin/stok-monitor`,
+      `\n\nLihat katalog: ${SITE}/#produk`,
   }),
 
   adminDeliveryFailed: (p: { orderNumber: string }) => ({
