@@ -16,6 +16,10 @@ ADMIN_WHATSAPP_NUMBER=628xxxxxxxxxxxxxxx
 # Dapatkan via WAHA API: GET /api/{session}/groups → cari subject "Notif Penjualan"
 # Format: "<id>@g.us" misal "120363426756060932@g.us"
 ADMIN_WA_GROUP_ID=
+# WhatsApp group ID dedicated untuk stock digest 4x/hari (06:00, 12:00, 18:00, 00:00 WIB).
+# Beda dari ADMIN_WA_GROUP_ID supaya admin DM tidak ke-spam digest non-kritis.
+# Group "Jualakun.id Community" — cari via GET /api/{session}/groups.
+WAHA_STOCK_DIGEST_GROUP_ID=
 ADMIN_EMAIL=admin@jualakun.id
 # QRIS Statis dari GoPay Saya — decode QR image pakai zxing.org untuk dapat string
 QRIS_STATIC_PAYLOAD=00020101021126620014ID.CO.QRIS.WWW...

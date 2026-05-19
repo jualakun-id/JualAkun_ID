@@ -48,26 +48,35 @@ stockAlertsCron.post('/', async (c) => {
     console.warn('[cron/stock-alerts] cleanup failed:', err)
   }
 
-  // Stock alert WA + activity log HANYA jam 06:00-06:29 WIB (digest harian)
-  // supaya grup tidak ke-spam tiap 30 menit. Cron tetap jalan tiap 30 menit
-  // untuk kupon expired + cleanup logs, tapi stock alert WA/email gate ke
-  // morning slot saja.
+  // Stock digest 4x/hari: 00:00, 06:00, 12:00, 18:00 WIB. Cron tetap jalan tiap
+  // 30 menit untuk kupon expired + cleanup logs, tapi stock digest WA gate ke
+  // 4 slot saja supaya grup tidak ke-spam.
   //
-  // WIB = UTC+7. Cron */30 trigger di menit :00 dan :30. Slot pagi WIB:
-  //   - WIB 06:00 = UTC 23:00 (slot :00 → masuk window)
-  //   - WIB 06:30 = UTC 23:30 (slot :30 → skip, hindari dobel kirim)
+  // WIB = UTC+7. Cron */30 trigger di menit :00 dan :30. Slot :00 yang valid:
+  //   - WIB 00:00 = UTC 17:00
+  //   - WIB 06:00 = UTC 23:00
+  //   - WIB 12:00 = UTC 05:00
+  //   - WIB 18:00 = UTC 11:00
+  // Slot :30 di-skip untuk hindari dobel kirim dalam 1 jam.
   const now = new Date()
   const utcHour = now.getUTCHours()
   const utcMinute = now.getUTCMinutes()
   const wibHour = (utcHour + 7) % 24
-  const isMorningDigestSlot = wibHour === 6 && utcMinute < 30
+  const isDigestSlot = [0, 6, 12, 18].includes(wibHour) && utcMinute < 30
 
-  if (!isMorningDigestSlot) {
-    return c.json({ data: { ok: true, alerted: 0, skipped: 'not-morning-digest-slot' } })
+  if (!isDigestSlot) {
+    return c.json({ data: { ok: true, alerted: 0, skipped: 'not-digest-slot' } })
+  }
+
+  // Dedicated group untuk stock digest. Beda dari ADMIN_WA_GROUP_ID supaya
+  // admin DM tidak ke-spam 4x/hari dengan info non-kritis.
+  const stockGroupId = process.env.WAHA_STOCK_DIGEST_GROUP_ID
+  if (!stockGroupId) {
+    return c.json({ data: { ok: true, alerted: 0, skipped: 'no-stock-group-configured' } })
   }
 
   const supabase = createAdminClient()
-  // Digest pagi: list produk yang link ke supplier DAN masih ada stok.
+  // Digest: list produk yang link ke supplier DAN masih ada stok.
   // Produk full manual (no supplier link) di-skip — admin sudah punya
   // /admin/stok-monitor untuk monitoring manual. Produk supplier yang stok 0
   // di-skip — kalau auto-manage ON sudah dihandle (hide ke draft), kalau OFF
@@ -98,11 +107,11 @@ stockAlertsCron.post('/', async (c) => {
     products: available.map((p) => ({ name: p.name as string, stock_count: p.display_stock as number })),
     totalAvailable: count ?? available.length,
   })
-  const result = await NotificationService.sendAdminAlert({
+  const groupSent = await NotificationService.sendWhatsApp({
+    target: stockGroupId, // sudah include @g.us suffix
     template: tpl.template,
-    title: 'Stok Supplier Tersedia (Digest Pagi)',
-    message: tpl.waText.replace(/^\[[^\]]+\]\s*/, ''),
+    message: tpl.waText,
   })
 
-  return c.json({ data: { ok: true, alerted: available.length, total_available: count, wa_sent: result.wa, group_sent: result.group, email_fallback: result.email } })
+  return c.json({ data: { ok: true, alerted: available.length, total_available: count, wib_hour: wibHour, group_sent: groupSent } })
 })

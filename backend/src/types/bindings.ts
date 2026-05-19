@@ -12,6 +12,7 @@ export type Bindings = {
   RESEND_FROM_EMAIL: string
   ADMIN_WHATSAPP_NUMBER: string
   ADMIN_WA_GROUP_ID: string
+  WAHA_STOCK_DIGEST_GROUP_ID: string
   ADMIN_EMAIL: string
   QRIS_STATIC_PAYLOAD: string
   CORS_ORIGINS: string

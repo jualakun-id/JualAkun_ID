@@ -30,7 +30,8 @@ crons = [
 # - RESEND_API_KEY
 # - RESEND_FROM_EMAIL
 # - ADMIN_WHATSAPP_NUMBER
-# - ADMIN_WA_GROUP_ID  (opsional: WA group id "<num>@g.us" untuk broadcast alert)
+# - ADMIN_WA_GROUP_ID  (opsional: WA group id "<num>@g.us" untuk broadcast alert kritis)
+# - WAHA_STOCK_DIGEST_GROUP_ID  (opsional: WA group id "<num>@g.us" dedicated untuk stock digest 4x/hari)
 # - ADMIN_EMAIL
 # - SUPPLIER_CANBOSO_API_KEY
 # - CRON_SECRET
