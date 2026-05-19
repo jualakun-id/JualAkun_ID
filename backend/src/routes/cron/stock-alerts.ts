@@ -67,41 +67,42 @@ stockAlertsCron.post('/', async (c) => {
   }
 
   const supabase = createAdminClient()
-  // Pakai display_stock (admin-managed) untuk monitoring publik
-  const { data: lowStock, error } = await supabase
+  // Digest pagi: list produk yang link ke supplier DAN masih ada stok.
+  // Produk full manual (no supplier link) di-skip — admin sudah punya
+  // /admin/stok-monitor untuk monitoring manual. Produk supplier yang stok 0
+  // di-skip — kalau auto-manage ON sudah dihandle (hide ke draft), kalau OFF
+  // admin yang chose untuk hold draft sendiri.
+  //
+  // Total count diambil terpisah (head: true) supaya WA bisa tampilkan
+  // ringkasan "X produk tersedia" walau display di-cap 20 row teratas.
+  const baseFilter = supabase
     .from('products')
-    .select('id, name, display_stock')
+    .select('id, name, display_stock', { count: 'exact' })
     .eq('is_active', true)
-    .lte('display_stock', 5)
-    .order('display_stock', { ascending: true })
+    .not('supplier_product_id', 'is', null)
+    .neq('supplier_product_id', '')
+    .gt('display_stock', 0)
+
+  const { data: available, error, count } = await baseFilter
+    .order('display_stock', { ascending: true }) // stok paling sedikit dulu — paling perlu attention re-stock
     .limit(20)
 
   if (error) {
     return c.json({ ok: false, code: 'INTERNAL_ERROR', message: error.message }, 500)
   }
-  if (!lowStock || lowStock.length === 0) {
-    return c.json({ data: { ok: true, alerted: 0 } })
+  if (!available || available.length === 0) {
+    return c.json({ data: { ok: true, alerted: 0, reason: 'no-available-supplier-stock' } })
   }
 
-  // Activity log per produk — bedakan critical vs out supaya admin bisa filter
-  for (const p of lowStock as { id: string; name: string; display_stock: number }[]) {
-    const isOut = p.display_stock === 0
-    await ActivityLogService.log({
-      event_type: isOut ? 'stock_out' : 'stock_critical',
-      ref_id: p.id,
-      ref_table: 'products',
-      title: `${isOut ? 'Stok habis' : 'Stok kritis'}: ${p.name}`,
-      description: `Tersisa ${p.display_stock} unit${isOut ? ' — perlu refill segera' : ''}`,
-      metadata: { product_id: p.id, name: p.name, display_stock: p.display_stock },
-    })
-  }
-
-  const tpl = templates.adminLowStock({ products: lowStock.map((p) => ({ name: p.name, stock_count: p.display_stock })) })
+  const tpl = templates.adminSupplierStockDigest({
+    products: available.map((p) => ({ name: p.name as string, stock_count: p.display_stock as number })),
+    totalAvailable: count ?? available.length,
+  })
   const result = await NotificationService.sendAdminAlert({
     template: tpl.template,
-    title: 'Stok Kritis (Digest Pagi)',
-    message: tpl.waText.replace(/^\[[^\]]+\]\n\n/, ''),
+    title: 'Stok Supplier Tersedia (Digest Pagi)',
+    message: tpl.waText.replace(/^\[[^\]]+\]\s*/, ''),
   })
 
-  return c.json({ data: { ok: true, alerted: lowStock.length, wa_sent: result.wa, group_sent: result.group, email_fallback: result.email } })
+  return c.json({ data: { ok: true, alerted: available.length, total_available: count, wa_sent: result.wa, group_sent: result.group, email_fallback: result.email } })
 })

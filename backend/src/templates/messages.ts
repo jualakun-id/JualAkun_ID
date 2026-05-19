@@ -87,10 +87,10 @@ export const templates = {
     ),
   }),
 
-  adminLowStock: (p: { products: { name: string; stock_count: number }[] }) => ({
-    template: 'admin_low_stock',
+  adminSupplierStockDigest: (p: { products: { name: string; stock_count: number }[]; totalAvailable: number }) => ({
+    template: 'admin_supplier_stock_digest',
     waText:
-      `[ALERT] Stok produk hampir/sudah habis:\n\n` +
+      `[STOK] Produk supplier yang masih bisa dijual hari ini (${p.totalAvailable} produk):\n\n` +
       p.products.map((pr) => `- ${pr.name}: ${pr.stock_count} unit`).join('\n') +
       `\n\nLink: ${SITE}/admin/stok-monitor`,
   }),
