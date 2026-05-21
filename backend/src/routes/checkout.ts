@@ -14,13 +14,17 @@ checkoutRoute.use('*', authMiddleware)
  * POST /checkout/create-order
  * Spec: docs/api-spec.md § Checkout & Orders
  */
+// Nomor WA dalam format E.164 digit (sama seperti yang dikirim buildPhoneE164
+// di frontend & dipakai registerSchema). Support Indonesia (62) + Malaysia (60).
+const PHONE_WA_REGEX = /^(62|60)\d{8,13}$/
+
 const createOrderSchema = z.object({
   product_id: z.string().uuid(),
   coupon_code: z.string().trim().min(1).max(30).optional(),
   use_credits: z.boolean().optional().default(false),
   phone_wa: z
     .string()
-    .regex(/^(\+?62|0|8)\d{8,13}$/, 'Format: 08xx atau 628xx')
+    .regex(PHONE_WA_REGEX, 'Format nomor WA tidak valid (gunakan 62/60 + nomor)')
     .optional(),
 })
 
