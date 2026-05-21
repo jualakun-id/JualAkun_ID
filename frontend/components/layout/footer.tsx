@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { Mail, Phone, Clock, ShieldCheck, AlertCircle } from 'lucide-react'
 import { Logo } from '@/components/branding/logo'
+import { whatsappLink } from '@/lib/site'
 
 export function Footer() {
   return (
@@ -52,7 +53,14 @@ export function Footer() {
               </li>
               <li className="flex items-center gap-2.5 justify-center sm:justify-start">
                 <Phone size={16} className="text-brand-400 shrink-0" />
-                <span>WhatsApp Support</span>
+                <a
+                  href={whatsappLink('Halo admin Jualakun.id, saya mau tanya.')}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-brand-400 transition-colors"
+                >
+                  WhatsApp Support
+                </a>
               </li>
               <li className="flex items-center gap-2.5 justify-center sm:justify-start">
                 <AlertCircle size={16} className="text-brand-400 shrink-0" />

@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { Mail, MessageCircle, Clock, AlertCircle, ChevronRight } from 'lucide-react'
+import { whatsappLink } from '@/lib/site'
 
 export const metadata = {
   title: 'Kontak',
@@ -41,7 +42,7 @@ export default function KontakPage() {
       {/* ── Channels ─────────────────────────────────────── */}
       <div className="mt-10 grid gap-5 sm:grid-cols-2">
         <a
-          href="https://wa.me/628000000000"
+          href={whatsappLink('Halo admin Jualakun.id, saya mau tanya.')}
           target="_blank"
           rel="noopener noreferrer"
           className="group rounded-2xl border-2 border-black bg-white p-6 shadow-[0_4px_0_rgba(0,0,0,0.9)] hover:shadow-[0_6px_0_rgba(0,0,0,0.9)] hover:-translate-y-0.5 transition-all duration-200"
