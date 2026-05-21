@@ -17,28 +17,51 @@ import {
   LogOut,
   Menu,
   X,
+  type LucideIcon,
 } from 'lucide-react'
 import { Logo } from '@/components/branding/logo'
 import { createBrowserClient } from '@/lib/supabase'
+import { api } from '@/lib/api'
 
-const NAV = [
+type BadgeKey = 'pendingOrders' | 'newUsersToday'
+
+type NavItem = {
+  href: string
+  label: string
+  icon: LucideIcon
+  /** Kalau di-set, nav item tampil badge notif dari counts[badgeKey]. */
+  badgeKey?: BadgeKey
+}
+
+const NAV: NavItem[] = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/produk', label: 'Produk', icon: Package },
   { href: '/admin/supplier-baru', label: 'Produk Supplier', icon: PackagePlus },
   { href: '/admin/stok-monitor', label: 'Stok Monitor', icon: Boxes },
-  { href: '/admin/pesanan', label: 'Pesanan', icon: ShoppingCart },
+  { href: '/admin/pesanan', label: 'Pesanan', icon: ShoppingCart, badgeKey: 'pendingOrders' },
   { href: '/admin/tiket', label: 'Tiket', icon: LifeBuoy },
   { href: '/admin/kupon', label: 'Kupon', icon: Tag },
-  { href: '/admin/pengguna', label: 'Pengguna', icon: Users },
+  { href: '/admin/pengguna', label: 'Pengguna', icon: Users, badgeKey: 'newUsersToday' },
   { href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
   { href: '/admin/notifikasi', label: 'Notifikasi', icon: Bell },
-] as const
+]
+
+type AdminCounts = { pendingOrders: number; newUsersToday: number }
+
+/** Subset KPI dashboard yang dipakai untuk badge sidebar. */
+type DashboardKpis = {
+  orders?: { paid?: number }
+  users?: { new_today?: number }
+}
+
+const POLL_INTERVAL_MS = 60_000
 
 export function AdminSidebar() {
   const pathname = usePathname()
   const router = useRouter()
   const [loggingOut, setLoggingOut] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [counts, setCounts] = useState<AdminCounts>({ pendingOrders: 0, newUsersToday: 0 })
 
   // Auto-close mobile drawer saat navigasi
   useEffect(() => {
@@ -54,6 +77,26 @@ export function AdminSidebar() {
       }
     }
   }, [mobileOpen])
+
+  // Poll count notif (order menunggu fulfill + user baru hari ini) tiap 60s.
+  // Badge di sidebar update otomatis tanpa reload halaman.
+  useEffect(() => {
+    let cancelled = false
+    async function loadCounts() {
+      const res = await api.get<DashboardKpis>('/admin/analytics/dashboard')
+      if (cancelled || !res.ok) return
+      setCounts({
+        pendingOrders: res.data.orders?.paid ?? 0,
+        newUsersToday: res.data.users?.new_today ?? 0,
+      })
+    }
+    loadCounts()
+    const id = setInterval(loadCounts, POLL_INTERVAL_MS)
+    return () => {
+      cancelled = true
+      clearInterval(id)
+    }
+  }, [])
 
   async function handleLogout() {
     setLoggingOut(true)
@@ -74,9 +117,15 @@ export function AdminSidebar() {
           type="button"
           onClick={() => setMobileOpen(true)}
           aria-label="Buka menu"
-          className="p-2 rounded-lg text-ink bg-white border-2 border-black shadow-[0_2px_0_rgba(0,0,0,0.9)] hover:shadow-[0_3px_0_rgba(0,0,0,0.9)] hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-[0_1px_0_rgba(0,0,0,0.9)] transition-all duration-150"
+          className="relative p-2 rounded-lg text-ink bg-white border-2 border-black shadow-[0_2px_0_rgba(0,0,0,0.9)] hover:shadow-[0_3px_0_rgba(0,0,0,0.9)] hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-[0_1px_0_rgba(0,0,0,0.9)] transition-all duration-150"
         >
           <Menu size={20} strokeWidth={2.5} />
+          {counts.pendingOrders + counts.newUsersToday > 0 ? (
+            <span
+              className="absolute -top-1.5 -right-1.5 h-3 w-3 rounded-full bg-danger border-2 border-white"
+              aria-hidden="true"
+            />
+          ) : null}
         </button>
       </div>
 
@@ -117,8 +166,9 @@ export function AdminSidebar() {
 
         {/* Nav */}
         <nav className="flex-1 space-y-1 px-3 py-5 overflow-y-auto" aria-label="Admin sections">
-          {NAV.map(({ href, label, icon: Icon }) => {
+          {NAV.map(({ href, label, icon: Icon, badgeKey }) => {
             const isActive = href === '/admin' ? pathname === href : pathname.startsWith(href)
+            const count = badgeKey ? counts[badgeKey] : 0
             return (
               <Link
                 key={href}
@@ -130,8 +180,16 @@ export function AdminSidebar() {
                     : 'text-ink-muted hover:bg-brand-50 hover:text-brand-700 border-2 border-transparent'
                 }`}
               >
-                <Icon size={18} strokeWidth={2.25} />
-                {label}
+                <Icon size={18} strokeWidth={2.25} className="shrink-0" />
+                <span className="flex-1 truncate">{label}</span>
+                {count > 0 ? (
+                  <span
+                    className="shrink-0 inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full bg-danger text-white text-[11px] font-extrabold border border-black tabular-nums"
+                    aria-label={`${count} notifikasi`}
+                  >
+                    {count > 99 ? '99+' : count}
+                  </span>
+                ) : null}
               </Link>
             )
           })}
