@@ -22,10 +22,15 @@ export function ResolveForm({ ticketId, availableStockIds }: Props) {
     const status =
       resolutionType === 'replaced' ? 'resolved_replaced' :
       resolutionType === 'refunded' ? 'resolved_refunded' : 'rejected'
+    // Hanya kirim new_account_stock_id kalau memang ada stok yang dipilih.
+    // Kalau stok kosong, admin biasanya nulis credential pengganti manual di
+    // `note` — service tetap kirim template ticketReplaced ke WA/email buyer
+    // dengan isi note. Empty string di-tolak zValidator (.uuid()) -> 400.
     const result = await api.patch(`/admin/tickets/${ticketId}`, {
       status,
       resolution: note,
-      new_account_stock_id: resolutionType === 'replaced' ? stockId : undefined,
+      new_account_stock_id:
+        resolutionType === 'replaced' && stockId ? stockId : undefined,
     })
     setLoading(false)
     if (!result.ok) {
@@ -83,6 +88,12 @@ export function ResolveForm({ ticketId, availableStockIds }: Props) {
               <option key={id} value={id}>#{i + 1} {id.slice(0, 8)}</option>
             ))}
           </select>
+        </div>
+      ) : null}
+
+      {resolutionType === 'replaced' && availableStockIds.length === 0 ? (
+        <div className="rounded-lg border-2 border-warning/40 bg-warning/10 px-3.5 py-2.5 text-xs font-medium text-warning leading-relaxed">
+          ⚠ Stok kosong. Tulis kredensial pengganti (email/user + password) langsung di kolom <strong>Catatan</strong> di bawah — akan dikirim ke buyer via WA &amp; email.
         </div>
       ) : null}
 
