@@ -17,3 +17,7 @@ Thumbs.db
 .vscode/settings.json
 *.swp
 *.swo
+
+# Backup lokal thumbnail produk — JANGAN commit (besar + binary, sumber utama
+# adalah Supabase Storage bucket `product-thumbnails`).
+thumbnails-backup/
