@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import { zValidator } from '@hono/zod-validator'
+import { zValidator } from '@/lib/zv'
 import { z } from 'zod'
 import { AdminCouponsService } from '@/services/admin.service'
 import type { AppEnv } from '@/types/bindings'

@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import { zValidator } from '@hono/zod-validator'
+import { zValidator } from '@/lib/zv'
 import { z } from 'zod'
 import { AdminOrdersService } from '@/services/admin.service'
 import { ManualPaymentService } from '@/services/manual-payment.service'

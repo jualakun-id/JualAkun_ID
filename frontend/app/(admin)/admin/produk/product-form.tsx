@@ -62,6 +62,16 @@ function isoToLocal(iso: string | null | undefined): string {
   return new Date(d.getTime() - off).toISOString().slice(0, 16)
 }
 
+/** Slugify nama produk → format yang lolos schema /^[a-z0-9-]+$/. */
+function nameToSlug(name: string): string {
+  return name
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9-]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .replace(/-+/g, '-')
+}
+
 export function ProductForm({ categories, initial, embedded, onSuccess }: Props) {
   const router = useRouter()
   const toast = useToast()
@@ -69,7 +79,10 @@ export function ProductForm({ categories, initial, embedded, onSuccess }: Props)
   const [form, setForm] = useState({
     category_id: initial?.category_id ?? categories[0]?.id ?? '',
     name: initial?.name ?? '',
-    slug: initial?.slug ?? '',
+    // Auto-derive slug dari name kalau initial.name di-supply tapi initial.slug
+    // tidak (mis. flow import produk supplier — nama pre-filled, slug kosong).
+    // Tanpa ini, slug stay '' → Zod tolak dengan "String must contain at least 2".
+    slug: initial?.slug ?? (initial?.name ? nameToSlug(initial.name) : ''),
     description: initial?.description ?? '',
     thumbnail_url: initial?.thumbnail_url ?? '',
     duration_days: initial?.duration_days ?? 30,
@@ -123,13 +136,7 @@ export function ProductForm({ categories, initial, embedded, onSuccess }: Props)
   function handleNameChange(value: string) {
     update('name', value)
     if (!isEdit) {
-      const autoSlug = value
-        .toLowerCase()
-        .trim()
-        .replace(/[^a-z0-9-]+/g, '-')
-        .replace(/^-+|-+$/g, '')
-        .replace(/-+/g, '-')
-      update('slug', autoSlug)
+      update('slug', nameToSlug(value))
     }
   }
 
