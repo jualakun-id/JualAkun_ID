@@ -24,6 +24,7 @@ export type ActivityEventType =
   | 'referral_credited'
   | 'referral_redeemed'
   | 'notification_failed'
+  | 'waha_session_down'
   | 'product_created'
   | 'product_auto_published'
   | 'product_auto_drafted'
