@@ -45,6 +45,10 @@ export class CatalogService {
         { count: 'exact' },
       )
       .eq('is_active', true)
+      // Sembunyikan produk stok habis dari katalog publik — visitor tidak perlu
+      // lihat card "Stok Habis" yang gak bisa dibeli. Produk masih ada di DB +
+      // bisa di-rev-publish saat stok masuk lagi (admin panel / cron supplier).
+      .gt('display_stock', 0)
       .order(sortColumn, { ascending: sortAsc, nullsFirst: false })
       .range(offset, offset + q.limit - 1)
 
