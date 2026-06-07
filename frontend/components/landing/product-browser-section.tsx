@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { ChevronDown, ChevronLeft, ChevronRight, Loader2, Package, Search, X } from 'lucide-react'
+import { ChevronDown, Loader2, Package, Search, X } from 'lucide-react'
 import { LandingProductCard } from './landing-product-card'
 import type { Product } from '@/types'
 
@@ -45,7 +45,9 @@ export function ProductBrowserSection({ categories, initialData }: Props) {
   const [categorySlug, setCategorySlug] = useState<string>('')
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(false)
+  const [loadingMore, setLoadingMore] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const sentinelRef = useRef<HTMLDivElement | null>(null)
 
   // Auto-filter berdasarkan hash URL (#ai → kategori ai) untuk backward compat
   useEffect(() => {
@@ -62,8 +64,10 @@ export function ProductBrowserSection({ categories, initialData }: Props) {
     nextSort: SortValue,
     nextCategory: string,
     nextSearch: string,
+    append: boolean = false,
   ) {
-    setLoading(true)
+    if (append) setLoadingMore(true)
+    else setLoading(true)
     try {
       const params = new URLSearchParams({
         sort: nextSort,
@@ -75,13 +79,39 @@ export function ProductBrowserSection({ categories, initialData }: Props) {
       const res = await fetch(`${API_URL}/catalog?${params.toString()}`, { cache: 'no-store' })
       const json = (await res.json()) as { data: CatalogResponse }
       if (json.data) {
-        setProducts(json.data.products)
+        if (append) {
+          setProducts((prev) => [...prev, ...json.data.products])
+        } else {
+          setProducts(json.data.products)
+        }
         setPagination(json.data.pagination)
       }
     } finally {
-      setLoading(false)
+      if (append) setLoadingMore(false)
+      else setLoading(false)
     }
   }
+
+  // Infinite scroll: auto-load page berikutnya saat sentinel mendekati viewport.
+  // Pakai rootMargin 400px supaya prefetch dimulai sebelum user reach bottom,
+  // biar UX flowing — gak ada jeda "kosong" saat tunggu fetch.
+  useEffect(() => {
+    const el = sentinelRef.current
+    if (!el) return
+    const hasMore = pagination.page < pagination.total_pages
+    if (!hasMore) return
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting && !loading && !loadingMore) {
+          fetchPage(pagination.page + 1, sort, categorySlug, search, true)
+        }
+      },
+      { rootMargin: '400px' },
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pagination.page, pagination.total_pages, loading, loadingMore, sort, categorySlug, search])
 
   function handleSortChange(newSort: SortValue) {
     if (newSort === sort) return
@@ -110,12 +140,7 @@ export function ProductBrowserSection({ categories, initialData }: Props) {
     fetchPage(1, sort, categorySlug, '')
   }
 
-  const totalPages = Math.max(
-    1,
-    pagination.total_pages || Math.ceil(pagination.total / PAGE_SIZE) || 1,
-  )
-  const hasPrev = pagination.page > 1
-  const hasNext = pagination.page < totalPages
+  const hasMore = pagination.page < pagination.total_pages
   const activeCategoryLabel =
     categories.find((c) => c.slug === categorySlug)?.name ?? 'Semua Kategori'
 
@@ -262,38 +287,25 @@ export function ProductBrowserSection({ categories, initialData }: Props) {
           </div>
         )}
 
-        {/* Pagination */}
-        {totalPages > 1 ? (
-          <nav
-            aria-label="Pagination produk"
-            className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4"
+        {/* Infinite scroll sentinel + status */}
+        {products.length > 0 ? (
+          <div
+            ref={sentinelRef}
+            aria-live="polite"
+            className="mt-10 flex flex-col items-center justify-center gap-2 py-4"
           >
-            <p className="text-sm font-medium text-ink-muted tabular-nums">
-              Halaman <strong className="text-ink">{pagination.page}</strong> dari{' '}
-              <strong className="text-ink">{totalPages}</strong> ·{' '}
-              <strong className="text-ink">{pagination.total}</strong> produk
-            </p>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => fetchPage(pagination.page - 1, sort, categorySlug, search)}
-                disabled={!hasPrev || loading}
-                className="inline-flex items-center gap-1 bg-white hover:bg-brand-50 text-ink font-extrabold px-4 py-2 rounded-lg border-2 border-black shadow-[0_2px_0_rgba(0,0,0,0.9)] hover:shadow-[0_3px_0_rgba(0,0,0,0.9)] hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-[0_1px_0_rgba(0,0,0,0.9)] transition-all duration-150 text-sm disabled:opacity-40 disabled:pointer-events-none"
-              >
-                <ChevronLeft size={14} strokeWidth={2.5} />
-                Prev
-              </button>
-              <button
-                type="button"
-                onClick={() => fetchPage(pagination.page + 1, sort, categorySlug, search)}
-                disabled={!hasNext || loading}
-                className="inline-flex items-center gap-1 bg-white hover:bg-brand-50 text-ink font-extrabold px-4 py-2 rounded-lg border-2 border-black shadow-[0_2px_0_rgba(0,0,0,0.9)] hover:shadow-[0_3px_0_rgba(0,0,0,0.9)] hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-[0_1px_0_rgba(0,0,0,0.9)] transition-all duration-150 text-sm disabled:opacity-40 disabled:pointer-events-none"
-              >
-                Next
-                <ChevronRight size={14} strokeWidth={2.5} />
-              </button>
-            </div>
-          </nav>
+            {loadingMore ? (
+              <span className="inline-flex items-center gap-2 text-sm font-bold text-ink-muted">
+                <Loader2 size={16} strokeWidth={2.5} className="animate-spin text-brand-600" />
+                Memuat lebih banyak…
+              </span>
+            ) : !hasMore && pagination.total > 0 ? (
+              <span className="text-xs font-medium text-ink-subtle tabular-nums">
+                Menampilkan <strong className="text-ink">{products.length}</strong> dari{' '}
+                <strong className="text-ink">{pagination.total}</strong> produk · sudah semua
+              </span>
+            ) : null}
+          </div>
         ) : null}
       </div>
     </section>
